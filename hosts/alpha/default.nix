@@ -10,6 +10,8 @@
 
     ./../../modules/home/dotfiles/obsidian
 
+    ./../../modules/lab
+
     ./../../modules/programs/firefox
     ./../../modules/programs/git
 
