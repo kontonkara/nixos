@@ -1,4 +1,4 @@
-{ username, pkgs, ... }:
+{ username, config,  pkgs, ... }:
 
 {
   users = {
@@ -12,7 +12,7 @@
         keepassxc
         vscode
       ];
-      hashedPasswordFile = "/etc/nixos/secrets/user-password";
+       hashedPasswordFile = config.sops.secrets."kontonkara".path;
       };
     };
   };

@@ -3,9 +3,13 @@
     nixpkgs = {
       url = "github:nixos/nixpkgs/nixos-unstable";
     };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs }@inputs:
+  outputs = { self, nixpkgs, sops-nix, ... }@inputs:
     let
       username = "kontonkara";
       system = "x86_64-linux";
@@ -19,6 +23,7 @@
           };
           modules = [
             ./hosts/alpha
+            sops-nix.nixosModules.sops
           ];
         };
       };
