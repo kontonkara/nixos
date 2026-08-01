@@ -15,6 +15,7 @@
 
     ./../../modules/services/desktopManager
     ./../../modules/services/displayManager
+    ./../../modules/services/sing-box
     ./../../modules/services/xserver
 
     ./../../modules/system/audio
