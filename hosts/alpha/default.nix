@@ -8,6 +8,8 @@
   imports = [
     ./hardware.nix
 
+    ./../../modules/home/dotfiles/obsidian
+
     ./../../modules/programs/firefox
     ./../../modules/programs/git
 
