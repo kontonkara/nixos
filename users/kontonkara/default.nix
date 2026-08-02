@@ -2,15 +2,17 @@
 
 {
   users = {
+    mutableUsers = false;
     users = {
       ${username} = {
       isNormalUser = true;
-      extraGroups = [ "wheel" "networkmanager" ];
-      packages = with pkgs; [
-        tree
-        telegram-desktop
-        keepassxc
-        vscode
+      extraGroups = [
+        "networkmanager" 
+        "wheel"
+        "input"
+        "render"
+        "uinput"
+        "video"
       ];
        hashedPasswordFile = config.sops.secrets."kontonkara".path;
       };

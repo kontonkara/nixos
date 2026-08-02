@@ -8,6 +8,7 @@
   imports = [
     ./hardware.nix
 
+    ./../../modules/home/apps
     ./../../modules/home/dotfiles/obsidian
 
     ./../../modules/lab
