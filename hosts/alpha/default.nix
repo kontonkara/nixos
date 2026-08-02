@@ -9,6 +9,7 @@
     ./hardware.nix
 
     ./../../modules/home/apps
+    ./../../modules/home/dotfiles/fish
     ./../../modules/home/dotfiles/obsidian
     ./../../modules/home/dotfiles/vscode
 

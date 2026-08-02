@@ -1,13 +1,21 @@
 { username, inputs, config, host, pkgs, ... }:
 
 {
+  programs = {
+    fish = {
+      enable = true;
+      generateCompletions = true;
+    };
+  };
+
   users = {
     mutableUsers = false;
     users = {
       ${username} = {
+      shell = pkgs.fish;
       isNormalUser = true;
       extraGroups = [
-        "networkmanager" 
+        "networkmanager"
         "wheel"
         "input"
         "render"
