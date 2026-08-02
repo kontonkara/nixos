@@ -8,7 +8,6 @@
           packages = with pkgs; [
             telegram-desktop
             keepassxc
-            vscode
             vulkan-tools
             spotify
           ];
