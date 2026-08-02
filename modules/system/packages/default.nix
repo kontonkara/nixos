@@ -3,6 +3,7 @@
 {
   environment = {
     systemPackages = with pkgs; [
+      mcontrolcenter
       vim
       wget
       sops

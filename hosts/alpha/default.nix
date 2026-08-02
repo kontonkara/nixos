@@ -27,6 +27,8 @@
     ./../../modules/system/boot
     ./../../modules/system/core
     ./../../modules/system/environment
+    ./../../modules/system/graphics/amd
+    ./../../modules/system/graphics/nvidia
     ./../../modules/system/locale
     ./../../modules/system/network
     ./../../modules/system/packages
