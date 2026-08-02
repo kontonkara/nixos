@@ -26,6 +26,7 @@
     ./../../modules/system/bluetooth
     ./../../modules/system/boot
     ./../../modules/system/core
+    ./../../modules/system/environment
     ./../../modules/system/locale
     ./../../modules/system/network
     ./../../modules/system/packages
