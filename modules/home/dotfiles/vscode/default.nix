@@ -20,12 +20,12 @@
         programs = {
           vscode = {
             enable = true;
-            # package = pkgs.vscode.override {
-            #   commandLineArgs = [
-            #     "--enable-features=UseOzonePlatform"
-            #     "--ozone-platform=wayland"
-            #   ];
-            # };
+            package = pkgs.vscode.override {
+              commandLineArgs = [
+                # "--enable-features=UseOzonePlatform"
+                "--ozone-platform=x11"
+              ];
+            };
             mutableExtensionsDir = false;
 
             argvSettings = {

@@ -4,7 +4,11 @@
   environment = {
     systemPackages = with pkgs; [
       mcontrolcenter
-      vim
+      binutils
+      pciutils
+      usbutils
+      nvme-cli
+      ryzenadj
       wget
       sops
       age

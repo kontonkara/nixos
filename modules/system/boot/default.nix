@@ -1,7 +1,20 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
+let
+  msiEc = {
+    rev = "050d4394a6747ebd106ae2f8ddb3a4eebe7c700f";
+    hash = "sha256-b7wwZstjeLPEsxIjmZentDwkQTxdBYbpJfdOR24Ofww=";
+  };
+
+  ryzenSmu = {
+    rev = "1be4fb1cd9d60b5ddefc2a4201a898766a731400";
+    hash = "sha256-Tj3MZBDtobXAdF07DmqEnaJWCoJ0Xkbn25jqAIWAfoc=";
+  };
+
+  ryzenCurveOptimizerOffset = "0xFFFEC"; # CO -20
+  applyRyzenCurveOptimizer = "${pkgs.ryzenadj}/bin/ryzenadj --set-coall=${ryzenCurveOptimizerOffset}";
+in
 {
-
   imports = [
     ./plymouth.nix
   ];
@@ -17,6 +30,42 @@
       "tcp_bbr"
       "ath12k"
       "kvm-amd"
+    ];
+
+    extraModulePackages = [
+      (config.boot.kernelPackages.msi-ec.overrideAttrs (_oldAttrs: {
+        src = pkgs.fetchFromGitHub {
+          owner = "BeardOverflow";
+          repo = "msi-ec";
+          inherit (msiEc) rev hash;
+        };
+        patches = [ ];
+        postPatch = ''
+          substituteInPlace Makefile \
+            --replace-fail '/lib/modules/$(KERNELRELEASE)/build' '${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build'
+        '';
+        installTargets = [ "modules" ];
+        postInstall = ''
+          dest=$out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/updates
+          mkdir -p $dest
+          cp msi-ec.ko $dest/
+        '';
+      }))
+      (config.boot.kernelPackages.ryzen-smu.overrideAttrs (_oldAttrs: {
+        src = pkgs.fetchFromGitHub {
+          owner = "amkillam";
+          repo = "ryzen_smu";
+          inherit (ryzenSmu) rev hash;
+        };
+
+        installPhase = ''
+          runHook preInstall
+
+          install ryzen_smu.ko -Dm444 -t $out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/kernel/drivers/ryzen_smu
+
+          runHook postInstall
+        '';
+      }))
     ];
 
     kernelParams = [
@@ -95,6 +144,22 @@
       };
     };
   };
+
+  systemd.services.ryzen-curve-optimizer = {
+    description = "Apply Ryzen Curve Optimizer offset";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "systemd-modules-load.service" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = applyRyzenCurveOptimizer;
+    };
+  };
+
+  powerManagement.resumeCommands = ''
+    sleep 2
+    ${applyRyzenCurveOptimizer} || true
+  '';
 
   zramSwap = {
     enable = true;
