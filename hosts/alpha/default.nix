@@ -23,6 +23,7 @@
     ./../../modules/services/xserver
 
     ./../../modules/system/audio
+    ./../../modules/system/bluetooth
     ./../../modules/system/boot
     ./../../modules/system/core
     ./../../modules/system/locale
