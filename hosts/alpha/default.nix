@@ -35,6 +35,8 @@
     ./../../modules/system/packages
     ./../../modules/system/secrets
 
+    ./../../pkgs/yandex-browser-corporate
+
     ./../../users/kontonkara
   ];
 }

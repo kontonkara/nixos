@@ -17,6 +17,10 @@
       "sing-box/vless/path" = { };
       "sing-box/vless/sni" = { };
       "sing-box/vless/uuid" = { };
+      "yandex-browser" = {
+        owner = "kontonkara";
+        mode = "0400";
+      };
     };
   };
 }
