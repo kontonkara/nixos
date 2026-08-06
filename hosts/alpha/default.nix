@@ -21,6 +21,7 @@
     ./../../modules/services/desktopManager
     ./../../modules/services/displayManager
     ./../../modules/services/sing-box
+    ./../../modules/services/sunshine
     ./../../modules/services/xserver
 
     ./../../modules/system/audio

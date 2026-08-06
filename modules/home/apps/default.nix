@@ -10,6 +10,10 @@
             keepassxc
             vulkan-tools
             spotify
+            protonplus
+            (bottles.override {
+              removeWarningPopup = true;
+            })
           ];
         };
       };
