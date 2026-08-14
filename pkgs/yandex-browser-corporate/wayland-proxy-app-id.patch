@@ -1,0 +1,12 @@
+diff --git a/src/xwayland.ml b/src/xwayland.ml
+index c4acd4f..76eb7a9 100644
+--- a/src/xwayland.ml
++++ b/src/xwayland.ml
+@@ -617,6 +617,9 @@ let init_toplevel t ~x11 ~xdg_surface ~info ~paired window =
+       )
+   in
+   Xdg_toplevel.set_title toplevel ~title:(t.config.tag ^ info.title);
++  Sys.getenv_opt "WAYLAND_PROXY_APP_ID"
++  |> Option.iter (fun app_id ->
++      Xdg_toplevel.set_app_id toplevel ~app_id);
+   X11.Icccm.Wm_normal_hints.min_size info.wm_normal_hints |> Option.iter (fun (width, height) ->

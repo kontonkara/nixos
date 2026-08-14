@@ -18,6 +18,7 @@
 
     ./../../modules/programs/firefox
     ./../../modules/programs/git
+    ./../../modules/programs/yandex-browser-corporate
 
     ./../../modules/services/desktopManager
     ./../../modules/services/displayManager
