@@ -77,7 +77,7 @@
                     "package.json" = "package-lock.json,yarn.lock,pnpm-lock.yaml";
                   };
                   "extensions.autoCheckUpdates" = false;
-                  "extensions.autoUpdate" = false;
+                  "extensions.autoUpdate" = "off";
                   "extensions.ignoreRecommendations" = true;
                   "files.autoSave" = "onFocusChange";
                   "files.associations" = {
@@ -101,6 +101,13 @@
                   "github.gitAuthentication" = false;
                   "nix.enableLanguageServer" = true;
                   "nix.serverPath" = "${pkgs.nixd}/bin/nixd";
+                  "nix.serverSettings" = {
+                    nixd = { };
+                  };
+                  "nix.hiddenLanguageServerErrors" = [
+                    "textDocument/documentHighlight"
+                    "textDocument/definition"
+                  ];
                   "redhat.telemetry.enabled" = false;
                   "security.workspace.trust.enabled" = true;
                   "security.workspace.trust.untrustedFiles" = "open";
@@ -115,7 +122,7 @@
                   "terminal.integrated.smoothScrolling" = true;
                   "update.mode" = "none";
                   "window.commandCenter" = true;
-                  "window.controlsStyle" = "default";
+                  "window.controlsStyle" = "native";
                   # "window.customTitleBarVisibility" = "windowed";
                   # "window.dialogStyle" = "custom";
                   "window.titleBarStyle" = "native";

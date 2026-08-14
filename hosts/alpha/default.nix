@@ -11,6 +11,7 @@
     ./../../modules/home/apps
     ./../../modules/home/dotfiles/fish
     ./../../modules/home/dotfiles/obsidian
+    ./../../modules/home/dotfiles/vesktop
     ./../../modules/home/dotfiles/vscode
 
     ./../../modules/lab

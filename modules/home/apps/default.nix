@@ -14,6 +14,16 @@
             (bottles.override {
               removeWarningPopup = true;
             })
+            (prismlauncher.override {
+              jdks = [
+                zulu8
+                zulu17
+                zulu21
+                zulu25
+              ];
+            })
+            zoom-us
+            inputs.llm-agents.packages.x86_64-linux.codex
           ];
         };
       };
