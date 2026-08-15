@@ -42,6 +42,7 @@
     locale.enable = true;
     network.enable = true;
     packages.enable = true;
+    power.enable = true;
     users.kontonkara.enable = true;
   };
 }
