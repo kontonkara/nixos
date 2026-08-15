@@ -1,9 +1,11 @@
-{ ... }:
+{ config, lib, ... }:
 
 {
-  boot = {
-    plymouth = {
-      enable = true;
+  config = lib.mkIf config.modules.boot.enable {
+    boot = {
+      plymouth = {
+        enable = true;
+      };
     };
   };
 }

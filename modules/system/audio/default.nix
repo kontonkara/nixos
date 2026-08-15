@@ -1,29 +1,36 @@
-{ ... }:
+{ config, lib, ... }:
 
+let
+  cfg = config.modules.audio;
+in
 {
-  services = {
-    pulseaudio = {
-      enable = false;
-    };
+  options.modules.audio.enable = lib.mkEnableOption "PipeWire audio";
 
-    pipewire = {
-      enable = true;
-      pulse = {
-        enable = true;
-      };
-      alsa = {
-        enable = true;
-        support32Bit = true;
-      };
-      jack = {
+  config = lib.mkIf cfg.enable {
+    services = {
+      pulseaudio = {
         enable = false;
       };
-      wireplumber = {
+
+      pipewire = {
         enable = true;
-        extraConfig = {
-          "50-bluetooth-hfp" = {
-            "wireplumber.settings" = {
-              "bluetooth.autoswitch-to-headset-profile" = false;
+        pulse = {
+          enable = true;
+        };
+        alsa = {
+          enable = true;
+          support32Bit = true;
+        };
+        jack = {
+          enable = false;
+        };
+        wireplumber = {
+          enable = true;
+          extraConfig = {
+            "50-bluetooth-hfp" = {
+              "wireplumber.settings" = {
+                "bluetooth.autoswitch-to-headset-profile" = false;
+              };
             };
           };
         };

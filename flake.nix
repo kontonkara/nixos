@@ -21,24 +21,91 @@
     };
   };
 
-  outputs = { self, nixpkgs, sops-nix, home-manager, nixpak, ... }@inputs:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      sops-nix,
+      home-manager,
+      nixpak,
+      ...
+    }@inputs:
     let
+      inherit (nixpkgs) lib;
+
       username = "kontonkara";
       system = "x86_64-linux";
-    in {
-      nixosConfigurations = {
-        alpha = nixpkgs.lib.nixosSystem {
+
+      discoverModules =
+        {
+          root,
+          matches,
+          excludedDirectories ? [ ],
+        }:
+        let
+          walk =
+            directory:
+            let
+              entries = builtins.readDir directory;
+            in
+            lib.concatMap (
+              name:
+              let
+                entryType = entries.${name};
+                path = directory + "/${name}";
+              in
+              if entryType == "directory" then
+                if builtins.elem name excludedDirectories then [ ] else walk path
+              else if entryType == "regular" && matches name then
+                [ path ]
+              else
+                [ ]
+            ) (builtins.attrNames entries);
+        in
+        walk root;
+
+      sharedModules = discoverModules {
+        root = ./.;
+        matches = name: name == "default.nix";
+        excludedDirectories = [
+          ".direnv"
+          ".git"
+          "hosts"
+          "lib"
+        ];
+      };
+
+      hostModules =
+        host:
+        discoverModules {
+          root = ./hosts/${host};
+          matches = name: lib.hasSuffix ".nix" name;
+        };
+
+      mkHost =
+        host:
+        lib.nixosSystem {
           inherit system;
           specialArgs = {
-            host = "alpha";
-            inherit self inputs username;
+            inherit
+              host
+              inputs
+              self
+              username
+              ;
           };
-          modules = [
-            ./hosts/alpha
-            sops-nix.nixosModules.sops
-            home-manager.nixosModules.home-manager
-          ];
+          modules =
+            sharedModules
+            ++ hostModules host
+            ++ [
+              sops-nix.nixosModules.sops
+              home-manager.nixosModules.home-manager
+            ];
         };
+    in
+    {
+      nixosConfigurations = {
+        alpha = mkHost "alpha";
       };
     };
 }

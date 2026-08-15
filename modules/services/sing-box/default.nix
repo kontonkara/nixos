@@ -1,6 +1,8 @@
 { config, lib, ... }:
 
 let
+  cfg = config.modules.services.sing-box;
+
   proxyDomains = [
     "anthropic.com"
     "clau.de"
@@ -44,130 +46,134 @@ let
   directDnsServer = "1.1.1.1";
 in
 {
-  # DNS must enter sing-box so selected domains can receive FakeIP addresses.
-  networking = {
-    nameservers = [ tunDnsAddress ];
-    networkmanager.dns = "none";
-  };
+  options.modules.services.sing-box.enable = lib.mkEnableOption "sing-box transparent proxy";
 
-  services.sing-box = {
-    enable = true;
+  config = lib.mkIf cfg.enable {
+    # DNS must enter sing-box so selected domains can receive FakeIP addresses.
+    networking = {
+      nameservers = [ tunDnsAddress ];
+      networkmanager.dns = "none";
+    };
 
-    settings = {
-      log.level = "info";
+    services.sing-box = {
+      enable = true;
 
-      dns = {
-        strategy = "ipv4_only";
+      settings = {
+        log.level = "info";
 
-        servers = [
-          {
-            type = "udp";
-            tag = "dns-direct";
-            server = directDnsServer;
-          }
-          {
-            type = "fakeip";
-            tag = "dns-fakeip";
-            inet4_range = fakeIpRange;
-          }
-        ];
+        dns = {
+          strategy = "ipv4_only";
 
-        rules = [
-          {
-            domain_suffix = proxyDomains;
-            query_type = [
-              "A"
-              "AAAA"
-            ];
-            server = "dns-fakeip";
-          }
-        ];
-
-        final = "dns-direct";
-      };
-
-      inbounds = [
-        {
-          type = "tun";
-          address = [ "172.18.0.1/30" ];
-          mtu = 65535;
-
-          auto_route = true;
-          auto_redirect = true;
-          strict_route = true;
-          stack = "system";
-
-          route_address = [
-            fakeIpRange
+          servers = [
+            {
+              type = "udp";
+              tag = "dns-direct";
+              server = directDnsServer;
+            }
+            {
+              type = "fakeip";
+              tag = "dns-fakeip";
+              inet4_range = fakeIpRange;
+            }
           ];
-        }
-      ];
 
-      outbounds = [
-        {
-          type = "vless";
-          tag = "proxy-out";
+          rules = [
+            {
+              domain_suffix = proxyDomains;
+              query_type = [
+                "A"
+                "AAAA"
+              ];
+              server = "dns-fakeip";
+            }
+          ];
 
-          server._secret = config.sops.secrets."sing-box/vless/address".path;
-          server_port = 443;
-          uuid._secret = config.sops.secrets."sing-box/vless/uuid".path;
+          final = "dns-direct";
+        };
 
-          tls = {
-            enabled = true;
-            server_name._secret = config.sops.secrets."sing-box/vless/sni".path;
-            insecure = false;
-
-            utls = {
-              enabled = true;
-              fingerprint = "chrome";
-            };
-          };
-
-          transport = {
-            type = "ws";
-            path._secret = config.sops.secrets."sing-box/vless/path".path;
-            headers.Host._secret = config.sops.secrets."sing-box/vless/host".path;
-          };
-        }
-        {
-          type = "direct";
-          tag = "direct";
-        }
-      ];
-
-      route = {
-        rules = [
+        inbounds = [
           {
-            action = "sniff";
-          }
-          {
-            protocol = "dns";
-            action = "hijack-dns";
-          }
-          {
-            domain_suffix = proxyDomains;
-            outbound = "proxy-out";
+            type = "tun";
+            address = [ "172.18.0.1/30" ];
+            mtu = 65535;
+
+            auto_route = true;
+            auto_redirect = true;
+            strict_route = true;
+            stack = "system";
+
+            route_address = [
+              fakeIpRange
+            ];
           }
         ];
 
-        final = "direct";
-        auto_detect_interface = true;
-        default_domain_resolver = "dns-direct";
-      };
+        outbounds = [
+          {
+            type = "vless";
+            tag = "proxy-out";
 
-      experimental = {
-        cache_file.enabled = true;
-        clash_api.external_controller = "127.0.0.1:9090";
+            server._secret = config.sops.secrets."sing-box/vless/address".path;
+            server_port = 443;
+            uuid._secret = config.sops.secrets."sing-box/vless/uuid".path;
+
+            tls = {
+              enabled = true;
+              server_name._secret = config.sops.secrets."sing-box/vless/sni".path;
+              insecure = false;
+
+              utls = {
+                enabled = true;
+                fingerprint = "chrome";
+              };
+            };
+
+            transport = {
+              type = "ws";
+              path._secret = config.sops.secrets."sing-box/vless/path".path;
+              headers.Host._secret = config.sops.secrets."sing-box/vless/host".path;
+            };
+          }
+          {
+            type = "direct";
+            tag = "direct";
+          }
+        ];
+
+        route = {
+          rules = [
+            {
+              action = "sniff";
+            }
+            {
+              protocol = "dns";
+              action = "hijack-dns";
+            }
+            {
+              domain_suffix = proxyDomains;
+              outbound = "proxy-out";
+            }
+          ];
+
+          final = "direct";
+          auto_detect_interface = true;
+          default_domain_resolver = "dns-direct";
+        };
+
+        experimental = {
+          cache_file.enabled = true;
+          clash_api.external_controller = "127.0.0.1:9090";
+        };
       };
     };
-  };
 
-  systemd.services.sing-box = {
-    after = lib.mkForce [
-      "network.target"
-      "nss-lookup.target"
-    ];
-    requires = lib.mkForce [ ];
-    unitConfig.Requires = lib.mkForce [ ];
+    systemd.services.sing-box = {
+      after = lib.mkForce [
+        "network.target"
+        "nss-lookup.target"
+      ];
+      requires = lib.mkForce [ ];
+      unitConfig.Requires = lib.mkForce [ ];
+    };
   };
 }

@@ -1,19 +1,32 @@
-{ pkgs, username, ... }:
-
 {
-  nixpkgs = {
-    overlays = [
-      (import ./openh264-overlay.nix)
-    ];
-  };
+  config,
+  lib,
+  pkgs,
+  username,
+  ...
+}:
 
-  home-manager = {
-    users = {
-      ${username} = {
-        programs = {
-          vesktop = {
-            enable = true;
-            package = pkgs.vesktop;
+let
+  cfg = config.modules.home.vesktop;
+in
+{
+  options.modules.home.vesktop.enable = lib.mkEnableOption "Vesktop home configuration";
+
+  config = lib.mkIf cfg.enable {
+    nixpkgs = {
+      overlays = [
+        (import ./openh264-overlay.nix)
+      ];
+    };
+
+    home-manager = {
+      users = {
+        ${username} = {
+          programs = {
+            vesktop = {
+              enable = true;
+              package = pkgs.vesktop;
+            };
           };
         };
       };

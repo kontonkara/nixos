@@ -1,45 +1,47 @@
 { ... }:
 
 {
-  networking = {
-    hostName = "alpha";
+  networking.hostName = "alpha";
+
+  modules = {
+    home = {
+      apps.enable = true;
+      fish.enable = true;
+      obsidian.enable = true;
+      vesktop.enable = true;
+      vscode.enable = true;
+    };
+
+    programs = {
+      firefox.enable = true;
+      git.enable = true;
+    };
+
+    desktop = {
+      plasma.enable = true;
+      sddm.enable = true;
+      xserver.enable = true;
+    };
+
+    services = {
+      sing-box.enable = true;
+      sunshine.enable = true;
+    };
+
+    graphics = {
+      amd.enable = true;
+      nvidia.enable = true;
+    };
+
+    audio.enable = true;
+    bluetooth.enable = true;
+    boot.enable = true;
+    core.enable = true;
+    environment.enable = true;
+    lab.enable = true;
+    locale.enable = true;
+    network.enable = true;
+    packages.enable = true;
+    users.kontonkara.enable = true;
   };
-
-  imports = [
-    ./hardware.nix
-
-    ./../../modules/home/apps
-    ./../../modules/home/dotfiles/fish
-    ./../../modules/home/dotfiles/obsidian
-    ./../../modules/home/dotfiles/vesktop
-    ./../../modules/home/dotfiles/vscode
-
-    ./../../modules/lab
-
-    ./../../modules/programs/firefox
-    ./../../modules/programs/git
-    ./../../modules/programs/yandex-browser-corporate
-
-    ./../../modules/services/desktopManager
-    ./../../modules/services/displayManager
-    ./../../modules/services/sing-box
-    ./../../modules/services/sunshine
-    ./../../modules/services/xserver
-
-    ./../../modules/system/audio
-    ./../../modules/system/bluetooth
-    ./../../modules/system/boot
-    ./../../modules/system/core
-    ./../../modules/system/environment
-    ./../../modules/system/graphics/amd
-    ./../../modules/system/graphics/nvidia
-    ./../../modules/system/locale
-    ./../../modules/system/network
-    ./../../modules/system/packages
-    ./../../modules/system/secrets
-
-    ./../../pkgs/yandex-browser-corporate
-
-    ./../../users/kontonkara
-  ];
 }
