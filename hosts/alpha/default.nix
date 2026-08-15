@@ -42,7 +42,10 @@
     locale.enable = true;
     network.enable = true;
     packages.enable = true;
-    power.enable = true;
+    power = {
+      enable = true;
+      msiEc.enable = true;
+    };
     users.kontonkara.enable = true;
   };
 }
