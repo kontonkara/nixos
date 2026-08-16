@@ -46,6 +46,29 @@
       enable = true;
       msiEc.enable = true;
     };
+    storage = {
+      enable = true;
+
+      btrfs = {
+        mountPoints = [
+          "/"
+          "/data"
+          "/home"
+          "/nix"
+          "/var/log"
+        ];
+
+        scrub.fileSystems = [
+          "/"
+          "/data"
+        ];
+      };
+
+      luks.devices = [
+        "data"
+        "system"
+      ];
+    };
     users.kontonkara.enable = true;
   };
 }
