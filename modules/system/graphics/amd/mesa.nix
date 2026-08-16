@@ -5,8 +5,11 @@
   ...
 }:
 
+let
+  cfg = config.modules.graphics.amd;
+in
 {
-  config = lib.mkIf config.modules.graphics.amd.enable {
+  config = lib.mkIf cfg.enable {
     hardware = {
       graphics =
         let
@@ -29,12 +32,16 @@
               withValgrind = false;
             }).overrideAttrs
               (oldAttrs: {
-                mesonFlags = oldAttrs.mesonFlags ++ [
-                  (pkgs.lib.mesonOption "c_args" "-march=znver4")
-                  (pkgs.lib.mesonOption "cpp_args" "-march=znver4")
-                  (pkgs.lib.mesonOption "optimization" "3")
-                  (pkgs.lib.mesonOption "b_ndebug" "true")
-                ];
+                mesonFlags =
+                  oldAttrs.mesonFlags
+                  ++ lib.optionals (cfg.mesa.cpuArch != null) [
+                    (pkgs.lib.mesonOption "c_args" "-march=${cfg.mesa.cpuArch}")
+                    (pkgs.lib.mesonOption "cpp_args" "-march=${cfg.mesa.cpuArch}")
+                  ]
+                  ++ lib.optional (cfg.mesa.optimizationLevel != null) (
+                    pkgs.lib.mesonOption "optimization" (toString cfg.mesa.optimizationLevel)
+                  )
+                  ++ lib.optional cfg.mesa.disableAssertions (pkgs.lib.mesonOption "b_ndebug" "true");
 
                 outputs = lib.filter (out: out != "spirv2dxil") oldAttrs.outputs;
               });

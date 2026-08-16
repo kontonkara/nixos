@@ -29,7 +29,15 @@
     };
 
     graphics = {
-      amd.enable = true;
+      amd = {
+        enable = true;
+
+        mesa = {
+          cpuArch = "znver4";
+          optimizationLevel = 3;
+          disableAssertions = true;
+        };
+      };
       nvidia.enable = true;
     };
 
