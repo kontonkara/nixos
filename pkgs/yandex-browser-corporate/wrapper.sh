@@ -5,23 +5,9 @@ set -euo pipefail
 browser_dir=@browser@
 license_seed=${YANDEX_LICENSE_SECRET_PATH-}
 license_file=${HOME}/.yandex/browser/license
-inner_proxy_pid=
-inner_proxy_dir=
-inner_wayland_socket=
 singleton_guard_fd=
 profile_dir=${XDG_CONFIG_HOME}/yandex-browser
 
-cleanup() {
-    if [[ -n "$inner_proxy_pid" ]]; then
-        kill "$inner_proxy_pid" 2>/dev/null || true
-        wait "$inner_proxy_pid" 2>/dev/null || true
-    fi
-    if [[ "$inner_proxy_dir" == /tmp/yandex-browser-wayland.* ]]; then
-        @coreutils@/bin/rm -rf --one-file-system -- "$inner_proxy_dir"
-    fi
-}
-
-trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
@@ -45,12 +31,11 @@ if @flock@ --nonblock "$singleton_guard_fd"; then
     shopt -s nullglob
     stale_runtime_paths=(
         /tmp/.ru.yandex.desktop.browser.*
-        /tmp/yandex-browser-wayland.*
     )
     shopt -u nullglob
     for stale_path in "${stale_runtime_paths[@]}"; do
         case "$stale_path" in
-            /tmp/.ru.yandex.desktop.browser.*|/tmp/yandex-browser-wayland.*)
+            /tmp/.ru.yandex.desktop.browser.*)
                 @coreutils@/bin/rm -rf --one-file-system -- "$stale_path"
                 ;;
         esac
@@ -105,75 +90,21 @@ export XCURSOR_PATH=@cursorPath@
 export XCURSOR_THEME="$cursor_theme"
 export XCURSOR_SIZE="$cursor_size"
 
+# The browser uses direct Wayland, but Yandex 26.4 occasionally emits an
+# xdg_surface.set_window_geometry request with a 0x0 size. Chromium can bundle
+# its own hidden libwayland-client, so sanitize the final Wayland wire stream
+# rather than replacing the public libwayland-client.
+export LD_PRELOAD="@waylandWireSanitizer@/lib/libyandex-wayland-wire-sanitizer.so${LD_PRELOAD:+:$LD_PRELOAD}"
+
 browser_args=(
-    --ozone-platform=x11
+    # Native Wayland/GBM directly to the host compositor socket.
+    --ozone-platform=wayland
+
     --qt-version=6
     --password-store=basic
     --class=@appId@
     @extraArgs@
 )
-
-inner_proxy_dir=$(@coreutils@/bin/mktemp -d /tmp/yandex-browser-wayland.XXXXXX)
-inner_wayland_socket="$inner_proxy_dir/socket"
-
-inner_proxy_args=(
-    --wayland-display="$inner_wayland_socket"
-    --x-display=42
-    --xwayland-binary=@xwayland@
-    --tag=
-)
-if [[ -n "$cursor_theme" ]]; then
-    inner_proxy_args+=(--xrdb="Xcursor.theme: $cursor_theme")
-fi
-if [[ -n "$cursor_size" ]]; then
-    inner_proxy_args+=(--xrdb="Xcursor.size: $cursor_size")
-fi
-
-XCURSOR_PATH=@cursorPath@ \
-XCURSOR_THEME="$cursor_theme" \
-XCURSOR_SIZE="$cursor_size" \
-WAYLAND_PROXY_APP_ID=@appId@ \
-@waylandProxy@/bin/wayland-proxy-virtwl "${inner_proxy_args[@]}" &
-inner_proxy_pid=$!
-
-for _attempt in {1..500}; do
-    if [[ -S "$inner_wayland_socket" ]]; then
-        break
-    fi
-    if ! kill -0 "$inner_proxy_pid" 2>/dev/null; then
-        wait "$inner_proxy_pid"
-        exit $?
-    fi
-    @coreutils@/bin/sleep 0.01
-done
-
-if [[ ! -S "$inner_wayland_socket" ]]; then
-    printf 'Yandex Browser: isolated Xwayland proxy did not become ready\n' >&2
-    exit 1
-fi
-
-# The proxy's --xrdb arguments publish the session selection through the X11
-# RESOURCE_MANAGER property. Set the Xwayland root cursor as well, because its
-# initial core-X11 cursor otherwise ignores that database.
-cursor_configured=false
-for _attempt in {1..500}; do
-    if XCURSOR_PATH=@cursorPath@ \
-       XCURSOR_THEME="$cursor_theme" \
-       XCURSOR_SIZE="$cursor_size" \
-       @xsetroot@ -display :42 -cursor_name left_ptr 2>/dev/null; then
-        cursor_configured=true
-        break
-    fi
-    if ! kill -0 "$inner_proxy_pid" 2>/dev/null; then
-        wait "$inner_proxy_pid"
-        exit $?
-    fi
-    @coreutils@/bin/sleep 0.01
-done
-
-if [[ "$cursor_configured" != true ]]; then
-    printf 'Yandex Browser: could not apply the session Xcursor theme\n' >&2
-fi
 
 set +e
 (

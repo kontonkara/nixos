@@ -42,18 +42,31 @@ let
     exit 0
   '';
 
-  isolatedXwayland = writeShellScript "yandex-browser-isolated-xwayland" ''
-    # The X11 listener exists only in bubblewrap's private network namespace;
-    # wayland-proxy-virtwl supplies the XWM and already disables TCP.
-    exec ${pkgs.xwayland}/bin/Xwayland -ac "$@"
-  '';
+  # Chromium/Yandex may use a bundled Wayland client with hidden symbols, so
+  # patching the system libwayland-client does not necessarily affect Ozone.
+  # This tiny interposer works below both implementations at sendmsg(2), and
+  # only rewrites invalid xdg-shell dimensions before they reach KWin.
+  waylandWireSanitizer = pkgs.stdenv.mkDerivation {
+    pname = "yandex-browser-wayland-wire-sanitizer";
+    version = "1";
+    src = ./wayland-wire-sanitizer.c;
+    dontUnpack = true;
 
-  browserWaylandProxy = pkgs.wayland-proxy-virtwl.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [
-      ./wayland-proxy-app-id.patch
-      ./wayland-proxy-resize.patch
-    ];
-  });
+    buildPhase = ''
+      runHook preBuild
+      $CC -std=c11 -O2 -Wall -Wextra -Werror -fPIC -shared "$src" \
+        -ldl -pthread \
+        -o libyandex-wayland-wire-sanitizer.so
+      runHook postBuild
+    '';
+
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 libyandex-wayland-wire-sanitizer.so \
+        "$out/lib/libyandex-wayland-wire-sanitizer.so"
+      runHook postInstall
+    '';
+  };
 
   vendorFiltered = runCommand "yandex-browser-corporate-vendor" { } ''
     mkdir -p "$out/opt/yandex/browser" "$out/share"
@@ -202,9 +215,7 @@ StartupWMClass=${appId}"
       inherit bash coreutils;
       flock = "${pkgs.util-linux}/bin/flock";
       gdbus = "${pkgs.glib.bin}/bin/gdbus";
-      waylandProxy = browserWaylandProxy;
-      xwayland = isolatedXwayland;
-      xsetroot = "${pkgs.xsetroot}/bin/xsetroot";
+      waylandWireSanitizer = waylandWireSanitizer;
       cursorPath = lib.makeSearchPath "share/icons" cursorPackages;
       extraArgs = lib.escapeShellArgs extraCommandLineArgs;
     };
@@ -250,7 +261,7 @@ StartupWMClass=${appId}"
           inherit desktopFile;
           info.Context = {
             filesystems = "";
-            sockets = "x11;pulseaudio;";
+            sockets = "wayland;pulseaudio;";
           };
         };
 
@@ -265,13 +276,10 @@ StartupWMClass=${appId}"
           bundlePackage = gpuPackage;
         };
 
-        # Yandex's native Wayland path aborts when its Qt context menu sends a
-        # zero-sized xdg_toplevel geometry.  The wrapper starts Xwayland inside
-        # bubblewrap; this proxy is its only route to the host compositor.
-        waylandProxy = {
-          enable = true;
-          tag = "";
-        };
+        # Use the compositor's Wayland socket directly.  The browser remains
+        # inside nixpak/bubblewrap; only the display socket is exposed directly
+        # so Chromium can use the compositor's complete Wayland protocol set.
+        waylandProxy.enable = false;
 
         pasta = {
           enable = true;
@@ -293,14 +301,16 @@ StartupWMClass=${appId}"
           network = true;
           shareIpc = false;
           bindEntireStore = false;
+          extraStorePaths = [ waylandWireSanitizer ];
           clearEnv = true;
           newSession = true;
           dieWithParent = true;
 
+          # Expose only the host Wayland display socket.  X11 remains hidden.
           sockets = {
             pulse = true;
             pipewire = true;
-            wayland = false;
+            wayland = true;
             x11 = false;
           };
 
@@ -371,9 +381,8 @@ StartupWMClass=${appId}"
             XDG_CACHE_HOME = "${sandboxHome}/.cache";
             XDG_DATA_HOME = "${sandboxHome}/.local/share";
             XDG_STATE_HOME = "${sandboxHome}/.local/state";
-            XDG_SESSION_TYPE = "x11";
+            XDG_SESSION_TYPE = "wayland";
             TMPDIR = "/tmp";
-            DISPLAY = ":42";
 
             PATH = lib.makeBinPath [ coreutils ];
             XDG_DATA_DIRS = lib.makeSearchPath "share" [
@@ -386,12 +395,17 @@ StartupWMClass=${appId}"
               "${gsettings-desktop-schemas}/share/gsettings-schemas/${gsettings-desktop-schemas.name}/glib-2.0/schemas";
 
             GTK_USE_PORTAL = "1";
-            GDK_BACKEND = "x11";
-            QT_QPA_PLATFORM = "xcb";
-            QT_PLUGIN_PATH =
-              "${pkgs.qt6.qtbase}/lib/qt-6/plugins";
+            GDK_BACKEND = "wayland";
+            QT_QPA_PLATFORM = "wayland";
+            QT_PLUGIN_PATH = lib.makeSearchPath "lib/qt-6/plugins" [
+              pkgs.qt6.qtbase
+              pkgs.qt6.qtwayland
+            ];
             QT_QPA_PLATFORM_PLUGIN_PATH =
-              "${pkgs.qt6.qtbase}/lib/qt-6/plugins/platforms";
+              lib.makeSearchPath "lib/qt-6/plugins/platforms" [
+                pkgs.qt6.qtbase
+                pkgs.qt6.qtwayland
+              ];
             PULSE_SERVER = runtimePath "/pulse/native";
             PIPEWIRE_REMOTE = "pipewire-0";
 

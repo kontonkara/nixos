@@ -1,5 +1,9 @@
 { ... }:
 
 {
-  programs.yandex-browser-corporate.enable = true;
+  programs = {
+    yandex-browser-corporate = {
+      enable = true;
+    };
+  };
 }
