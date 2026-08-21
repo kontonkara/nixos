@@ -4,7 +4,15 @@ let
   cfg = config.modules.desktop.xserver;
 in
 {
-  options.modules.desktop.xserver.enable = lib.mkEnableOption "X server compatibility support";
+  options = {
+    modules = {
+      desktop = {
+        xserver = {
+          enable = lib.mkEnableOption "X server compatibility support";
+        };
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     services = {

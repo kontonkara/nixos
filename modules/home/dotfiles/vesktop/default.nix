@@ -10,7 +10,15 @@ let
   cfg = config.modules.home.vesktop;
 in
 {
-  options.modules.home.vesktop.enable = lib.mkEnableOption "Vesktop home configuration";
+  options = {
+    modules = {
+      home = {
+        vesktop = {
+          enable = lib.mkEnableOption "Vesktop home configuration";
+        };
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     nixpkgs = {

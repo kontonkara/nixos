@@ -4,7 +4,13 @@ let
   cfg = config.modules.audio;
 in
 {
-  options.modules.audio.enable = lib.mkEnableOption "PipeWire audio";
+  options = {
+    modules = {
+      audio = {
+        enable = lib.mkEnableOption "PipeWire audio";
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     services = {

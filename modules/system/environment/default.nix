@@ -4,7 +4,13 @@ let
   cfg = config.modules.environment;
 in
 {
-  options.modules.environment.enable = lib.mkEnableOption "desktop environment variables";
+  options = {
+    modules = {
+      environment = {
+        enable = lib.mkEnableOption "desktop environment variables";
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     environment = {

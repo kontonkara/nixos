@@ -10,7 +10,13 @@ let
   cfg = config.modules.lab;
 in
 {
-  options.modules.lab.enable = lib.mkEnableOption "virtualisation and homelab tooling";
+  options = {
+    modules = {
+      lab = {
+        enable = lib.mkEnableOption "virtualisation and homelab tooling";
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     virtualisation = {

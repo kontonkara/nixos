@@ -9,7 +9,13 @@ let
   cfg = config.modules.packages;
 in
 {
-  options.modules.packages.enable = lib.mkEnableOption "system utility packages";
+  options = {
+    modules = {
+      packages = {
+        enable = lib.mkEnableOption "system utility packages";
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     environment = {

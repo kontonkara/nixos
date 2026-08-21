@@ -11,7 +11,15 @@ let
   cfg = config.modules.home.apps;
 in
 {
-  options.modules.home.apps.enable = lib.mkEnableOption "home applications";
+  options = {
+    modules = {
+      home = {
+        apps = {
+          enable = lib.mkEnableOption "home applications";
+        };
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     home-manager = {

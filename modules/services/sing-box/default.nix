@@ -46,7 +46,15 @@ let
   directDnsServer = "1.1.1.1";
 in
 {
-  options.modules.services.sing-box.enable = lib.mkEnableOption "sing-box transparent proxy";
+  options = {
+    modules = {
+      services = {
+        sing-box = {
+          enable = lib.mkEnableOption "sing-box transparent proxy";
+        };
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     # DNS must enter sing-box so selected domains can receive FakeIP addresses.

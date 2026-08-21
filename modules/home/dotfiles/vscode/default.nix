@@ -10,7 +10,15 @@ let
   cfg = config.modules.home.vscode;
 in
 {
-  options.modules.home.vscode.enable = lib.mkEnableOption "Visual Studio Code home configuration";
+  options = {
+    modules = {
+      home = {
+        vscode = {
+          enable = lib.mkEnableOption "Visual Studio Code home configuration";
+        };
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     home-manager = {

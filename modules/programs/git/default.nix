@@ -4,7 +4,15 @@ let
   cfg = config.modules.programs.git;
 in
 {
-  options.modules.programs.git.enable = lib.mkEnableOption "Git";
+  options = {
+    modules = {
+      programs = {
+        git = {
+          enable = lib.mkEnableOption "Git";
+        };
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     programs = {

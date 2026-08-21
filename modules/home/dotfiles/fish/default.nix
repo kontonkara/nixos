@@ -10,7 +10,15 @@ let
   cfg = config.modules.home.fish;
 in
 {
-  options.modules.home.fish.enable = lib.mkEnableOption "Fish home configuration";
+  options = {
+    modules = {
+      home = {
+        fish = {
+          enable = lib.mkEnableOption "Fish home configuration";
+        };
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     home-manager = {

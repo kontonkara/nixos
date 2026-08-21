@@ -4,7 +4,13 @@ let
   cfg = config.modules.locale;
 in
 {
-  options.modules.locale.enable = lib.mkEnableOption "locale and timezone configuration";
+  options = {
+    modules = {
+      locale = {
+        enable = lib.mkEnableOption "locale and timezone configuration";
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     console = {

@@ -4,7 +4,15 @@ let
   cfg = config.modules.graphics.nvidia;
 in
 {
-  options.modules.graphics.nvidia.enable = lib.mkEnableOption "NVIDIA hybrid graphics";
+  options = {
+    modules = {
+      graphics = {
+        nvidia = {
+          enable = lib.mkEnableOption "NVIDIA hybrid graphics";
+        };
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     hardware = {

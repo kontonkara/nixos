@@ -9,7 +9,13 @@ let
   cfg = config.modules.core;
 in
 {
-  options.modules.core.enable = lib.mkEnableOption "core NixOS configuration";
+  options = {
+    modules = {
+      core = {
+        enable = lib.mkEnableOption "core NixOS configuration";
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     system = {
