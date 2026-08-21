@@ -20,6 +20,14 @@ let
 
   ryzenCurveOptimizerOffset = "0xFFFEC"; # CO -20
   applyRyzenCurveOptimizer = "${pkgs.ryzenadj}/bin/ryzenadj --set-coall=${ryzenCurveOptimizerOffset}";
+
+  xanmodKernel =
+    if config.modules.ccache.enable then
+      pkgs.linux_xanmod_latest.override {
+        stdenv = config.modules.ccache.stdenv;
+      }
+    else
+      pkgs.linux_xanmod_latest;
 in
 {
   imports = [
@@ -30,7 +38,7 @@ in
 
   config = lib.mkIf cfg.enable {
     boot = {
-      kernelPackages = pkgs.linuxPackages_xanmod_latest;
+      kernelPackages = pkgs.linuxPackagesFor xanmodKernel;
 
       kernelModules = [
         "msi-ec"
