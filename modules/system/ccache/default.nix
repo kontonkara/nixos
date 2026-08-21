@@ -24,26 +24,30 @@ let
   };
 in
 {
-  options.modules.ccache = {
-    enable = lib.mkEnableOption "a persistent compiler cache for selected packages";
+  options = {
+    modules = {
+      ccache = {
+        enable = lib.mkEnableOption "a persistent compiler cache for selected packages";
 
-    cacheDir = lib.mkOption {
-      type = lib.types.path;
-      default = "/var/cache/ccache";
-      description = "Persistent ccache directory exposed to Nix build sandboxes.";
-    };
+        cacheDir = lib.mkOption {
+          type = lib.types.path;
+          default = "/var/cache/ccache";
+          description = "Persistent ccache directory exposed to Nix build sandboxes.";
+        };
 
-    maxSize = lib.mkOption {
-      type = lib.types.strMatching "[0-9]+([.][0-9]+)?[KMGTP]?";
-      default = "50G";
-      description = "Maximum size of the persistent compiler cache.";
-    };
+        maxSize = lib.mkOption {
+          type = lib.types.strMatching "[0-9]+([.][0-9]+)?[KMGTP]?";
+          default = "50G";
+          description = "Maximum size of the persistent compiler cache.";
+        };
 
-    stdenv = lib.mkOption {
-      type = lib.types.package;
-      internal = true;
-      readOnly = true;
-      description = "Stdenv wrapping the compiler with the configured ccache instance.";
+        stdenv = lib.mkOption {
+          type = lib.types.package;
+          internal = true;
+          readOnly = true;
+          description = "Stdenv wrapping the compiler with the configured ccache instance.";
+        };
+      };
     };
   };
 

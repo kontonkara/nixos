@@ -116,52 +116,56 @@ let
   };
 in
 {
-  options.modules.power = {
-    enable = lib.mkEnableOption "automatic power profiles";
+  options = {
+    modules = {
+      power = {
+        enable = lib.mkEnableOption "automatic power profiles";
 
-    acProfile = lib.mkOption {
-      type = lib.types.enum [
-        "power-saver"
-        "balanced"
-        "performance"
-      ];
-      default = "performance";
-      description = "Power profile used while mains power is connected.";
-    };
+        acProfile = lib.mkOption {
+          type = lib.types.enum [
+            "power-saver"
+            "balanced"
+            "performance"
+          ];
+          default = "performance";
+          description = "Power profile used while mains power is connected.";
+        };
 
-    batteryProfile = lib.mkOption {
-      type = lib.types.enum [
-        "power-saver"
-        "balanced"
-        "performance"
-      ];
-      default = "power-saver";
-      description = "Power profile used while discharging the battery.";
-    };
+        batteryProfile = lib.mkOption {
+          type = lib.types.enum [
+            "power-saver"
+            "balanced"
+            "performance"
+          ];
+          default = "power-saver";
+          description = "Power profile used while discharging the battery.";
+        };
 
-    msiEc = {
-      enable = lib.mkEnableOption "MSI EC shift-mode switching";
+        msiEc = {
+          enable = lib.mkEnableOption "MSI EC shift-mode switching";
 
-      acMode = lib.mkOption {
-        type = lib.types.enum [
-          "high-performance"
-          "balanced"
-          "silent"
-          "super-battery"
-        ];
-        default = "high-performance";
-        description = "Composite MSI EC mode used while mains power is connected.";
-      };
+          acMode = lib.mkOption {
+            type = lib.types.enum [
+              "high-performance"
+              "balanced"
+              "silent"
+              "super-battery"
+            ];
+            default = "high-performance";
+            description = "Composite MSI EC mode used while mains power is connected.";
+          };
 
-      batteryMode = lib.mkOption {
-        type = lib.types.enum [
-          "high-performance"
-          "balanced"
-          "silent"
-          "super-battery"
-        ];
-        default = "super-battery";
-        description = "Composite MSI EC mode used while discharging the battery.";
+          batteryMode = lib.mkOption {
+            type = lib.types.enum [
+              "high-performance"
+              "balanced"
+              "silent"
+              "super-battery"
+            ];
+            default = "super-battery";
+            description = "Composite MSI EC mode used while discharging the battery.";
+          };
+        };
       };
     };
   };
