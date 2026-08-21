@@ -8,20 +8,18 @@
 let
   cfg = config.modules.ccache;
 
-  ccacheStdenv = pkgs.ccacheStdenv.override {
-    extraConfig = ''
-      export CCACHE_DIR=${lib.escapeShellArg (toString cfg.cacheDir)}
-      export CCACHE_MAXSIZE=${lib.escapeShellArg cfg.maxSize}
-      export CCACHE_COMPRESS=1
-      export CCACHE_COMPRESSLEVEL=1
-      export CCACHE_COMPILERCHECK=content
-      export CCACHE_UMASK=007
+  wrapperConfig = ''
+    export CCACHE_DIR=${lib.escapeShellArg (toString cfg.cacheDir)}
+    export CCACHE_MAXSIZE=${lib.escapeShellArg cfg.maxSize}
+    export CCACHE_COMPRESS=1
+    export CCACHE_COMPRESSLEVEL=1
+    export CCACHE_COMPILERCHECK=content
+    export CCACHE_UMASK=007
 
-      if [ ! -d "$CCACHE_DIR" ] || [ ! -w "$CCACHE_DIR" ]; then
-        export CCACHE_DISABLE=1
-      fi
-    '';
-  };
+    if [ ! -d "$CCACHE_DIR" ] || [ ! -w "$CCACHE_DIR" ]; then
+      export CCACHE_DISABLE=1
+    fi
+  '';
 in
 {
   options = {
@@ -41,18 +39,23 @@ in
           description = "Maximum size of the persistent compiler cache.";
         };
 
-        stdenv = lib.mkOption {
-          type = lib.types.package;
+        wrapStdenv = lib.mkOption {
+          type = lib.types.raw;
           internal = true;
           readOnly = true;
-          description = "Stdenv wrapping the compiler with the configured ccache instance.";
+          description = "Function wrapping a selected stdenv compiler with the configured ccache instance.";
         };
       };
     };
   };
 
   config = lib.mkIf cfg.enable {
-    modules.ccache.stdenv = ccacheStdenv;
+    modules.ccache.wrapStdenv =
+      stdenv:
+      pkgs.ccacheStdenv.override {
+        inherit stdenv;
+        extraConfig = wrapperConfig;
+      };
 
     programs.ccache = {
       enable = true;

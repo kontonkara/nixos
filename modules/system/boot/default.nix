@@ -8,6 +8,19 @@
 let
   cfg = config.modules.boot;
 
+  kernelStdenvs = {
+    gcc = pkgs.stdenv;
+    clang18 = pkgs.llvmPackages_18.stdenv;
+    clang19 = pkgs.llvmPackages_19.stdenv;
+  };
+
+  kernelBaseStdenv = kernelStdenvs.${cfg.kernel.compiler};
+  kernelStdenv =
+    if config.modules.ccache.enable then
+      config.modules.ccache.wrapStdenv kernelBaseStdenv
+    else
+      kernelBaseStdenv;
+
   msiEc = {
     rev = "050d4394a6747ebd106ae2f8ddb3a4eebe7c700f";
     hash = "sha256-b7wwZstjeLPEsxIjmZentDwkQTxdBYbpJfdOR24Ofww=";
@@ -21,13 +34,9 @@ let
   ryzenCurveOptimizerOffset = "0xFFFEC"; # CO -20
   applyRyzenCurveOptimizer = "${pkgs.ryzenadj}/bin/ryzenadj --set-coall=${ryzenCurveOptimizerOffset}";
 
-  xanmodKernel =
-    if config.modules.ccache.enable then
-      pkgs.linux_xanmod_latest.override {
-        stdenv = config.modules.ccache.stdenv;
-      }
-    else
-      pkgs.linux_xanmod_latest;
+  xanmodKernel = pkgs.linux_xanmod_latest.override {
+    stdenv = kernelStdenv;
+  };
 in
 {
   imports = [
@@ -46,6 +55,16 @@ in
           ];
           default = "generic";
           description = "CPU microarchitecture used to compile the host kernel.";
+        };
+
+        kernel.compiler = lib.mkOption {
+          type = lib.types.enum [
+            "gcc"
+            "clang18"
+            "clang19"
+          ];
+          default = "gcc";
+          description = "Compiler toolchain used to build the host kernel.";
         };
       };
     };

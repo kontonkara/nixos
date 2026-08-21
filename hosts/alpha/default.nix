@@ -45,7 +45,10 @@
     bluetooth.enable = true;
     boot = {
       enable = true;
-      kernel.cpuTarget = "znver4";
+      kernel = {
+        compiler = "gcc";
+        cpuTarget = "znver4";
+      };
     };
     ccache.enable = true;
     core.enable = true;
