@@ -55,6 +55,7 @@
       enable = true;
       msiEc.enable = true;
     };
+    scx.enable = true;
     storage = {
       enable = true;
 
