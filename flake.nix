@@ -3,6 +3,9 @@
     nixpkgs = {
       url = "github:nixos/nixpkgs/nixos-unstable";
     };
+    chaotic = {
+      url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
+    };
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -25,6 +28,7 @@
     {
       self,
       nixpkgs,
+      chaotic,
       sops-nix,
       home-manager,
       nixpak,
@@ -98,6 +102,7 @@
             sharedModules
             ++ hostModules host
             ++ [
+              chaotic.nixosModules.nyx-overlay
               sops-nix.nixosModules.sops
               home-manager.nixosModules.home-manager
             ];

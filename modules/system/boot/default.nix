@@ -8,19 +8,6 @@
 let
   cfg = config.modules.boot;
 
-  kernelStdenvs = {
-    gcc = pkgs.stdenv;
-    clang18 = pkgs.llvmPackages_18.stdenv;
-    clang19 = pkgs.llvmPackages_19.stdenv;
-  };
-
-  kernelBaseStdenv = kernelStdenvs.${cfg.kernel.compiler};
-  kernelStdenv =
-    if config.modules.ccache.enable then
-      config.modules.ccache.wrapStdenv kernelBaseStdenv
-    else
-      kernelBaseStdenv;
-
   msiEc = {
     rev = "050d4394a6747ebd106ae2f8ddb3a4eebe7c700f";
     hash = "sha256-b7wwZstjeLPEsxIjmZentDwkQTxdBYbpJfdOR24Ofww=";
@@ -34,9 +21,6 @@ let
   ryzenCurveOptimizerOffset = "0xFFFEC"; # CO -20
   applyRyzenCurveOptimizer = "${pkgs.ryzenadj}/bin/ryzenadj --set-coall=${ryzenCurveOptimizerOffset}";
 
-  xanmodKernel = pkgs.linux_xanmod_latest.override {
-    stdenv = kernelStdenv;
-  };
 in
 {
   imports = [
@@ -47,41 +31,13 @@ in
     modules = {
       boot = {
         enable = lib.mkEnableOption "alpha boot and kernel configuration";
-
-        kernel.cpuTarget = lib.mkOption {
-          type = lib.types.enum [
-            "generic"
-            "znver4"
-          ];
-          default = "generic";
-          description = "CPU microarchitecture used to compile the host kernel.";
-        };
-
-        kernel.compiler = lib.mkOption {
-          type = lib.types.enum [
-            "gcc"
-            "clang18"
-            "clang19"
-          ];
-          default = "gcc";
-          description = "Compiler toolchain used to build the host kernel.";
-        };
       };
     };
   };
 
   config = lib.mkIf cfg.enable {
     boot = {
-      kernelPackages = pkgs.linuxPackagesFor xanmodKernel;
-
-      kernelPatches = lib.optional (cfg.kernel.cpuTarget == "znver4") {
-        name = "xanmod-znver4";
-        patch = null;
-        structuredExtraConfig = with lib.kernel; {
-          GENERIC_CPU = lib.mkForce no;
-          MZEN4 = lib.mkForce yes;
-        };
-      };
+      kernelPackages = pkgs.linuxPackages_cachyos-lto-znver4;
 
       kernelModules = [
         "msi-ec"
@@ -112,12 +68,14 @@ in
             cp msi-ec.ko $dest/
           '';
         }))
-        (config.boot.kernelPackages.ryzen-smu.overrideAttrs (_oldAttrs: {
+        (config.boot.kernelPackages.ryzen-smu.overrideAttrs (oldAttrs: {
           src = pkgs.fetchFromGitHub {
             owner = "amkillam";
             repo = "ryzen_smu";
             inherit (ryzenSmu) rev hash;
           };
+
+          patches = (oldAttrs.patches or [ ]) ++ [ ./ryzen-smu-linux-7.2-cpuid.patch ];
 
           installPhase = ''
             runHook preInstall
@@ -142,6 +100,7 @@ in
         "amdgpu.sg_display=0"
         "amdgpu.dcdebugmask=0x40010"
         "transparent_hugepage=always"
+        "zswap.enabled=0"
         "nowatchdog"
         "nvidia_drm.modeset=1"
         "nvidia_drm.fbdev=1"

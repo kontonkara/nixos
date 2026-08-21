@@ -1,7 +1,26 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  ...
+}:
 
 let
   cfg = config.modules.graphics.nvidia;
+
+  nvidiaPackages = config.boot.kernelPackages.nvidiaPackages;
+  nvidiaPackage =
+    if nvidiaPackages ? cachyos then
+      let
+        basePackage = nvidiaPackages.cachyos;
+      in
+      basePackage
+      // {
+        open = basePackage.open.overrideAttrs (oldAttrs: {
+          installFlags = (oldAttrs.installFlags or [ ]) ++ [ "INSTALL_MOD_STRIP=1" ];
+        });
+      }
+    else
+      nvidiaPackages.latest;
 in
 {
   options = {
@@ -19,7 +38,7 @@ in
       nvidia = {
         open = true;
         nvidiaSettings = true;
-        package = config.boot.kernelPackages.nvidiaPackages.latest;
+        package = nvidiaPackage;
         modesetting = {
           enable = true;
         };
