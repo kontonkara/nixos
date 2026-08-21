@@ -34,11 +34,35 @@ in
     ./plymouth.nix
   ];
 
-  options.modules.boot.enable = lib.mkEnableOption "alpha boot and kernel configuration";
+  options = {
+    modules = {
+      boot = {
+        enable = lib.mkEnableOption "alpha boot and kernel configuration";
+
+        kernel.cpuTarget = lib.mkOption {
+          type = lib.types.enum [
+            "generic"
+            "znver4"
+          ];
+          default = "generic";
+          description = "CPU microarchitecture used to compile the host kernel.";
+        };
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     boot = {
       kernelPackages = pkgs.linuxPackagesFor xanmodKernel;
+
+      kernelPatches = lib.optional (cfg.kernel.cpuTarget == "znver4") {
+        name = "xanmod-znver4";
+        patch = null;
+        structuredExtraConfig = with lib.kernel; {
+          GENERIC_CPU = lib.mkForce no;
+          MZEN4 = lib.mkForce yes;
+        };
+      };
 
       kernelModules = [
         "msi-ec"

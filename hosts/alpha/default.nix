@@ -43,7 +43,10 @@
 
     audio.enable = true;
     bluetooth.enable = true;
-    boot.enable = true;
+    boot = {
+      enable = true;
+      kernel.cpuTarget = "znver4";
+    };
     ccache.enable = true;
     core.enable = true;
     environment.enable = true;
