@@ -72,10 +72,13 @@
         ];
       };
 
-      luks.devices = [
-        "data"
-        "system"
-      ];
+      luks = {
+        allowDiscards = true;
+        devices = [
+          "data"
+          "system"
+        ];
+      };
     };
     users.kontonkara.enable = true;
   };
