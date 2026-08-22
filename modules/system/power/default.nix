@@ -182,7 +182,7 @@ in
 
     systemd.services.apply-power-profile = {
       description = "Apply the power profile for the current power source";
-      wantedBy = [ "multi-user.target" ];
+      wantedBy = [ "graphical.target" ];
       after = [
         "power-profiles-daemon.service"
         "systemd-modules-load.service"
