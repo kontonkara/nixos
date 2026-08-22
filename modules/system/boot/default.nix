@@ -95,7 +95,6 @@ in
         "amd_pstate.prefcore=1"
         "nvme_core.default_ps_max_latency_us=5500"
         "amdgpu.ppfeaturemask=0xffffffff"
-        "amdgpu.gttsize=8192"
         "amdgpu.freesync_video=1"
         "amdgpu.sg_display=0"
         "amdgpu.dcdebugmask=0x40010"
