@@ -15,6 +15,12 @@ in
         amd = {
           enable = lib.mkEnableOption "AMD graphics";
 
+          kernel = {
+            removeUnsupportedRgba8888 = {
+              enable = lib.mkEnableOption "the AMDGPU workaround for unsupported DRM_FORMAT_RGBA8888 scanout";
+            };
+          };
+
           mesa = {
             cpuArch = lib.mkOption {
               type = lib.types.nullOr lib.types.str;
@@ -40,6 +46,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    boot.kernelPatches = lib.optional cfg.kernel.removeUnsupportedRgba8888.enable {
+      name = "amdgpu-do-not-advertise-unsupported-rgba8888";
+      patch = ./remove-unsupported-rgba8888.patch;
+    };
+
     hardware = {
       graphics = {
         enable = true;

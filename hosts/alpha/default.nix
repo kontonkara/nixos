@@ -32,6 +32,10 @@
       amd = {
         enable = true;
 
+        kernel = {
+          removeUnsupportedRgba8888.enable = true;
+        };
+
         mesa = {
           cpuArch = "znver4";
           optimizationLevel = 3;
@@ -44,6 +48,7 @@
     audio.enable = true;
     bluetooth.enable = true;
     boot.enable = true;
+    ccache.enable = true;
     core.enable = true;
     environment.enable = true;
     lab.enable = true;

@@ -8,6 +8,15 @@
 let
   cfg = config.modules.boot;
 
+  baseKernelPackages = pkgs.linuxPackages_cachyos-lto-znver4;
+  kernelPackages =
+    if config.modules.ccache.enable then
+      baseKernelPackages.cachyOverride {
+        stdenv = config.modules.ccache.wrapStdenv baseKernelPackages.kernel.stdenv;
+      }
+    else
+      baseKernelPackages;
+
   msiEc = {
     rev = "050d4394a6747ebd106ae2f8ddb3a4eebe7c700f";
     hash = "sha256-b7wwZstjeLPEsxIjmZentDwkQTxdBYbpJfdOR24Ofww=";
@@ -37,7 +46,7 @@ in
 
   config = lib.mkIf cfg.enable {
     boot = {
-      kernelPackages = pkgs.linuxPackages_cachyos-lto-znver4;
+      inherit kernelPackages;
 
       kernelModules = [
         "msi-ec"
@@ -94,7 +103,6 @@ in
         "amd_pstate=active"
         "amd_pstate.prefcore=1"
         "nvme_core.default_ps_max_latency_us=5500"
-        "amdgpu.ppfeaturemask=0xffffffff"
         "amdgpu.freesync_video=1"
         "amdgpu.sg_display=0"
         "amdgpu.dcdebugmask=0x40010"

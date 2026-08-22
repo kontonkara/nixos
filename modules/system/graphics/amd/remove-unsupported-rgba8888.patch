@@ -1,0 +1,8 @@
+diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
+index 1d2eb7a97d65..7031adbd0062 100644
+--- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
++++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
+@@ -53 +52,0 @@ static const uint32_t rgb_formats[] = {
+-	DRM_FORMAT_RGBA8888,
+@@ -70 +68,0 @@ static const uint32_t overlay_formats[] = {
+-	DRM_FORMAT_RGBA8888,
