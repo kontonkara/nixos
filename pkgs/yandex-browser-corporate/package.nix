@@ -22,6 +22,19 @@
   extraCommandLineArgs ? [ ],
   extraManagedPolicies ? { },
   extraRecommendedPolicies ? { },
+
+  # Chromium password backend.  "kwallet6" keeps credentials inside the
+  # user's encrypted KDE wallet instead of a plaintext JSON profile file.
+  passwordStore ? "kwallet6",
+  # Bind the host CUPS socket so printing works inside the sandbox.
+  enablePrinting ? false,
+  # Seed for the sandbox machine-id.  Derive it from something host-unique
+  # (e.g. hostname) to avoid an identical fingerprint on every machine.
+  machineIdSeed ? "yandex-browser-corporate-nixpak-machine-id",
+  # Managed-policy overrides kept as options so deployments can revisit them
+  # without editing the derivation.
+  forcePortalDownloads ? true,
+  backgroundModeEnabled ? false,
 }:
 
 let
@@ -40,6 +53,30 @@ let
   updateCodecsShim = writeShellScript "yandex-browser-update-codecs-disabled" ''
     # The package is immutable; codecs are supplied by the derivation.
     exit 0
+  '';
+
+  # The browser trusts /.flatpak-info (portals require it) and therefore
+  # relaunches itself through flatpak(1) on restart/update paths.  Answer for
+  # our app id only; anything else fails like a missing Flatpak would.
+  flatpakShim = writeShellScript "yandex-browser-flatpak-shim" ''
+    set -euo pipefail
+    cmd=''${1-}
+    target=''${2-}
+    case "$cmd" in
+      run)
+        if [[ "$target" != "${appId}" ]]; then
+          printf 'flatpak: application not installed: %s\n' "$target" >&2
+          exit 1
+        fi
+        shift 2
+        exec /app/bin/yandex-browser-corporate "$@"
+        ;;
+      *)
+        printf 'flatpak: unsupported operation %q in the bundled runtime\n' \
+          "$cmd" >&2
+        exit 1
+        ;;
+    esac
   '';
 
   # Chromium/Yandex may use a bundled Wayland client with hidden symbols, so
@@ -74,7 +111,7 @@ let
     for entry in ${vendor}/opt/yandex/browser/*; do
       name="''${entry##*/}"
       case "$name" in
-        find_ffmpeg|update_codecs)
+        find_ffmpeg|update_codecs|update-ffmpeg)
           ;;
         yandex-browser)
           install -Dm755 "$entry" "$out/opt/yandex/browser/$name"
@@ -87,6 +124,7 @@ let
 
     install -Dm755 ${findFfmpegShim} "$out/opt/yandex/browser/find_ffmpeg"
     install -Dm755 ${updateCodecsShim} "$out/opt/yandex/browser/update_codecs"
+    install -Dm755 ${updateCodecsShim} "$out/opt/yandex/browser/update-ffmpeg"
 
     # Application icons are installed by systemIntegration below.  Keeping
     # vendor/share/icons as one symlink here prevents symlinkJoin from merging
@@ -138,21 +176,25 @@ let
       ${customisation}/${customisation.customizationSubpath}/. "$target_dir/"
   '';
 
+  forcedPolicies = {
+    BackgroundModeEnabled = backgroundModeEnabled;
+    PromptForDownloadLocation = forcePortalDownloads;
+  };
+
   managedPoliciesFile = runCommand "yandex-browser-managed-policies.json" {
     nativeBuildInputs = [ jq ];
     extraPoliciesJson = builtins.toJSON extraManagedPolicies;
-    passAsFile = [ "extraPoliciesJson" ];
+    forcedPoliciesJson = builtins.toJSON forcedPolicies;
+    passAsFile = [
+      "extraPoliciesJson"
+      "forcedPoliciesJson"
+    ];
   } ''
-    # Downloads must pass through the desktop FileChooser/Document portal.
-    # Disabling background mode also prevents a non-functional tray action
-    # from trying to invoke this non-Flatpak application through flatpak(1).
-    jq --sort-keys -s \
-      '.[0] * .[1] * {
-        "BackgroundModeEnabled": false,
-        "PromptForDownloadLocation": true
-      }' \
+    # Vendor set < deployment extras < derivation-level guarantees.
+    jq --sort-keys -s '.[0] * .[1] * .[2]' \
       ${customisation}/${customisation.managedPoliciesSubpath} \
-      "$extraPoliciesJsonPath" > "$out"
+      "$extraPoliciesJsonPath" \
+      "$forcedPoliciesJsonPath" > "$out"
   '';
 
   recommendedPoliciesFile = writeText "yandex-browser-recommended-policies.json"
@@ -164,13 +206,14 @@ let
 
     install -Dm644 "$vendor_share/applications/yandex-browser.desktop" \
       "$out/share/applications/${desktopFile}"
-    substituteInPlace "$out/share/applications/${desktopFile}" \
-      --replace-fail "/usr/bin/yandex-browser-corporate" "yandex-browser-corporate" \
-      --replace-fail "Name=Yandex Browser" "Name=Yandex Browser Corporate"
-    substituteInPlace "$out/share/applications/${desktopFile}" \
-      --replace-fail "StartupNotify=true" \
-        "StartupNotify=true
-StartupWMClass=${appId}"
+    # Anchor every rewrite to line starts: survives reordering, comments and
+    # minor wording changes in vendor desktop entries.  Exec appears three
+    # times (main entry plus two Desktop Actions); all must drop /usr/bin.
+    sed -i \
+      -e '/^Exec=/s|/usr/bin/yandex-browser-corporate|yandex-browser-corporate|g' \
+      -e '/^Name=/s|=Yandex Browser$|=Yandex Browser Corporate|' \
+      -e "/^StartupNotify=true/a StartupWMClass=${appId}" \
+      "$out/share/applications/${desktopFile}"
 
     if [[ -f "$vendor_share/appdata/yandex-browser.appdata.xml" ]]; then
       install -Dm644 "$vendor_share/appdata/yandex-browser.appdata.xml" \
@@ -218,8 +261,25 @@ StartupWMClass=${appId}"
       waylandWireSanitizer = waylandWireSanitizer;
       cursorPath = lib.makeSearchPath "share/icons" cursorPackages;
       extraArgs = lib.escapeShellArgs extraCommandLineArgs;
+      passwordStore = passwordStore;
     };
   };
+
+  # Runs on the host before the nixpak launcher.  A missing license secret
+  # otherwise surfaces as a cryptic bubblewrap "Can't find source path".
+  launchPrecheck = writeShellScript "yandex-browser-corporate-precheck" ''
+    set -euo pipefail
+    seed=${lib.escapeShellArg licenseSecretPath}
+    if [[ -n "$seed" && ! -r "$seed" ]]; then
+      printf 'yandex-browser-corporate: license secret %s is not readable.\n' \
+        "$seed" >&2
+      printf '  restore the secret or adjust licenseSecretPath.\n' >&2
+      exit 126
+    fi
+    self_dir=$(${coreutils}/bin/dirname \
+      "$(${coreutils}/bin/readlink -f -- "$0")")
+    exec "$self_dir/.yandex-browser-corporate-launcher" "$@"
+  '';
 
   browserEnvironment = symlinkJoin {
     name = "yandex-browser-corporate-runtime";
@@ -230,6 +290,9 @@ StartupWMClass=${appId}"
     ];
     postBuild = ''
       install -Dm755 ${browserWrapper} "$out/bin/yandex-browser-corporate"
+      # Chromium relaunches (restart-after-update, tray flows) call flatpak(1)
+      # because /.flatpak-info is present; route them back to the wrapper.
+      install -Dm755 ${flatpakShim} "$out/bin/flatpak"
       install -Dm644 ${managedPoliciesFile} \
         "$out/etc/opt/yandex/browser/policies/managed/managed_policies.json"
       ${lib.optionalString (extraRecommendedPolicies != { }) ''
@@ -240,9 +303,7 @@ StartupWMClass=${appId}"
   };
 
   spoofedMachineId = writeText "yandex-browser-machine-id" (
-    builtins.substring 0 32 (
-      builtins.hashString "sha256" "yandex-browser-corporate-nixpak-machine-id"
-    )
+    builtins.substring 0 32 (builtins.hashString "sha256" machineIdSeed)
     + "\n"
   );
 
@@ -369,6 +430,10 @@ StartupWMClass=${appId}"
               "/etc/opt/yandex/browser"
             ]
             [ "${spoofedMachineId}" "/etc/machine-id" ]
+          ] ++ lib.optionals enablePrinting [
+            # Chromium talks to cupsd over its unix socket directly; without
+            # this bind the print dialog silently produces nothing.
+            "/run/cups"
           ];
 
           env = {
@@ -384,7 +449,17 @@ StartupWMClass=${appId}"
             XDG_SESSION_TYPE = "wayland";
             TMPDIR = "/tmp";
 
-            PATH = lib.makeBinPath [ coreutils ];
+            # /app/bin first: the bundled flatpak shim must shadow nothing on
+            # the minimal coreutils PATH, but stay reachable for Chromium
+            # self-relaunch flows.
+            PATH = "/app/bin:" + lib.makeBinPath [ coreutils ];
+
+            # Standard corporate proxy variables; the vendor wrapper converts
+            # them into --proxy-server/--proxy-bypass-list flags.
+            http_proxy = sloth.envOr "http_proxy" "";
+            https_proxy = sloth.envOr "https_proxy" "";
+            all_proxy = sloth.envOr "all_proxy" "";
+            no_proxy = sloth.envOr "no_proxy" "";
             XDG_DATA_DIRS = lib.makeSearchPath "share" [
               adwaita-icon-theme
               hicolor-icon-theme
@@ -431,6 +506,25 @@ StartupWMClass=${appId}"
             "org.mpris.MediaPlayer2.chromium.*" = "own";
             "org.freedesktop.DBus" = "talk";
             "org.freedesktop.portal.*" = "talk";
+
+            # Allow the browser to contact Plasma's tray watcher. Chromium's
+            # generated org.kde.StatusNotifierItem-$PID-$ID name cannot be
+            # granted narrowly: xdg-dbus-proxy only supports a trailing ".*"
+            # component, not a wildcard inside a component. Do not widen this
+            # to org.kde.*; background mode is disabled, so a tray item is not
+            # required for browser lifetime management.
+            "org.kde.StatusNotifierWatcher" = "talk";
+
+            # System notifications through the desktop service instead of
+            # native Chromium toasts, whose degenerate geometry interacts
+            # badly with the wire sanitizer and KWin placement.
+            "org.freedesktop.Notifications" = "talk";
+
+            # Encrypted credential storage via the user's wallet; falls back
+            # gracefully when kwalletd6 is unavailable.
+            "org.kde.kwalletd6" = "talk";
+            "org.kde.kwalletd5" = "talk";
+            "org.freedesktop.secrets" = "talk";
           };
         };
       };
@@ -447,6 +541,13 @@ sandboxed.config.env.overrideAttrs (old: {
       ${coreutils}/bin/install -Dm644 "$desktop_target" "$desktop_file"
     fi
     ${pkgs.gnused}/bin/sed -i '/^X-Flatpak=/d' "$desktop_file"
+
+    # Put the license precheck in front of the generated bubblewrap launcher
+    # so a missing secret fails with a human-readable message.
+    launcher="$out/bin/yandex-browser-corporate"
+    ${coreutils}/bin/mv -- "$launcher" \
+      "$out/bin/.yandex-browser-corporate-launcher"
+    ${coreutils}/bin/install -Dm755 ${launchPrecheck} "$launcher"
   '';
 
   passthru = (old.passthru or { }) // {
