@@ -9,25 +9,44 @@ let
   cfg = config.modules.boot;
 
   baseKernelPackages = pkgs.linuxPackages_cachyos-lto-znver4;
-  baseKernelConfig = lib.filterAttrs (
-    name: _value: lib.hasPrefix "CONFIG_" name
-  ) baseKernelPackages.kernel.config;
   kernelConfigOverrides = config.modules.graphics.amd.kernel.cachyosConfigOverrides;
-  kernelConfigPath = builtins.toFile "cachyos-kernel-config.nix" (
-    lib.generators.toPretty { } (baseKernelConfig // kernelConfigOverrides)
-  );
-  kernelPackageOverrides =
-    lib.optionalAttrs config.modules.ccache.enable {
-      stdenv = config.modules.ccache.wrapStdenv baseKernelPackages.kernel.stdenv;
-    }
-    // lib.optionalAttrs (kernelConfigOverrides != { }) {
-      configPath = kernelConfigPath;
-    };
-  kernelPackages =
-    if config.modules.ccache.enable || kernelConfigOverrides != { } then
-      baseKernelPackages.cachyOverride kernelPackageOverrides
+  kernelConfigArgs = lib.concatMap (
+    name:
+    let
+      value = kernelConfigOverrides.${name};
+      action =
+        if value == "y" then
+          "-e"
+        else if value == "m" then
+          "-m"
+        else
+          "-d";
+    in
+    [
+      action
+      (lib.removePrefix "CONFIG_" name)
+    ]
+  ) (builtins.attrNames kernelConfigOverrides);
+  compilerKernelPackages =
+    if config.modules.ccache.enable then
+      baseKernelPackages.cachyOverride {
+        stdenv = config.modules.ccache.wrapStdenv baseKernelPackages.kernel.stdenv;
+      }
     else
       baseKernelPackages;
+  kernelPackages = compilerKernelPackages.extend (
+    _final: previous:
+    lib.optionalAttrs (kernelConfigOverrides != { }) {
+      kernel = previous.kernel.overrideAttrs (oldAttrs: {
+        postConfigure = (oldAttrs.postConfigure or "") + ''
+          cp "$buildRoot/.config" "$buildRoot/.config.mutable"
+          mv "$buildRoot/.config.mutable" "$buildRoot/.config"
+          scripts/config --file "$buildRoot/.config" ${lib.escapeShellArgs kernelConfigArgs}
+          make "''${makeFlags[@]}" olddefconfig
+        '';
+      });
+    }
+  );
 
   msiEc = {
     rev = "050d4394a6747ebd106ae2f8ddb3a4eebe7c700f";
