@@ -9,9 +9,12 @@ let
   cfg = config.modules.boot;
 
   baseKernelPackages = pkgs.linuxPackages_cachyos-lto-znver4;
+  baseKernelConfig = lib.filterAttrs (
+    name: _value: lib.hasPrefix "CONFIG_" name
+  ) baseKernelPackages.kernel.config;
   kernelConfigOverrides = config.modules.graphics.amd.kernel.cachyosConfigOverrides;
   kernelConfigPath = builtins.toFile "cachyos-kernel-config.nix" (
-    lib.generators.toPretty { } (baseKernelPackages.kernel.config // kernelConfigOverrides)
+    lib.generators.toPretty { } (baseKernelConfig // kernelConfigOverrides)
   );
   kernelPackageOverrides =
     lib.optionalAttrs config.modules.ccache.enable {
