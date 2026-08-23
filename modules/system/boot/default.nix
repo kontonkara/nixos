@@ -359,7 +359,6 @@ in
         "preempt=full"
         "mitigations=off"
         "amd_pstate=active"
-        "nvme_core.default_ps_max_latency_us=5500"
         "amdgpu.sg_display=0"
         "amdgpu.dcdebugmask=0x40010"
         "transparent_hugepage=always"
