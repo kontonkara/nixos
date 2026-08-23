@@ -542,6 +542,11 @@ sandboxed.config.env.overrideAttrs (old: {
     fi
     ${pkgs.gnused}/bin/sed -i '/^X-Flatpak=/d' "$desktop_file"
 
+    # bin/flatpak must stay inside the sandbox (/app/bin) only.  Merging the
+    # application into the host-visible environment leaks it onto PATH where
+    # it shadows hostFlatpakShim and answers every real flatpak(1) call.
+    ${coreutils}/bin/rm -f "$out/bin/flatpak"
+
     # Put the license precheck in front of the generated bubblewrap launcher
     # so a missing secret fails with a human-readable message.
     launcher="$out/bin/yandex-browser-corporate"

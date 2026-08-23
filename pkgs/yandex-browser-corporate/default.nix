@@ -14,21 +14,59 @@ let
   # flatpak(1).  The sandbox must keep /.flatpak-info for portals, so provide
   # the two operations our app id actually needs; everything else fails
   # exactly like a missing Flatpak installation would.
-  hostFlatpakShim = pkgs.writeShellScriptBin "flatpak" ''
-    set -euo pipefail
-    cmd=''${1-}
-    target=''${2-}
-    if [[ "$cmd" == kill && "$target" == "${appId}" ]]; then
-      exec ${pkgs.procps}/bin/pkill -TERM -f \
-        '/opt/yandex/browser/yandex-browser'
-    fi
-    if [[ "$cmd" == run && "$target" == "${appId}" ]]; then
-      shift 2 || true
-      exec ${pkgs.yandex-browser-corporate}/bin/yandex-browser-corporate "$@"
-    fi
-    printf 'flatpak: application not installed\n' >&2
-    exit 1
-  '';
+  hostFlatpakShim =
+    let
+      # flatpak inserts options (e.g. --branch=stable --arch=x86_64) before
+      # the application id; pick the first bare argument instead of a fixed
+      # position, and drop everything up to it when forwarding.
+      extractAndForward = ''
+        app_id=""
+        shift_count=0
+        for arg in "$@"; do
+          case "$arg" in
+            -*) shift_count=$((shift_count + 1)) ;;
+            *) app_id="$arg"; break ;;
+          esac
+        done
+        if [[ "$app_id" != "${appId}" ]]; then
+          printf 'flatpak: application not installed\n' >&2
+          exit 1
+        fi
+        shift "$((shift_count + 1))"
+      '';
+    in
+    pkgs.writeShellScriptBin "flatpak" ''
+      set -euo pipefail
+
+      # Read-only queries: answer like a Flatpak with zero installations.
+      # Integration snippets (e.g. flatpak's own fish vendor_conf.d) probe us
+      # as soon as the executable appears on PATH; staying silent here keeps
+      # them behaving exactly as on a host without any Flatpak apps.
+      cmd=''${1-}
+      case "$cmd" in
+        --installations|list|remotes|history|search|info|metadata)
+          exit 0
+          ;;
+      esac
+
+      case "$cmd" in
+        kill)
+          shift
+          ${extractAndForward}
+          exec ${pkgs.procps}/bin/pkill -TERM -f \
+            '/opt/yandex/browser/yandex-browser'
+          ;;
+        run)
+          shift
+          ${extractAndForward}
+          exec ${pkgs.yandex-browser-corporate}/bin/yandex-browser-corporate "$@"
+          ;;
+        *)
+          printf 'flatpak: application not installed\n' >&2
+          exit 1
+          ;;
+      esac
+    '';
 in
 {
   options.programs.yandex-browser-corporate = {
