@@ -33,7 +33,9 @@
         enable = true;
 
         kernel = {
+          builtIn.enable = true;
           removeUnsupportedRgba8888.enable = true;
+          trimUnsupportedHardware.enable = true;
         };
 
         mesa = {
