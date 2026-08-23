@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 
@@ -8,19 +9,17 @@ let
   cfg = config.modules.graphics.nvidia;
 
   nvidiaPackages = config.boot.kernelPackages.nvidiaPackages;
-  nvidiaPackage =
-    if nvidiaPackages ? cachyos then
-      let
-        basePackage = nvidiaPackages.cachyos;
-      in
-      basePackage
-      // {
-        open = basePackage.open.overrideAttrs (oldAttrs: {
-          installFlags = (oldAttrs.installFlags or [ ]) ++ [ "INSTALL_MOD_STRIP=1" ];
-        });
-      }
-    else
-      nvidiaPackages.latest;
+  runtimeD3NotifyPatch = pkgs.fetchurl {
+    url = "https://github.com/NVIDIA/open-gpu-kernel-modules/pull/1299.patch";
+    hash = "sha256-O9kTxyqjbG9Vx+z0sE14zZptfkCAwZgKRhJdYnwUmaY=";
+  };
+  nvidiaPackage = nvidiaPackages.latest // {
+    open = nvidiaPackages.latest.open.overrideAttrs (oldAttrs: {
+      installFlags = (oldAttrs.installFlags or [ ]) ++ [ "INSTALL_MOD_STRIP=1" ];
+      patches =
+        (oldAttrs.patches or [ ]) ++ lib.optional cfg.runtimeD3NotifyFix.enable runtimeD3NotifyPatch;
+    });
+  };
 in
 {
   options = {
@@ -28,6 +27,10 @@ in
       graphics = {
         nvidia = {
           enable = lib.mkEnableOption "NVIDIA hybrid graphics";
+
+          runtimeD3NotifyFix = {
+            enable = lib.mkEnableOption "deferring NVIDIA NVPCF notifications until runtime resume";
+          };
         };
       };
     };

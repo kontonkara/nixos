@@ -44,7 +44,10 @@
           disableAssertions = true;
         };
       };
-      nvidia.enable = true;
+      nvidia = {
+        enable = true;
+        runtimeD3NotifyFix.enable = true;
+      };
     };
 
     audio.enable = true;
