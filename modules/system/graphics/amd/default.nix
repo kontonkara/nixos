@@ -30,7 +30,6 @@ in
               );
               default = { };
               internal = true;
-              readOnly = true;
               description = "Kconfig overrides applied to the CachyOS kernel for AMD graphics.";
             };
 
