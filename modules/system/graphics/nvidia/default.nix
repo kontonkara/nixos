@@ -39,6 +39,11 @@ in
         open = true;
         nvidiaSettings = true;
         package = nvidiaPackage;
+        moduleParams = {
+          nvidia = {
+            NVreg_EnableResizableBar = 1;
+          };
+        };
         modesetting = {
           enable = true;
         };
