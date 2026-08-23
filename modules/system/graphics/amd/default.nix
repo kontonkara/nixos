@@ -20,6 +20,20 @@ in
               enable = lib.mkEnableOption "building AMDGPU into the kernel image";
             };
 
+            cachyosConfigOverrides = lib.mkOption {
+              type = lib.types.attrsOf (
+                lib.types.enum [
+                  "n"
+                  "m"
+                  "y"
+                ]
+              );
+              default = { };
+              internal = true;
+              readOnly = true;
+              description = "Kconfig overrides applied to the CachyOS kernel for AMD graphics.";
+            };
+
             removeUnsupportedRgba8888 = {
               enable = lib.mkEnableOption "the AMDGPU workaround for unsupported DRM_FORMAT_RGBA8888 scanout";
             };
@@ -54,28 +68,21 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.kernelPatches =
-      lib.optional cfg.kernel.removeUnsupportedRgba8888.enable {
-        name = "amdgpu-do-not-advertise-unsupported-rgba8888";
-        patch = ./remove-unsupported-rgba8888.patch;
+    modules.graphics.amd.kernel.cachyosConfigOverrides =
+      lib.optionalAttrs cfg.kernel.builtIn.enable {
+        CONFIG_DRM_AMDGPU = "y";
       }
-      ++ lib.optional cfg.kernel.builtIn.enable {
-        name = "amdgpu-built-in";
-        patch = null;
-        structuredExtraConfig = {
-          DRM_AMDGPU = lib.kernel.yes;
-        };
-      }
-      ++ lib.optional cfg.kernel.trimUnsupportedHardware.enable {
-        name = "amdgpu-trim-unsupported-hardware";
-        patch = null;
-        structuredExtraConfig = {
-          DRM_AMDGPU_CIK = lib.kernel.no;
-          DRM_AMDGPU_SI = lib.kernel.no;
-          DRM_AMD_ISP = lib.kernel.no;
-          DRM_AMD_SECURE_DISPLAY = lib.kernel.no;
-        };
+      // lib.optionalAttrs cfg.kernel.trimUnsupportedHardware.enable {
+        CONFIG_DRM_AMDGPU_CIK = "n";
+        CONFIG_DRM_AMDGPU_SI = "n";
+        CONFIG_DRM_AMD_ISP = "n";
+        CONFIG_DRM_AMD_SECURE_DISPLAY = "n";
       };
+
+    boot.kernelPatches = lib.optional cfg.kernel.removeUnsupportedRgba8888.enable {
+      name = "amdgpu-do-not-advertise-unsupported-rgba8888";
+      patch = ./remove-unsupported-rgba8888.patch;
+    };
 
     hardware = {
       graphics = {
