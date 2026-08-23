@@ -53,7 +53,10 @@
     environment.enable = true;
     lab.enable = true;
     locale.enable = true;
-    network.enable = true;
+    network = {
+      enable = true;
+      wifi.lowLatency.enable = true;
+    };
     packages.enable = true;
     power = {
       enable = true;

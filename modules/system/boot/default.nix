@@ -54,7 +54,6 @@ in
         "ntsync"
         "ec_sys"
         "tcp_bbr"
-        "ath12k"
         "kvm-amd"
       ];
 
