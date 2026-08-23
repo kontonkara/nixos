@@ -20,19 +20,6 @@ in
               enable = lib.mkEnableOption "building AMDGPU into the kernel image";
             };
 
-            cachyosConfigOverrides = lib.mkOption {
-              type = lib.types.attrsOf (
-                lib.types.enum [
-                  "n"
-                  "m"
-                  "y"
-                ]
-              );
-              default = { };
-              internal = true;
-              description = "Kconfig overrides applied to the CachyOS kernel for AMD graphics.";
-            };
-
             removeUnsupportedRgba8888 = {
               enable = lib.mkEnableOption "the AMDGPU workaround for unsupported DRM_FORMAT_RGBA8888 scanout";
             };
@@ -67,7 +54,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    modules.graphics.amd.kernel.cachyosConfigOverrides =
+    modules.boot.kernel.cachyosConfigOverrides =
       lib.optionalAttrs cfg.kernel.builtIn.enable {
         CONFIG_DRM_AMDGPU = "y";
       }

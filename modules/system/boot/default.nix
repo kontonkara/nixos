@@ -8,8 +8,150 @@
 let
   cfg = config.modules.boot;
 
+  disableKernelOptions = names: lib.genAttrs (map (name: "CONFIG_${name}") names) (_name: "n");
+  leanKernelConfigOverrides = disableKernelOptions [
+    # Storage and buses absent from alpha. USB mass storage keeps using the
+    # generic SCSI core, while its low-level host-adapter drivers are removed.
+    "ACPI_NFIT"
+    "ATA"
+    "CAN"
+    "CXL_BUS"
+    "DAX"
+    "FIREWIRE"
+    "FS_DAX"
+    "IIO"
+    "INFINIBAND"
+    "LIBNVDIMM"
+    "MMC"
+    "MEMSTICK"
+    "MTD"
+    "NFC"
+    "PCCARD"
+    "SCSI_LOWLEVEL"
+    "STAGING"
+    "TARGET_CORE"
+    "USB_GADGET"
+    "X86_PMEM_LEGACY"
+
+    # Alpha uses built-in AMDGPU and the external NVIDIA driver.
+    "DRM_AST"
+    "DRM_GMA500"
+    "DRM_GUD"
+    "DRM_I915"
+    "DRM_MGAG200"
+    "DRM_NOUVEAU"
+    "DRM_QXL"
+    "DRM_RADEON"
+    "DRM_UDL"
+    "DRM_VBOXVIDEO"
+    "DRM_VIRTIO_GPU"
+    "DRM_VKMS"
+    "DRM_VMWGFX"
+    "DRM_XE"
+
+    # Keep the UVC webcam stack, but remove TV, radio and capture-card stacks.
+    "MEDIA_ANALOG_TV_SUPPORT"
+    "MEDIA_DIGITAL_TV_SUPPORT"
+    "MEDIA_PCI_SUPPORT"
+    "MEDIA_PLATFORM_SUPPORT"
+    "MEDIA_RADIO_SUPPORT"
+    "MEDIA_TEST_SUPPORT"
+
+    # RTL8125B is the only physical Ethernet controller in alpha.
+    "NET_VENDOR_3COM"
+    "NET_VENDOR_8390"
+    "NET_VENDOR_ADAPTEC"
+    "NET_VENDOR_ADI"
+    "NET_VENDOR_AGERE"
+    "NET_VENDOR_ALACRITECH"
+    "NET_VENDOR_ALIBABA"
+    "NET_VENDOR_AMAZON"
+    "NET_VENDOR_AMD"
+    "NET_VENDOR_AQUANTIA"
+    "NET_VENDOR_ARC"
+    "NET_VENDOR_ASIX"
+    "NET_VENDOR_ATHEROS"
+    "NET_VENDOR_BROADCOM"
+    "NET_VENDOR_BROCADE"
+    "NET_VENDOR_CADENCE"
+    "NET_VENDOR_CAVIUM"
+    "NET_VENDOR_CHELSIO"
+    "NET_VENDOR_CISCO"
+    "NET_VENDOR_CORTINA"
+    "NET_VENDOR_DAVICOM"
+    "NET_VENDOR_DEC"
+    "NET_VENDOR_DLINK"
+    "NET_VENDOR_EMULEX"
+    "NET_VENDOR_ENGLEDER"
+    "NET_VENDOR_EZCHIP"
+    "NET_VENDOR_FUNGIBLE"
+    "NET_VENDOR_GOOGLE"
+    "NET_VENDOR_HISILICON"
+    "NET_VENDOR_HUAWEI"
+    "NET_VENDOR_I825XX"
+    "NET_VENDOR_INTEL"
+    "NET_VENDOR_LITEX"
+    "NET_VENDOR_MARVELL"
+    "NET_VENDOR_MELLANOX"
+    "NET_VENDOR_META"
+    "NET_VENDOR_MICREL"
+    "NET_VENDOR_MICROCHIP"
+    "NET_VENDOR_MICROSEMI"
+    "NET_VENDOR_MICROSOFT"
+    "NET_VENDOR_MUCSE"
+    "NET_VENDOR_MYRI"
+    "NET_VENDOR_NATSEMI"
+    "NET_VENDOR_NETRONOME"
+    "NET_VENDOR_NI"
+    "NET_VENDOR_NVIDIA"
+    "NET_VENDOR_OKI"
+    "NET_VENDOR_PENSANDO"
+    "NET_VENDOR_QLOGIC"
+    "NET_VENDOR_QUALCOMM"
+    "NET_VENDOR_RDC"
+    "NET_VENDOR_RENESAS"
+    "NET_VENDOR_ROCKER"
+    "NET_VENDOR_SAMSUNG"
+    "NET_VENDOR_SEEQ"
+    "NET_VENDOR_SILAN"
+    "NET_VENDOR_SIS"
+    "NET_VENDOR_SMSC"
+    "NET_VENDOR_SOCIONEXT"
+    "NET_VENDOR_SOLARFLARE"
+    "NET_VENDOR_STMICRO"
+    "NET_VENDOR_SUN"
+    "NET_VENDOR_SYNOPSYS"
+    "NET_VENDOR_TEHUTI"
+    "NET_VENDOR_TI"
+    "NET_VENDOR_VERTEXCOM"
+    "NET_VENDOR_VIA"
+    "NET_VENDOR_WANGXUN"
+    "NET_VENDOR_WIZNET"
+    "NET_VENDOR_XILINX"
+    "NET_VENDOR_XIRCOM"
+
+    # AX210 is the only Wi-Fi controller in alpha.
+    "WLAN_VENDOR_ADMTEK"
+    "WLAN_VENDOR_ATH"
+    "WLAN_VENDOR_ATMEL"
+    "WLAN_VENDOR_BROADCOM"
+    "WLAN_VENDOR_INTERSIL"
+    "WLAN_VENDOR_MARVELL"
+    "WLAN_VENDOR_MEDIATEK"
+    "WLAN_VENDOR_MICROCHIP"
+    "WLAN_VENDOR_PURELIFI"
+    "WLAN_VENDOR_QUANTENNA"
+    "WLAN_VENDOR_RALINK"
+    "WLAN_VENDOR_REALTEK"
+    "WLAN_VENDOR_RSI"
+    "WLAN_VENDOR_SILABS"
+    "WLAN_VENDOR_ST"
+    "WLAN_VENDOR_TI"
+    "WLAN_VENDOR_ZYDAS"
+  ];
+
   baseKernelPackages = pkgs.linuxPackages_cachyos-lto-znver4;
-  kernelConfigOverrides = config.modules.graphics.amd.kernel.cachyosConfigOverrides;
+  kernelConfigOverrides = cfg.kernel.cachyosConfigOverrides;
   kernelConfigArgs = lib.concatMap (
     name:
     let
@@ -71,11 +213,32 @@ in
     modules = {
       boot = {
         enable = lib.mkEnableOption "alpha boot and kernel configuration";
+
+        kernel = {
+          cachyosConfigOverrides = lib.mkOption {
+            type = lib.types.attrsOf (
+              lib.types.enum [
+                "n"
+                "m"
+                "y"
+              ]
+            );
+            default = { };
+            internal = true;
+            description = "Kconfig overrides applied to the CachyOS kernel.";
+          };
+
+          lean = {
+            enable = lib.mkEnableOption "removing kernel drivers and subsystems absent from this host";
+          };
+        };
       };
     };
   };
 
   config = lib.mkIf cfg.enable {
+    modules.boot.kernel.cachyosConfigOverrides = lib.mkIf cfg.kernel.lean.enable leanKernelConfigOverrides;
+
     boot = {
       inherit kernelPackages;
 
