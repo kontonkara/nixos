@@ -8,13 +8,16 @@
 let
   cfg = config.modules.ccache;
 
+  cacheConfig = pkgs.writeText "ccache.conf" ''
+    max_size = ${cfg.maxSize}
+    compression = true
+    compression_level = 1
+    compiler_check = content
+    umask = 007
+  '';
+
   wrapperConfig = ''
     export CCACHE_DIR=${lib.escapeShellArg (toString cfg.cacheDir)}
-    export CCACHE_MAXSIZE=${lib.escapeShellArg cfg.maxSize}
-    export CCACHE_COMPRESS=1
-    export CCACHE_COMPRESSLEVEL=1
-    export CCACHE_COMPILERCHECK=content
-    export CCACHE_UMASK=007
 
     if [ ! -d "$CCACHE_DIR" ] || [ ! -w "$CCACHE_DIR" ]; then
       export CCACHE_DISABLE=1
@@ -63,6 +66,10 @@ in
       owner = "root";
       group = "nixbld";
     };
+
+    systemd.tmpfiles.rules = [
+      "L+ ${toString cfg.cacheDir}/ccache.conf - - - - ${cacheConfig}"
+    ];
 
     nix.settings.extra-sandbox-paths = [ "${toString cfg.cacheDir}?" ];
   };
