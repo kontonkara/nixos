@@ -38,9 +38,46 @@ let
   msiEcFanModePath = "/sys/devices/platform/msi-ec/fan_mode";
   msiEcSuperBatteryPath = "/sys/devices/platform/msi-ec/super_battery";
 
+  applyDisplayPowerProfile = pkgs.writeShellApplication {
+    name = "apply-display-power-profile";
+    runtimeInputs = [ pkgs.kdePackages.libkscreen ];
+    text = ''
+      if [[ -z "''${WAYLAND_DISPLAY:-}" || -z "''${XDG_RUNTIME_DIR:-}" ]]; then
+        exit 0
+      fi
+
+      mains_online=0
+
+      for supply in /sys/class/power_supply/*; do
+        if [[ -r "$supply/type" && -r "$supply/online" ]]; then
+          read -r supply_type < "$supply/type"
+          read -r supply_online < "$supply/online"
+
+          if [[ "$supply_type" == "Mains" && "$supply_online" == "1" ]]; then
+            mains_online=1
+            break
+          fi
+        fi
+      done
+
+      if ((mains_online)); then
+        desired_abm_level=${toString cfg.display.acAbmLevel}
+      else
+        desired_abm_level=${toString cfg.display.batteryAbmLevel}
+      fi
+
+      if ! kscreen-doctor ${lib.escapeShellArg "output.${cfg.display.connector}.abm"}."$desired_abm_level"; then
+        echo "unable to apply adaptive backlight modulation to ${lib.escapeShellArg cfg.display.connector}" >&2
+      fi
+    '';
+  };
+
   applyPowerProfile = pkgs.writeShellApplication {
     name = "apply-power-profile";
-    runtimeInputs = [ pkgs.power-profiles-daemon ];
+    runtimeInputs = [
+      pkgs.power-profiles-daemon
+      pkgs.systemd
+    ];
     text = ''
       mains_online=0
 
@@ -78,6 +115,25 @@ let
         fi
       }
 
+      ${lib.optionalString cfg.display.enable ''
+        notify_graphical_sessions() {
+          declare -A notified_users=()
+
+          while read -r session _rest; do
+            [[ "$(loginctl show-session "$session" --property=Active --value)" == "yes" ]] || continue
+            [[ "$(loginctl show-session "$session" --property=Remote --value)" == "no" ]] || continue
+            [[ "$(loginctl show-session "$session" --property=Type --value)" == "wayland" ]] || continue
+
+            session_user="$(loginctl show-session "$session" --property=Name --value)"
+            [[ -n "$session_user" ]] || continue
+            [[ -z "''${notified_users[$session_user]:-}" ]] || continue
+            notified_users[$session_user]=1
+
+            systemctl --machine="$session_user@.host" --user start apply-display-power-profile.service || true
+          done < <(loginctl list-sessions --no-legend --no-pager)
+        }
+      ''}
+
       ${lib.optionalString cfg.msiEc.enable ''
         apply_ec_value() {
           path="$1"
@@ -112,6 +168,10 @@ let
           apply_ec_value ${lib.escapeShellArg msiEcSuperBatteryPath} "$desired_super_battery" super-battery
         ''}
       fi
+
+      ${lib.optionalString cfg.display.enable ''
+        notify_graphical_sessions
+      ''}
     '';
   };
 in
@@ -166,11 +226,40 @@ in
             description = "Composite MSI EC mode used while discharging the battery.";
           };
         };
+
+        display = {
+          enable = lib.mkEnableOption "power-source-aware adaptive backlight modulation";
+
+          connector = lib.mkOption {
+            type = lib.types.nullOr lib.types.str;
+            default = null;
+            description = "KScreen connector name that receives the adaptive backlight level.";
+          };
+
+          acAbmLevel = lib.mkOption {
+            type = lib.types.ints.between 0 4;
+            default = 0;
+            description = "Adaptive backlight modulation level used while mains power is connected.";
+          };
+
+          batteryAbmLevel = lib.mkOption {
+            type = lib.types.ints.between 0 4;
+            default = 4;
+            description = "Adaptive backlight modulation level used while discharging the battery.";
+          };
+        };
       };
     };
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = !cfg.display.enable || cfg.display.connector != null;
+        message = "modules.power.display.connector must be set when display power management is enabled";
+      }
+    ];
+
     services = {
       acpid = {
         enable = true;
@@ -192,6 +281,20 @@ in
       serviceConfig = {
         Type = "oneshot";
         ExecStart = lib.getExe applyPowerProfile;
+      };
+    };
+
+    systemd.user.services.apply-display-power-profile = lib.mkIf cfg.display.enable {
+      description = "Apply the display power profile for the current power source";
+      wantedBy = [ "graphical-session.target" ];
+      after = [ "plasma-kwin_wayland.service" ];
+      partOf = [ "graphical-session.target" ];
+
+      environment.QT_QPA_PLATFORM = "wayland";
+
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = lib.getExe applyDisplayPowerProfile;
       };
     };
   };

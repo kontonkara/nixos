@@ -65,6 +65,12 @@
     packages.enable = true;
     power = {
       enable = true;
+      display = {
+        enable = true;
+        connector = "eDP-1";
+        acAbmLevel = 0;
+        batteryAbmLevel = 4;
+      };
       msiEc.enable = true;
     };
     scx.enable = true;
