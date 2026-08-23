@@ -18,6 +18,11 @@ let
 
   wrapperConfig = ''
     export CCACHE_DIR=${lib.escapeShellArg (toString cfg.cacheDir)}
+    export CCACHE_MAXSIZE=${lib.escapeShellArg cfg.maxSize}
+    export CCACHE_COMPRESS=1
+    export CCACHE_COMPRESSLEVEL=1
+    export CCACHE_COMPILERCHECK=content
+    export CCACHE_UMASK=007
 
     if [ ! -d "$CCACHE_DIR" ] || [ ! -w "$CCACHE_DIR" ]; then
       export CCACHE_DISABLE=1
