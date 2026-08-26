@@ -1,0 +1,17 @@
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
+--- a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
++++ b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
+@@ -2075,6 +2075,13 @@ static int smu_disable_dpms(struct smu_context *smu)
+ 	if (IP_VERSION_MAJ(amdgpu_ip_version(adev, GC_HWIP, 0)) >= 11 &&
+ 	    smu->is_apu && (amdgpu_in_reset(adev) || adev->in_s0ix))
+ 		return 0;
+ 
++	if (smu->is_apu && adev->in_s0ix &&
++	    amdgpu_ip_version(adev, MP1_HWIP, 0) == IP_VERSION(13, 0, 5) &&
++	    amdgpu_ip_version(adev, GC_HWIP, 0) == IP_VERSION(10, 3, 6)) {
++		dev_info(adev->dev, "preserving SMU DPM for Raphael S0ix\n");
++		return 0;
++	}
++
+ 	/* vangogh s0ix */
+ 	if ((amdgpu_ip_version(adev, MP1_HWIP, 0) == IP_VERSION(11, 5, 0) ||

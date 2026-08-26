@@ -24,6 +24,10 @@ in
               enable = lib.mkEnableOption "the AMDGPU workaround for unsupported DRM_FORMAT_RGBA8888 scanout";
             };
 
+            preserveRaphaelSmuDpmDuringS0ix = {
+              enable = lib.mkEnableOption "preserving Raphael SMU DPM and RLC state during S0ix";
+            };
+
             trimUnsupportedHardware = {
               enable = lib.mkEnableOption "removing AMDGPU support for hardware absent from this host";
             };
@@ -65,10 +69,15 @@ in
         CONFIG_DRM_AMD_SECURE_DISPLAY = "n";
       };
 
-    boot.kernelPatches = lib.optional cfg.kernel.removeUnsupportedRgba8888.enable {
-      name = "amdgpu-do-not-advertise-unsupported-rgba8888";
-      patch = ./remove-unsupported-rgba8888.patch;
-    };
+    boot.kernelPatches =
+      lib.optional cfg.kernel.removeUnsupportedRgba8888.enable {
+        name = "amdgpu-do-not-advertise-unsupported-rgba8888";
+        patch = ./remove-unsupported-rgba8888.patch;
+      }
+      ++ lib.optional cfg.kernel.preserveRaphaelSmuDpmDuringS0ix.enable {
+        name = "amdgpu-preserve-raphael-smu-dpm-during-s0ix";
+        patch = ./preserve-raphael-smu-dpm-s0ix.patch;
+      };
 
     hardware = {
       graphics = {

@@ -45,6 +45,7 @@ in
               })
               zoom-us
               inputs.llm-agents.packages.x86_64-linux.codex
+              inputs.llm-agents.packages.x86_64-linux.chatgpt
               inputs.llm-agents.packages.x86_64-linux.opencode
             ];
           };

@@ -201,6 +201,12 @@ in
           description = "Power profile used while discharging the battery.";
         };
 
+        amdPmc = {
+          delaySuspend = {
+            enable = lib.mkEnableOption "the AMD PMC suspend delay workaround for buggy embedded controllers";
+          };
+        };
+
         msiEc = {
           enable = lib.mkEnableOption "MSI EC shift-mode switching";
 
@@ -268,6 +274,10 @@ in
 
       power-profiles-daemon.enable = true;
     };
+
+    boot.extraModprobeConfig = lib.optionalString cfg.amdPmc.delaySuspend.enable ''
+      options amd_pmc delay_suspend=1
+    '';
 
     systemd.services.apply-power-profile = {
       description = "Apply the power profile for the current power source";

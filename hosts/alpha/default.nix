@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, pkgs, ... }:
 
 {
   networking.hostName = "alpha";
@@ -35,6 +35,7 @@
         kernel = {
           builtIn.enable = true;
           removeUnsupportedRgba8888.enable = true;
+          preserveRaphaelSmuDpmDuringS0ix.enable = true;
           trimUnsupportedHardware.enable = true;
         };
 
@@ -46,6 +47,7 @@
       };
       nvidia = {
         enable = true;
+        dynamicBoost.enable = true;
         runtimeD3NotifyFix.enable = true;
       };
     };

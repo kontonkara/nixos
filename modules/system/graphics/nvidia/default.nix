@@ -28,6 +28,10 @@ in
         nvidia = {
           enable = lib.mkEnableOption "NVIDIA hybrid graphics";
 
+          dynamicBoost = {
+            enable = lib.mkEnableOption "NVIDIA Dynamic Boost power balancing";
+          };
+
           runtimeD3NotifyFix = {
             enable = lib.mkEnableOption "deferring NVIDIA NVPCF notifications until runtime resume";
           };
@@ -42,6 +46,7 @@ in
         open = true;
         nvidiaSettings = true;
         package = nvidiaPackage;
+        dynamicBoost.enable = cfg.dynamicBoost.enable;
         moduleParams = {
           nvidia = {
             NVreg_EnableResizableBar = 1;
