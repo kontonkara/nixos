@@ -76,7 +76,10 @@
         acAbmLevel = 0;
         batteryAbmLevel = 4;
       };
-      msiEc.enable = true;
+      msiEc = {
+        enable = true;
+        rearmHighPerformance.enable = true;
+      };
     };
     scx.enable = true;
     storage = {

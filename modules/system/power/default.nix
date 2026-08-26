@@ -135,6 +135,25 @@ let
       ''}
 
       ${lib.optionalString cfg.msiEc.enable ''
+        write_ec_value() {
+          path="$1"
+          desired_value="$2"
+          setting_name="$3"
+
+          if [[ ! -r "$path" || ! -w "$path" ]]; then
+            echo "msi-ec $setting_name is enabled, but $path is unavailable" >&2
+            return 1
+          fi
+
+          printf '%s\n' "$desired_value" > "$path"
+          read -r applied_value < "$path"
+
+          if [[ "$applied_value" != "$desired_value" ]]; then
+            echo "unable to apply msi-ec $setting_name: expected $desired_value, got $applied_value" >&2
+            return 1
+          fi
+        }
+
         apply_ec_value() {
           path="$1"
           desired_value="$2"
@@ -148,16 +167,38 @@ let
           read -r current_value < "$path"
 
           if [[ "$current_value" != "$desired_value" ]]; then
-            printf '%s\n' "$desired_value" > "$path"
+            write_ec_value "$path" "$desired_value" "$setting_name"
           fi
+        }
+
+        rearm_high_performance() {
+          echo "rearming msi-ec high-performance mode through comfort"
+
+          write_ec_value ${lib.escapeShellArg msiEcShiftModePath} comfort shift-mode
+          write_ec_value ${lib.escapeShellArg msiEcFanModePath} auto fan-mode
+          write_ec_value ${lib.escapeShellArg msiEcSuperBatteryPath} off super-battery
+
+          sleep ${lib.escapeShellArg cfg.msiEc.rearmHighPerformance.delay}
+
+          write_ec_value ${lib.escapeShellArg msiEcShiftModePath} "$desired_shift_mode" shift-mode
+          write_ec_value ${lib.escapeShellArg msiEcFanModePath} "$desired_fan_mode" fan-mode
+          write_ec_value ${lib.escapeShellArg msiEcSuperBatteryPath} "$desired_super_battery" super-battery
         }
       ''}
 
       if ((mains_online)); then
         ${lib.optionalString cfg.msiEc.enable ''
+          ${lib.optionalString cfg.msiEc.rearmHighPerformance.enable ''
+            if [[ "$desired_shift_mode" == turbo ]]; then
+              rearm_high_performance
+            else
+          ''}
           apply_ec_value ${lib.escapeShellArg msiEcSuperBatteryPath} "$desired_super_battery" super-battery
           apply_ec_value ${lib.escapeShellArg msiEcFanModePath} "$desired_fan_mode" fan-mode
           apply_ec_value ${lib.escapeShellArg msiEcShiftModePath} "$desired_shift_mode" shift-mode
+          ${lib.optionalString cfg.msiEc.rearmHighPerformance.enable ''
+            fi
+          ''}
         ''}
         apply_profile
       else
@@ -230,6 +271,16 @@ in
             ];
             default = "super-battery";
             description = "Composite MSI EC mode used while discharging the battery.";
+          };
+
+          rearmHighPerformance = {
+            enable = lib.mkEnableOption "rearming MSI EC high-performance mode through comfort";
+
+            delay = lib.mkOption {
+              type = lib.types.str;
+              default = "1s";
+              description = "Delay between the forced comfort and turbo transitions.";
+            };
           };
         };
 
