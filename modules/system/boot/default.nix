@@ -355,30 +355,22 @@ in
         }))
       ];
 
-      kernelParams = [
-        "preempt=full"
-        "mitigations=off"
-        "amd_pstate=active"
-        "amdgpu.sg_display=0"
-        "amdgpu.dcdebugmask=0x40010"
-        "transparent_hugepage=always"
-        "zswap.enabled=0"
-        "nowatchdog"
-        "iommu=pt"
-        "acpi_backlight=native"
+      kernelParams = lib.mkMerge [
+        (lib.mkOrder 900 [
+          "preempt=full"
+          "mitigations=off"
+          "amd_pstate=active"
+          "amdgpu.sg_display=0"
+          "amdgpu.dcdebugmask=0x40010"
+        ])
+        (lib.mkOrder 920 [
+          "nowatchdog"
+          "iommu=pt"
+          "acpi_backlight=native"
+        ])
       ];
 
       kernel.sysctl = {
-        "vm.swappiness" = 180;
-        "vm.dirty_ratio" = 15;
-        "vm.dirty_background_ratio" = 5;
-        "vm.max_map_count" = 2147483642;
-        "vm.min_free_kbytes" = 524288;
-        "vm.vfs_cache_pressure" = 50;
-        "vm.page-cluster" = 0;
-        "vm.watermark_boost_factor" = 0;
-        "vm.watermark_scale_factor" = 125;
-        "vm.compaction_proactiveness" = 0;
         "kernel.nmi_watchdog" = 0;
         "net.core.default_qdisc" = "fq";
         "net.core.rmem_max" = 16777216;
@@ -389,11 +381,6 @@ in
         "net.ipv4.tcp_fastopen" = 3;
         "net.ipv4.tcp_mtu_probing" = 1;
         "fs.file-max" = 2097152;
-      };
-
-      tmp = {
-        useTmpfs = true;
-        tmpfsSize = "20%";
       };
 
       extraModprobeConfig = "options ec_sys write_support=1";
@@ -438,10 +425,5 @@ in
       ${applyRyzenCurveOptimizer} || true
     '';
 
-    zramSwap = {
-      enable = true;
-      algorithm = "zstd";
-      memoryPercent = 50;
-    };
   };
 }

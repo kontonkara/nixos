@@ -64,6 +64,7 @@
     environment.enable = true;
     lab.enable = true;
     locale.enable = true;
+    memory.enable = true;
     network = {
       enable = true;
       wifi.lowLatency.enable = true;
