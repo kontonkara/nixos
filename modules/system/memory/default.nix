@@ -29,16 +29,22 @@ in
           };
 
           algorithm = lib.mkOption {
-            type = lib.types.enum [
-              "842"
-              "lzo"
-              "lzo-rle"
-              "lz4"
-              "lz4hc"
-              "zstd"
-            ];
+            type = lib.types.either (
+              lib.types.enum [
+                "842"
+                "lzo"
+                "lzo-rle"
+                "lz4"
+                "lz4hc"
+                "zstd"
+              ]
+            ) lib.types.str;
             default = "zstd";
-            description = "Compression algorithm used by zram.";
+            description = ''
+              Compression algorithm specification used by zram-generator.
+              A string may contain a primary compressor, secondary recompression
+              algorithms and their parameters.
+            '';
           };
 
           memoryPercent = lib.mkOption {
@@ -48,7 +54,7 @@ in
           };
 
           priority = lib.mkOption {
-            type = lib.types.int;
+            type = lib.types.ints.between (-1) 32767;
             default = 5;
             description = "Swap priority assigned to the zram device.";
           };
@@ -101,8 +107,12 @@ in
 
           maxMapCount = lib.mkOption {
             type = lib.types.ints.positive;
-            default = 2147483642;
-            description = "Maximum number of virtual-memory mappings per process.";
+            default = 1048576;
+            description = ''
+              Maximum number of virtual-memory mappings per process. The NixOS
+              default leaves ample headroom without effectively disabling the
+              kernel's per-process VMA resource guard.
+            '';
           };
 
           minFreeKbytes = lib.mkOption {
