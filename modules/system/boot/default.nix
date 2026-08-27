@@ -313,7 +313,6 @@ in
         "ryzen_smu"
         "ntsync"
         "ec_sys"
-        "tcp_bbr"
         "kvm-amd"
       ];
 
@@ -372,14 +371,6 @@ in
 
       kernel.sysctl = {
         "kernel.nmi_watchdog" = 0;
-        "net.core.default_qdisc" = "fq";
-        "net.core.rmem_max" = 16777216;
-        "net.core.wmem_max" = 16777216;
-        "net.ipv4.tcp_rmem" = "4096 87380 16777216";
-        "net.ipv4.tcp_wmem" = "4096 65536 16777216";
-        "net.ipv4.tcp_congestion_control" = "bbr";
-        "net.ipv4.tcp_fastopen" = 3;
-        "net.ipv4.tcp_mtu_probing" = 1;
         "fs.file-max" = 2097152;
       };
 
