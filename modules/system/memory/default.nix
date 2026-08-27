@@ -105,16 +105,6 @@ in
             description = "Percentage of eligible memory at which background writeback starts.";
           };
 
-          maxMapCount = lib.mkOption {
-            type = lib.types.ints.positive;
-            default = 1048576;
-            description = ''
-              Maximum number of virtual-memory mappings per process. The NixOS
-              default leaves ample headroom without effectively disabling the
-              kernel's per-process VMA resource guard.
-            '';
-          };
-
           minFreeKbytes = lib.mkOption {
             type = lib.types.ints.positive;
             default = 524288;
@@ -156,7 +146,6 @@ in
         "vm.vfs_cache_pressure" = cfg.virtualMemory.vfsCachePressure;
         "vm.dirty_ratio" = cfg.virtualMemory.dirtyRatio;
         "vm.dirty_background_ratio" = cfg.virtualMemory.dirtyBackgroundRatio;
-        "vm.max_map_count" = cfg.virtualMemory.maxMapCount;
         "vm.min_free_kbytes" = cfg.virtualMemory.minFreeKbytes;
         "vm.watermark_boost_factor" = cfg.virtualMemory.watermarkBoostFactor;
         "vm.watermark_scale_factor" = cfg.virtualMemory.watermarkScaleFactor;
