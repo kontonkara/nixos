@@ -33,6 +33,7 @@
     services = {
       sing-box.enable = true;
       sunshine.enable = true;
+      udev.enable = true;
     };
 
     graphics = {
