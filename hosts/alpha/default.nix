@@ -8,6 +8,7 @@
       apps.enable = true;
       cli.enable = true;
       fish.enable = true;
+      nixTools.enable = true;
       obsidian.enable = true;
       vesktop.enable = true;
       vscode.enable = true;

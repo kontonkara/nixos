@@ -91,6 +91,19 @@ in
                 grbi = "git rebase --interactive";
                 gs = "git status --short";
                 gst = "git status";
+                nb = "nix build";
+                ncg = "nix-collect-garbage";
+                nd = "nix develop";
+                nf = "nix flake";
+                nfc = "nix flake check";
+                nfm = "nix flake metadata";
+                nfu = "nh flake update";
+                ngc = "nh clean all";
+                nhb = "nh os boot";
+                nhs = "nh os switch";
+                nht = "nh os test";
+                ns = "nix shell nixpkgs#";
+                nsp = "nix search nixpkgs";
                 za = "zoxide add";
                 zq = "zoxide query";
                 zr = "zoxide remove";
@@ -144,6 +157,20 @@ in
 
                     mkdir -p -- $argv[1]
                     and cd -- $argv[1]
+                  '';
+                };
+
+                nvd-system = {
+                  description = "show the package diff against the current system generation";
+                  body = ''
+                    set -l next (nix build --no-link --print-out-paths "/home/${username}/nixos#nixosConfigurations.alpha.config.system.build.toplevel")
+                    set -l build_status $status
+
+                    if test $build_status -ne 0
+                      return $build_status
+                    end
+
+                    nvd diff /run/current-system "$next"
                   '';
                 };
 
