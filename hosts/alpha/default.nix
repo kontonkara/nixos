@@ -20,6 +20,7 @@
     programs = {
       firefox.enable = true;
       git.enable = true;
+      steam.enable = true;
       yandex-browser-corporate.enable = true;
     };
 
