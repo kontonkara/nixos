@@ -6,6 +6,7 @@
   modules = {
     home = {
       apps.enable = true;
+      cli.enable = true;
       fish.enable = true;
       obsidian.enable = true;
       vesktop.enable = true;
