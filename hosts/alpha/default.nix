@@ -10,6 +10,7 @@
       fish.enable = true;
       nixTools.enable = true;
       obsidian.enable = true;
+      stylix.enable = true;
       vesktop.enable = true;
       vscode.enable = true;
     };

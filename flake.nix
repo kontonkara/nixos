@@ -14,6 +14,10 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    stylix = {
+      url = "github:nix-community/stylix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixpak = {
       url = "github:nixpak/nixpak";
       inputs.nixpkgs.follows = "nixpkgs";
