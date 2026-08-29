@@ -266,9 +266,6 @@ let
     hash = "sha256-Tj3MZBDtobXAdF07DmqEnaJWCoJ0Xkbn25jqAIWAfoc=";
   };
 
-  ryzenCurveOptimizerOffset = "0xFFFEC"; # CO -20
-  applyRyzenCurveOptimizer = "${pkgs.ryzenadj}/bin/ryzenadj --set-coall=${ryzenCurveOptimizerOffset}";
-
 in
 {
   imports = [
@@ -399,22 +396,6 @@ in
         };
       };
     };
-
-    systemd.services.ryzen-curve-optimizer = {
-      description = "Apply Ryzen Curve Optimizer offset";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "systemd-modules-load.service" ];
-
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = applyRyzenCurveOptimizer;
-      };
-    };
-
-    powerManagement.resumeCommands = ''
-      sleep 2
-      ${applyRyzenCurveOptimizer} || true
-    '';
 
   };
 }
