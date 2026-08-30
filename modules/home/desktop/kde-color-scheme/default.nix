@@ -116,19 +116,6 @@ in
         in
         {
           xdg.dataFile."color-schemes/${schemeId}.colors".text = colorScheme;
-
-          # Manage only General/ColorScheme. kwriteconfig6 preserves every
-          # unrelated key in kdeglobals and --notify avoids a Plasma reset.
-          home.activation.selectKdeColorScheme = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-            kde_config_home="''${XDG_CONFIG_HOME:-$HOME/.config}"
-            run mkdir -p "$kde_config_home"
-            run ${pkgs.kdePackages.kconfig}/bin/kwriteconfig6 \
-              --file "$kde_config_home/kdeglobals" \
-              --group General \
-              --key ColorScheme \
-              --notify \
-              ${schemeId}
-          '';
         }
       )
     ];

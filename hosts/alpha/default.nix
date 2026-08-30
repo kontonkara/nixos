@@ -11,6 +11,7 @@
       kdeColorScheme.enable = true;
       nixTools.enable = true;
       obsidian.enable = true;
+      plasmaManager.enable = true;
       stylix.enable = true;
       vesktop.enable = true;
       vscode.enable = true;

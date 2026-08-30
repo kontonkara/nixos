@@ -41,20 +41,48 @@ in
         polarity = "dark";
         base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
 
+        fonts = {
+          monospace = {
+            package = pkgs.nerd-fonts.jetbrains-mono;
+            name = "JetBrainsMono Nerd Font Mono";
+          };
+
+          sansSerif = {
+            package = pkgs.dejavu_fonts;
+            name = "DejaVu Sans";
+          };
+
+          serif = {
+            package = pkgs.dejavu_fonts;
+            name = "DejaVu Serif";
+          };
+
+          emoji = {
+            package = pkgs.noto-fonts-color-emoji;
+            name = "Noto Color Emoji";
+          };
+        };
+
+        cursor = {
+          package = pkgs.bibata-cursors;
+          name = "Bibata-Modern-Classic";
+          size = 24;
+        };
+
         targets = {
           bat.enable = true;
           fzf.enable = true;
           starship.enable = true;
 
-          # Plasma and Qt are owned by the generated native KDE color scheme.
+          # Plasma and Qt are owned by the generated native KDE color scheme
+          # and plasma-manager.
           kde.enable = false;
           qt.enable = false;
 
-          # Keep current application-native appearance and font choices.
           firefox.enable = false;
           fish.enable = false;
           gtk.enable = false;
-          vscode.enable = false;
+          vscode.enable = true;
         };
       };
 
