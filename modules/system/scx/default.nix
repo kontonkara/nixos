@@ -7,6 +7,36 @@
 
 let
   cfg = config.modules.scx;
+
+  scxRustScheds =
+    if lib.versionAtLeast pkgs.scx.rustscheds.version "1.1.3" then
+      pkgs.scx.rustscheds
+    else
+      pkgs.scx.rustscheds.overrideAttrs (oldAttrs: rec {
+        version = "1.1.3";
+
+        src = pkgs.fetchFromGitHub {
+          owner = "sched-ext";
+          repo = "scx";
+          tag = "v${version}";
+          hash = "sha256-LK0go5blWgCtDpS5xm9BQc7C2NvbfrW+Jp66ImIThxA=";
+        };
+
+        cargoHash = "sha256-vEsbpor52DEUpYO5OubFPMzRltO5kUXjqAoO/9hsKXc=";
+        cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
+          inherit src;
+          name = "scx_rustscheds-${version}-vendor";
+          hash = cargoHash;
+        };
+
+        passthru = oldAttrs.passthru // {
+          schedulers = lib.sort builtins.lessThan (oldAttrs.passthru.schedulers ++ [ "scx_mlfq" ]);
+        };
+
+        env = oldAttrs.env // {
+          EXPECTED_SCHEDULERS = lib.concatStringsSep " " passthru.schedulers;
+        };
+      });
 in
 {
   options = {
@@ -54,7 +84,7 @@ in
   config = lib.mkIf cfg.enable {
     services.scx-loader = {
       enable = true;
-      schedsPackages = [ pkgs.scx.rustscheds ];
+      schedsPackages = [ scxRustScheds ];
       config = {
         default_sched = cfg.defaultScheduler;
         default_mode = cfg.defaultMode;
