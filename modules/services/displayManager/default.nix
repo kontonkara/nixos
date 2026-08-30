@@ -17,11 +17,14 @@ in
   config = lib.mkIf cfg.enable {
     services = {
       displayManager = {
-        sddm = {
+        # sddm = {
+        #   enable = true;
+        #   wayland = {
+        #     enable = true;
+        #   };
+        # };
+        plasma-login-manager = {
           enable = true;
-          wayland = {
-            enable = true;
-          };
         };
       };
     };
