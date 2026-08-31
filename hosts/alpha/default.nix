@@ -15,6 +15,7 @@
       stylix.enable = true;
       vesktop.enable = true;
       vscode.enable = true;
+      zed.enable = true;
       xdg.enable = true;
     };
 
