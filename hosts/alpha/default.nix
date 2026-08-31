@@ -6,16 +6,27 @@
   modules = {
     home = {
       apps.enable = true;
-      cli.enable = true;
+      bat.enable = true;
+      duf.enable = true;
+      dust.enable = true;
+      eza.enable = true;
+      fd.enable = true;
+      fzf.enable = true;
       fish.enable = true;
+      htop.enable = true;
       kdeColorScheme.enable = true;
       nixTools.enable = true;
       obsidian.enable = true;
       plasmaManager.enable = true;
       stylix.enable = true;
+      procs.enable = true;
+      ripgrep.enable = true;
+      starship.enable = true;
+      tealdeer.enable = true;
       vesktop.enable = true;
       vscode.enable = true;
       zed.enable = true;
+      zoxide.enable = true;
       xdg.enable = true;
     };
 

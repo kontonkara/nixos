@@ -26,6 +26,10 @@ in
           programs = {
             obsidian = {
               enable = true;
+              vaults = {
+                devops-trainee.target = "documents/devops-trainee";
+                personal.target = "documents/personal";
+              };
             };
           };
         };

@@ -39,7 +39,6 @@ in
 
         extensions = [
           "ansible"
-          "catppuccin"
           "catppuccin-icons"
           "crates-lsp"
           "dockerfile"
@@ -127,9 +126,8 @@ in
               program = "${pkgs.fish}/bin/fish";
             };
             blinking = "on";
+            font_family = "JetBrainsMono Nerd Font Mono";
           };
-          theme = "Catppuccin Mocha";
-
           languages = {
             Nix = {
               language_servers = [
