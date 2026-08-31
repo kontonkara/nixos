@@ -13,6 +13,8 @@
       fd.enable = true;
       fzf.enable = true;
       fish.enable = true;
+      firefox.enable = true;
+      git.enable = true;
       htop.enable = true;
       kdeColorScheme.enable = true;
       nixTools.enable = true;
@@ -31,8 +33,6 @@
     };
 
     programs = {
-      firefox.enable = true;
-      git.enable = true;
       msi-gpu-switcher.enable = true;
       steam.enable = true;
       yandex-browser-corporate.enable = true;

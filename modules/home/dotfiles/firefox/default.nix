@@ -6,12 +6,12 @@
 }:
 
 let
-  cfg = config.modules.programs.firefox;
+  cfg = config.modules.home.firefox;
 in
 {
   options = {
     modules = {
-      programs = {
+      home = {
         firefox = {
           enable = lib.mkEnableOption "Firefox web browser";
         };
@@ -20,12 +20,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    programs = {
-      firefox = {
-        enable = true;
-      };
-    };
-
     home-manager = {
       users = {
         ${username} = {

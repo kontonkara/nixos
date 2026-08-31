@@ -6,12 +6,12 @@
 }:
 
 let
-  cfg = config.modules.programs.git;
+  cfg = config.modules.home.git;
 in
 {
   options = {
     modules = {
-      programs = {
+      home = {
         git = {
           enable = lib.mkEnableOption "Git version-control tooling";
         };
@@ -20,12 +20,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    programs = {
-      git = {
-        enable = true;
-      };
-    };
-
     home-manager = {
       users = {
         ${username} = {
