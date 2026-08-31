@@ -22,12 +22,22 @@ in
       stateVersion = "26.05";
     };
 
-    nixpkgs.config = {
-      allowUnfree = true;
+    nixpkgs = {
+      config = {
+        allowUnfree = true;
+      };
     };
 
-    chaotic.nyx.overlay.flakeNixpkgs.config = {
-      allowUnfree = true;
+    chaotic = {
+      nyx = {
+        overlay = {
+          flakeNixpkgs = {
+            config = {
+              allowUnfree = true;
+            };
+          };
+        };
+      };
     };
 
     nix = {

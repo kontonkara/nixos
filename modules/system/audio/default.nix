@@ -13,7 +13,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    security.rtkit.enable = true;
+    security = {
+      rtkit = {
+        enable = true;
+      };
+    };
 
     services = {
       pulseaudio = {

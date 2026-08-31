@@ -95,46 +95,52 @@ in
   options.modules.home.xdg.enable = lib.mkEnableOption "XDG desktop integration";
 
   config = lib.mkIf cfg.enable {
-    home-manager.users.${username}.xdg = {
-      enable = true;
+    home-manager = {
+      users = {
+        ${username} = {
+          xdg = {
+            enable = true;
 
-      configFile = {
-        "autostart/MControlCenter.desktop".text = ''
-          [Desktop Entry]
-          Categories=System
-          Comment=Tool to change the settings of MSI laptops running Linux
-          Exec=mcontrolcenter
-          Icon=mcontrolcenter
-          Name=MControlCenter
-          Type=Application
-          Version=1.5
-          X-GNOME-Autostart-enabled=true
-        '';
-        "mimeapps.list".force = true;
-      };
+            configFile = {
+              "autostart/MControlCenter.desktop".text = ''
+                [Desktop Entry]
+                Categories=System
+                Comment=Tool to change the settings of MSI laptops running Linux
+                Exec=mcontrolcenter
+                Icon=mcontrolcenter
+                Name=MControlCenter
+                Type=Application
+                Version=1.5
+                X-GNOME-Autostart-enabled=true
+              '';
+              "mimeapps.list".force = true;
+            };
 
-      mimeApps = {
-        enable = true;
-        associations.added = defaultApplications;
-        inherit defaultApplications;
-      };
+            mimeApps = {
+              enable = true;
+              associations.added = defaultApplications;
+              inherit defaultApplications;
+            };
 
-      userDirs = {
-        enable = true;
-        createDirectories = true;
-        setSessionVariables = true;
+            userDirs = {
+              enable = true;
+              createDirectories = true;
+              setSessionVariables = true;
 
-        desktop = "$HOME/desktop";
-        documents = "$HOME/documents";
-        download = "$HOME/downloads";
-        music = "$HOME/music";
-        pictures = "$HOME/pictures";
-        projects = "$HOME/projects";
-        publicShare = "$HOME/public";
-        templates = "$HOME/templates";
-        videos = "$HOME/videos";
+              desktop = "$HOME/desktop";
+              documents = "$HOME/documents";
+              download = "$HOME/downloads";
+              music = "$HOME/music";
+              pictures = "$HOME/pictures";
+              projects = "$HOME/projects";
+              publicShare = "$HOME/public";
+              templates = "$HOME/templates";
+              videos = "$HOME/videos";
 
-        extraConfig.XDG_SCREENSHOTS_DIR = "$HOME/pictures/screenshots";
+              extraConfig.XDG_SCREENSHOTS_DIR = "$HOME/pictures/screenshots";
+            };
+          };
+        };
       };
     };
   };

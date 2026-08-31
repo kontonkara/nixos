@@ -10,11 +10,19 @@ let
   cfg = config.modules.home.dust;
 in
 {
-  options.modules.home.dust.enable = lib.mkEnableOption "dust";
+  options.modules.home.dust.enable = lib.mkEnableOption "dust disk-usage utility";
 
   config = lib.mkIf cfg.enable {
-    home-manager.users.${username}.home.packages = [
-      pkgs.dust
-    ];
+    home-manager = {
+      users = {
+        ${username} = {
+          home = {
+            packages = [
+              pkgs.dust
+            ];
+          };
+        };
+      };
+    };
   };
 }

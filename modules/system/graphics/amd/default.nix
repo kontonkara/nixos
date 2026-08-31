@@ -58,26 +58,34 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    modules.boot.kernel.cachyosConfigOverrides =
-      lib.optionalAttrs cfg.kernel.builtIn.enable {
-        CONFIG_DRM_AMDGPU = "y";
-      }
-      // lib.optionalAttrs cfg.kernel.trimUnsupportedHardware.enable {
-        CONFIG_DRM_AMDGPU_CIK = "n";
-        CONFIG_DRM_AMDGPU_SI = "n";
-        CONFIG_DRM_AMD_ISP = "n";
-        CONFIG_DRM_AMD_SECURE_DISPLAY = "n";
+    modules = {
+      boot = {
+        kernel = {
+          cachyosConfigOverrides =
+            lib.optionalAttrs cfg.kernel.builtIn.enable {
+              CONFIG_DRM_AMDGPU = "y";
+            }
+            // lib.optionalAttrs cfg.kernel.trimUnsupportedHardware.enable {
+              CONFIG_DRM_AMDGPU_CIK = "n";
+              CONFIG_DRM_AMDGPU_SI = "n";
+              CONFIG_DRM_AMD_ISP = "n";
+              CONFIG_DRM_AMD_SECURE_DISPLAY = "n";
+            };
+        };
       };
+    };
 
-    boot.kernelPatches =
-      lib.optional cfg.kernel.removeUnsupportedRgba8888.enable {
-        name = "amdgpu-do-not-advertise-unsupported-rgba8888";
-        patch = ./remove-unsupported-rgba8888.patch;
-      }
-      ++ lib.optional cfg.kernel.preserveRaphaelSmuDpmDuringS0ix.enable {
-        name = "amdgpu-preserve-raphael-smu-dpm-during-s0ix";
-        patch = ./preserve-raphael-smu-dpm-s0ix.patch;
-      };
+    boot = {
+      kernelPatches =
+        lib.optional cfg.kernel.removeUnsupportedRgba8888.enable {
+          name = "amdgpu-do-not-advertise-unsupported-rgba8888";
+          patch = ./remove-unsupported-rgba8888.patch;
+        }
+        ++ lib.optional cfg.kernel.preserveRaphaelSmuDpmDuringS0ix.enable {
+          name = "amdgpu-preserve-raphael-smu-dpm-during-s0ix";
+          patch = ./preserve-raphael-smu-dpm-s0ix.patch;
+        };
+    };
 
     hardware = {
       graphics = {

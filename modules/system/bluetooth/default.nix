@@ -13,15 +13,17 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    hardware.bluetooth = {
-      enable = true;
-      settings = {
-        General = {
-          Experimental = true;
-          FastConnectable = true;
-        };
-        Policy = {
-          AutoEnable = true;
+    hardware = {
+      bluetooth = {
+        enable = true;
+        settings = {
+          General = {
+            Experimental = true;
+            FastConnectable = true;
+          };
+          Policy = {
+            AutoEnable = true;
+          };
         };
       };
     };

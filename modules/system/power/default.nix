@@ -323,39 +323,53 @@ in
         acEventCommands = lib.getExe applyPowerProfile;
       };
 
-      power-profiles-daemon.enable = true;
-    };
-
-    boot.extraModprobeConfig = lib.optionalString cfg.amdPmc.delaySuspend.enable ''
-      options amd_pmc delay_suspend=1
-    '';
-
-    systemd.services.apply-power-profile = {
-      description = "Apply the power profile for the current power source";
-      wantedBy = [ "graphical.target" ];
-      after = [
-        "power-profiles-daemon.service"
-        "systemd-modules-load.service"
-      ];
-      requires = [ "power-profiles-daemon.service" ];
-
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = lib.getExe applyPowerProfile;
+      power-profiles-daemon = {
+        enable = true;
       };
     };
 
-    systemd.user.services.apply-display-power-profile = lib.mkIf cfg.display.enable {
-      description = "Apply the display power profile for the current power source";
-      wantedBy = [ "graphical-session.target" ];
-      after = [ "plasma-kwin_wayland.service" ];
-      partOf = [ "graphical-session.target" ];
+    boot = {
+      extraModprobeConfig = lib.optionalString cfg.amdPmc.delaySuspend.enable ''
+        options amd_pmc delay_suspend=1
+      '';
+    };
 
-      environment.QT_QPA_PLATFORM = "wayland";
+    systemd = {
+      services = {
+        apply-power-profile = {
+          description = "Apply the power profile for the current power source";
+          wantedBy = [ "graphical.target" ];
+          after = [
+            "power-profiles-daemon.service"
+            "systemd-modules-load.service"
+          ];
+          requires = [ "power-profiles-daemon.service" ];
 
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = lib.getExe applyDisplayPowerProfile;
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = lib.getExe applyPowerProfile;
+          };
+        };
+      };
+
+      user = {
+        services = {
+          apply-display-power-profile = lib.mkIf cfg.display.enable {
+            description = "Apply the display power profile for the current power source";
+            wantedBy = [ "graphical-session.target" ];
+            after = [ "plasma-kwin_wayland.service" ];
+            partOf = [ "graphical-session.target" ];
+
+            environment = {
+              QT_QPA_PLATFORM = "wayland";
+            };
+
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = lib.getExe applyDisplayPowerProfile;
+            };
+          };
+        };
       };
     };
   };

@@ -46,7 +46,9 @@ in
         open = true;
         nvidiaSettings = true;
         package = nvidiaPackage;
-        dynamicBoost.enable = cfg.dynamicBoost.enable;
+        dynamicBoost = {
+          enable = cfg.dynamicBoost.enable;
+        };
         moduleParams = {
           nvidia = {
             NVreg_EnableResizableBar = 1;

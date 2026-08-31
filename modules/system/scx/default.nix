@@ -82,12 +82,14 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    services.scx-loader = {
-      enable = true;
-      schedsPackages = [ scxRustScheds ];
-      config = {
-        default_sched = cfg.defaultScheduler;
-        default_mode = cfg.defaultMode;
+    services = {
+      scx-loader = {
+        enable = true;
+        schedsPackages = [ scxRustScheds ];
+        config = {
+          default_sched = cfg.defaultScheduler;
+          default_mode = cfg.defaultMode;
+        };
       };
     };
   };

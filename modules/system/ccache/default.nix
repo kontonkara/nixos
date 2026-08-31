@@ -58,24 +58,38 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    modules.ccache.wrapStdenv =
-      stdenv:
-      pkgs.ccacheStdenv.override {
-        inherit stdenv;
-        extraConfig = wrapperConfig;
+    modules = {
+      ccache = {
+        wrapStdenv =
+          stdenv:
+          pkgs.ccacheStdenv.override {
+            inherit stdenv;
+            extraConfig = wrapperConfig;
+          };
       };
-
-    programs.ccache = {
-      enable = true;
-      inherit (cfg) cacheDir;
-      owner = "root";
-      group = "nixbld";
     };
 
-    systemd.tmpfiles.rules = [
-      "L+ ${toString cfg.cacheDir}/ccache.conf - - - - ${cacheConfig}"
-    ];
+    programs = {
+      ccache = {
+        enable = true;
+        inherit (cfg) cacheDir;
+        owner = "root";
+        group = "nixbld";
+      };
+    };
 
-    nix.settings.extra-sandbox-paths = [ "${toString cfg.cacheDir}?" ];
+    systemd = {
+      tmpfiles = {
+        rules = [
+          "L+ ${toString cfg.cacheDir}/ccache.conf - - - - ${cacheConfig}"
+        ];
+      };
+    };
+
+    nix = {
+      settings = {
+        extra-sandbox-paths = [ "${toString cfg.cacheDir}?" ];
+      };
+    };
   };
 }

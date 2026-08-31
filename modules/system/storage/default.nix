@@ -100,20 +100,30 @@ in
       options = btrfsMountOptions;
     });
 
-    boot.initrd.luks.devices = lib.genAttrs cfg.luks.devices (_device: {
-      inherit (cfg.luks) allowDiscards bypassWorkqueues;
-    });
+    boot = {
+      initrd = {
+        luks = {
+          devices = lib.genAttrs cfg.luks.devices (_device: {
+            inherit (cfg.luks) allowDiscards bypassWorkqueues;
+          });
+        };
+      };
+    };
 
     services = {
-      fstrim.enable = true;
+      fstrim = {
+        enable = true;
+      };
 
-      btrfs.autoScrub = {
-        inherit (cfg.btrfs.scrub)
-          enable
-          fileSystems
-          interval
-          limit
-          ;
+      btrfs = {
+        autoScrub = {
+          inherit (cfg.btrfs.scrub)
+            enable
+            fileSystems
+            interval
+            limit
+            ;
+        };
       };
     };
 

@@ -22,15 +22,17 @@ in
     boot = {
       kernelModules = [ "tcp_bbr" ];
 
-      kernel.sysctl = {
-        "net.core.default_qdisc" = "fq";
-        "net.core.rmem_max" = 16777216;
-        "net.core.wmem_max" = 16777216;
-        "net.ipv4.tcp_rmem" = "4096 87380 16777216";
-        "net.ipv4.tcp_wmem" = "4096 65536 16777216";
-        "net.ipv4.tcp_congestion_control" = "bbr";
-        "net.ipv4.tcp_fastopen" = 3;
-        "net.ipv4.tcp_mtu_probing" = 1;
+      kernel = {
+        sysctl = {
+          "net.core.default_qdisc" = "fq";
+          "net.core.rmem_max" = 16777216;
+          "net.core.wmem_max" = 16777216;
+          "net.ipv4.tcp_rmem" = "4096 87380 16777216";
+          "net.ipv4.tcp_wmem" = "4096 65536 16777216";
+          "net.ipv4.tcp_congestion_control" = "bbr";
+          "net.ipv4.tcp_fastopen" = 3;
+          "net.ipv4.tcp_mtu_probing" = 1;
+        };
       };
 
       extraModprobeConfig = lib.optionalString cfg.wifi.lowLatency.enable ''

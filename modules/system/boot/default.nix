@@ -300,7 +300,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    modules.boot.kernel.cachyosConfigOverrides = lib.mkIf cfg.kernel.lean.enable leanKernelConfigOverrides;
+    modules = {
+      boot = {
+        kernel = {
+          cachyosConfigOverrides = lib.mkIf cfg.kernel.lean.enable leanKernelConfigOverrides;
+        };
+      };
+    };
 
     boot = {
       inherit kernelPackages;
@@ -366,9 +372,11 @@ in
         ])
       ];
 
-      kernel.sysctl = {
-        "kernel.nmi_watchdog" = 0;
-        "fs.file-max" = 2097152;
+      kernel = {
+        sysctl = {
+          "kernel.nmi_watchdog" = 0;
+          "fs.file-max" = 2097152;
+        };
       };
 
       extraModprobeConfig = "options ec_sys write_support=1";
