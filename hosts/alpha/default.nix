@@ -33,6 +33,7 @@
     programs = {
       firefox.enable = true;
       git.enable = true;
+      msi-gpu-switcher.enable = true;
       steam.enable = true;
       yandex-browser-corporate.enable = true;
     };
