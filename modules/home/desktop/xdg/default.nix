@@ -9,8 +9,7 @@ let
   cfg = config.modules.home.xdg;
 
   browser = "firefox.desktop";
-  code = "code.desktop";
-  codeUrlHandler = "code-url-handler.desktop";
+  zed = "dev.zed.Zed.desktop";
   dolphin = "org.kde.dolphin.desktop";
   ark = "org.kde.ark.desktop";
   gwenview = "org.kde.gwenview.desktop";
@@ -25,7 +24,7 @@ let
     "x-scheme-handler/https"
   ];
 
-  codeTypes = [
+  zedTypes = [
     "application/javascript"
     "application/json"
     "application/toml"
@@ -74,7 +73,7 @@ let
 
   defaultApplications =
     lib.genAttrs browserTypes (_: browser)
-    // lib.genAttrs codeTypes (_: code)
+    // lib.genAttrs zedTypes (_: zed)
     // lib.genAttrs imageTypes (_: gwenview)
     // lib.genAttrs archiveTypes (_: ark)
     // {
@@ -88,7 +87,6 @@ let
       "application/x-keepass2" = keepassxc;
       "inode/directory" = dolphin;
       "x-scheme-handler/tg" = telegram;
-      "x-scheme-handler/vscode" = codeUrlHandler;
     };
 in
 {

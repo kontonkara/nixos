@@ -33,6 +33,7 @@
     };
 
     programs = {
+      gamemode.enable = true;
       msi-gpu-switcher.enable = true;
       steam.enable = true;
       yandex-browser-corporate.enable = true;
@@ -45,8 +46,11 @@
     };
 
     services = {
+      lact.enable = true;
       sing-box.enable = true;
       sunshine.enable = true;
+      syncthing.enable = true;
+      timesyncd.enable = true;
       udev.enable = true;
     };
 
