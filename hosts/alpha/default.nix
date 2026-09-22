@@ -18,6 +18,7 @@
     ./../../modules/system/locale
     ./../../modules/system/network
     ./../../modules/system/packages
+    ./../../modules/system/secrets
 
     ./../../users/kontonkara
   ];

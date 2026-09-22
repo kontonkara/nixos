@@ -1,7 +1,8 @@
-{ pkgs, inputs, ... }:
+{ pkgs, inputs, config, ... }:
 
 {
   users = {
+    mutableUsers = false;
     users = {
       kontonkara = {
         isNormalUser = true;
@@ -12,6 +13,7 @@
           keepassxc
           inputs.llm-agents.packages.x86_64-linux.mimo-code
         ];
+        hashedPasswordFile = config.sops.secrets."kontonkara".path;
       };
     };
   };

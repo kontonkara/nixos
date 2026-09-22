@@ -9,6 +9,8 @@
       fuzzel
       xwayland-satellite
       vscode
+      sops
+      age
     ];
   };
 }
