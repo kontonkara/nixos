@@ -22,7 +22,7 @@
             inherit self inputs username;
           };
           modules = [
-            (import ./configuration.nix)
+            ./hosts/alpha
           ];
         };
       };
