@@ -1,20 +1,40 @@
-{ pkgs, inputs, config, ... }:
+{ username, inputs, config, host, pkgs, ... }:
 
 {
   users = {
     mutableUsers = false;
     users = {
-      kontonkara = {
-        isNormalUser = true;
-        extraGroups = [ "wheel" ];
-        packages = with pkgs; [
-          tree
-          telegram-desktop
-          keepassxc
-          inputs.llm-agents.packages.x86_64-linux.mimo-code
-        ];
-        hashedPasswordFile = config.sops.secrets."kontonkara".path;
+      ${username} = {
+      shell = pkgs.fish;
+      isNormalUser = true;
+      extraGroups = [
+        "networkmanager"
+        "wheel"
+        "input"
+        "render"
+        "uinput"
+        "video"
+      ];
+       hashedPasswordFile = config.sops.secrets."kontonkara".path;
       };
     };
+  };
+
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    extraSpecialArgs = {
+      inherit inputs username host;
+    };
+    users = {
+      ${username} = {
+        home = {
+          username = "${username}";
+          homeDirectory = "/home/${username}";
+          stateVersion = config.system.stateVersion;
+        };
+      };
+    };
+    backupFileExtension = "backup";
   };
 }

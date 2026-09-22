@@ -7,13 +7,17 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     llm-agents = {
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, sops-nix, ... }@inputs:
+  outputs = { self, nixpkgs, sops-nix, home-manager, ... }@inputs:
     let
       username = "kontonkara";
       system = "x86_64-linux";
@@ -26,8 +30,9 @@
             inherit self inputs username;
           };
           modules = [
-            sops-nix.nixosModules.sops
             ./hosts/alpha
+            sops-nix.nixosModules.sops
+            home-manager.nixosModules.home-manager
           ];
         };
       };

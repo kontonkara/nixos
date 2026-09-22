@@ -8,7 +8,12 @@
   imports = [
     ./hardware.nix
 
+    ./../../modules/home/apps
+    ./../../modules/home/dotfiles/fish
+    ./../../modules/home/dotfiles/obsidian
+
     ./../../modules/programs/firefox
+    ./../../modules/programs/fish
     ./../../modules/programs/git
     ./../../modules/programs/niri
 
