@@ -8,14 +8,16 @@
   modules = {
     home = {
       apps.enable = true;
+      git.enable = true;
       fish.enable = true;
+      starship.enable = true;
       obsidian.enable = true;
+      vscode.enable = true;
     };
 
     programs = {
       firefox.enable = true;
       fish.enable = true;
-      git.enable = true;
       niri.enable = true;
       yandex-browser-corporate.enable = true;
     };
