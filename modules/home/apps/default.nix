@@ -23,6 +23,7 @@ in
               tree
               telegram-desktop
               keepassxc
+              nemo
               inputs.llm-agents.packages.x86_64-linux.mimo-code
             ];
           };

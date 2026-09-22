@@ -22,13 +22,7 @@
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      sops-nix,
-      home-manager,
-      ...
-    }@inputs:
+    { self, nixpkgs, sops-nix, home-manager, ... }@inputs:
     let
       inherit (nixpkgs) lib;
 

@@ -24,6 +24,20 @@
       audio.enable = true;
       boot.enable = true;
       core.enable = true;
+      graphics = {
+        amd = {
+          enable = true;
+          mesa = {
+            cpuArch = "znver4";
+            optimizationLevel = 3;
+            disableAssertions = true;
+          };
+        };
+        nvidia = {
+          enable = true;
+          dynamicBoost.enable = true;
+        };
+      };
       locale.enable = true;
       network.enable = true;
       packages.enable = true;
