@@ -1,18 +1,34 @@
-{ ... }:
+{ config, lib, ... }:
+
+let
+  cfg = config.modules.system.secrets;
+in
 {
-  sops = {
-    defaultSopsFile = ./../../../secrets/secrets.yaml;
-    age = {
-      keyFile = "/var/lib/sops-nix/key.txt";
-      sshKeyPaths = [ ];
-    };
-    secrets = {
-      "kontonkara" = {
-        neededForUsers = true;
+  options = {
+    modules = {
+      system = {
+        secrets = {
+          enable = lib.mkEnableOption "sops-nix secrets";
+        };
       };
-      "yandex-browser" = {
-        owner = "kontonkara";
-        mode = "0400";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    sops = {
+      defaultSopsFile = ./../../../secrets/secrets.yaml;
+      age = {
+        keyFile = "/var/lib/sops-nix/key.txt";
+        sshKeyPaths = [ ];
+      };
+      secrets = {
+        "kontonkara" = {
+          neededForUsers = true;
+        };
+        "yandex-browser" = {
+          owner = "kontonkara";
+          mode = "0400";
+        };
       };
     };
   };

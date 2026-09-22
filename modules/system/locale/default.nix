@@ -1,16 +1,31 @@
-{ ... }:
+{ config, lib, ... }:
 
+let
+  cfg = config.modules.system.locale;
+in
 {
-  i18n = {
-    defaultLocale = "en_US.UTF-8";
+  options = {
+    modules = {
+      system = {
+        locale = {
+          enable = lib.mkEnableOption "locale, timezone and console font";
+        };
+      };
+    };
   };
 
-  console = {
-    font = "Lat2-Terminus16";
-    useXkbConfig = true;
-  };
+  config = lib.mkIf cfg.enable {
+    i18n = {
+      defaultLocale = "en_US.UTF-8";
+    };
 
-  time = {
-    timeZone = "Europe/Minsk";
+    console = {
+      font = "Lat2-Terminus16";
+      useXkbConfig = true;
+    };
+
+    time = {
+      timeZone = "Europe/Minsk";
+    };
   };
 }

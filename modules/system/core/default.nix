@@ -1,22 +1,37 @@
-{ ... }:
+{ config, lib, ... }:
 
+let
+  cfg = config.modules.system.core;
+in
 {
-  system = {
-    stateVersion = "26.05";
-  };
-
-  nix = {
-    settings = {
-      experimental-features = [ 
-        "nix-command"
-        "flakes"
-      ];
+  options = {
+    modules = {
+      system = {
+        core = {
+          enable = lib.mkEnableOption "core system settings";
+        };
+      };
     };
   };
-  
-  nixpkgs = {
-    config = {
-      allowUnfree = true;
+
+  config = lib.mkIf cfg.enable {
+    system = {
+      stateVersion = "26.05";
+    };
+
+    nix = {
+      settings = {
+        experimental-features = [
+          "nix-command"
+          "flakes"
+        ];
+      };
+    };
+
+    nixpkgs = {
+      config = {
+        allowUnfree = true;
+      };
     };
   };
 }

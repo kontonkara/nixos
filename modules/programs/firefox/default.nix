@@ -1,9 +1,24 @@
-{ ... }:
+{ config, lib, ... }:
 
+let
+  cfg = config.modules.programs.firefox;
+in
 {
-  programs = {
-    firefox = {
-      enable = true;
+  options = {
+    modules = {
+      programs = {
+        firefox = {
+          enable = lib.mkEnableOption "Firefox";
+        };
+      };
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    programs = {
+      firefox = {
+        enable = true;
+      };
     };
   };
 }

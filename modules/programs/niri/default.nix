@@ -1,9 +1,24 @@
-{ ... }:
+{ config, lib, ... }:
 
+let
+  cfg = config.modules.programs.niri;
+in
 {
-  programs = {
-    niri = {
-      enable = true;
+  options = {
+    modules = {
+      programs = {
+        niri = {
+          enable = lib.mkEnableOption "niri Wayland compositor";
+        };
+      };
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    programs = {
+      niri = {
+        enable = true;
+      };
     };
   };
 }

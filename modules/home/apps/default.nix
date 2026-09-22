@@ -1,16 +1,31 @@
-{ username, inputs, pkgs, ... }:
+{ config, lib, username, inputs, pkgs, ... }:
 
+let
+  cfg = config.modules.home.apps;
+in
 {
-  home-manager = {
-    users = {
-      ${username} = {
-        home = {
-          packages = with pkgs; [
-            tree
-            telegram-desktop
-            keepassxc
-            inputs.llm-agents.packages.x86_64-linux.mimo-code
-          ];
+  options = {
+    modules = {
+      home = {
+        apps = {
+          enable = lib.mkEnableOption "home applications";
+        };
+      };
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    home-manager = {
+      users = {
+        ${username} = {
+          home = {
+            packages = with pkgs; [
+              tree
+              telegram-desktop
+              keepassxc
+              inputs.llm-agents.packages.x86_64-linux.mimo-code
+            ];
+          };
         };
       };
     };

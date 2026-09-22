@@ -5,27 +5,33 @@
     hostName = "alpha";
   };
 
-  imports = [
-    ./hardware.nix
+  modules = {
+    home = {
+      apps.enable = true;
+      fish.enable = true;
+      obsidian.enable = true;
+    };
 
-    ./../../modules/home/apps
-    ./../../modules/home/dotfiles/fish
-    ./../../modules/home/dotfiles/obsidian
+    programs = {
+      firefox.enable = true;
+      fish.enable = true;
+      git.enable = true;
+      niri.enable = true;
+      yandex-browser-corporate.enable = true;
+    };
 
-    ./../../modules/programs/firefox
-    ./../../modules/programs/fish
-    ./../../modules/programs/git
-    ./../../modules/programs/niri
-    ./../../modules/programs/yandex-browser-corporate
+    system = {
+      audio.enable = true;
+      boot.enable = true;
+      core.enable = true;
+      locale.enable = true;
+      network.enable = true;
+      packages.enable = true;
+      secrets.enable = true;
+    };
 
-    ./../../modules/system/audio
-    ./../../modules/system/boot
-    ./../../modules/system/core
-    ./../../modules/system/locale
-    ./../../modules/system/network
-    ./../../modules/system/packages
-    ./../../modules/system/secrets
-
-    ./../../users/kontonkara
-  ];
+    users = {
+      kontonkara.enable = true;
+    };
+  };
 }
