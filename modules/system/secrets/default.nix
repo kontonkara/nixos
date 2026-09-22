@@ -10,6 +10,10 @@
       "kontonkara" = {
         neededForUsers = true;
       };
+      "yandex-browser" = {
+        owner = "kontonkara";
+        mode = "0400";
+      };
     };
   };
 }

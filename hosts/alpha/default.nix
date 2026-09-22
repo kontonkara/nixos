@@ -16,6 +16,7 @@
     ./../../modules/programs/fish
     ./../../modules/programs/git
     ./../../modules/programs/niri
+    ./../../modules/programs/yandex-browser-corporate
 
     ./../../modules/system/audio
     ./../../modules/system/boot

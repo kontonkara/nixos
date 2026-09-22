@@ -11,13 +11,17 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixpak = {
+      url = "github:nixpak/nixpak";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     llm-agents = {
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, sops-nix, home-manager, ... }@inputs:
+  outputs = { self, nixpkgs, sops-nix, home-manager, nixpak, ... }@inputs:
     let
       username = "kontonkara";
       system = "x86_64-linux";
