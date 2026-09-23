@@ -23,9 +23,15 @@ in
               tree
               telegram-desktop
               keepassxc
-              nemo
+              nautilus
               inputs.llm-agents.packages.x86_64-linux.mimo-code
             ];
+          };
+
+          # yazi is the keyboard-driven primary; nautilus answers
+          # "open folder" requests from other apps and covers DnD edge cases.
+          xdg.mimeApps.defaultApplications = {
+            "inode/directory" = [ "nautilus.desktop" ];
           };
         };
       };

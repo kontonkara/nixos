@@ -10,7 +10,9 @@
       apps.enable = true;
       git.enable = true;
       fish.enable = true;
+      kitty.enable = true;
       starship.enable = true;
+      yazi.enable = true;
       obsidian.enable = true;
       vscode.enable = true;
       niri.enable = true;

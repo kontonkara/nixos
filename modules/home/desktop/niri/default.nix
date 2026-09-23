@@ -81,13 +81,14 @@ in
               settings =
                 let
                   decoration = import ./decoration.nix;
+                  rules = import ./rules.nix;
                 in
                 {
                   input = import ./input.nix;
                   outputs = import ./outputs.nix;
                   layout = import ./layout.nix;
                   inherit (decoration) prefer-no-csd animations;
-                  window-rules = import ./rules.nix;
+                  inherit (rules) window-rules layer-rules;
                   spawn-at-startup = import ./startup.nix;
                   binds = import ./binds.nix;
 
@@ -97,7 +98,7 @@ in
                   xwayland-satellite = {
                     enable = true;
                   };
-                  screenshot-path = "~/Pictures/Screenshots/%Y-%m-%dT%H:%M:%S.png";
+                  screenshot-path = "~/pictures/screenshots/%Y-%m-%dT%H:%M:%S.png";
                 };
             };
           };

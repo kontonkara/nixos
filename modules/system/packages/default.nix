@@ -19,7 +19,6 @@ in
       systemPackages = with pkgs; [
         vim
         wget
-        alacritty
         fuzzel
         xwayland-satellite
         sops

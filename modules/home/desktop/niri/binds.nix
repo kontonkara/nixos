@@ -2,12 +2,21 @@
   "Mod+Shift+Slash".action.show-hotkey-overlay = [ ];
 
   "Mod+T" = {
-    hotkey-overlay.title = "Open a Terminal: alacritty";
-    action.spawn = [ "alacritty" ];
+    hotkey-overlay.title = "Open a Terminal: kitty";
+    action.spawn = [ "kitty" ];
   };
   "Mod+E" = {
-    hotkey-overlay.title = "Open a File Browser: nemo";
-    action.spawn = [ "nemo" ];
+    hotkey-overlay.title = "Open a File Browser: yazi";
+    action.spawn = [
+      "kitty"
+      "--class"
+      "yazi"
+      "yazi"
+    ];
+  };
+  "Mod+Shift+E" = {
+    hotkey-overlay.title = "Open a File Browser (GUI): nautilus";
+    action.spawn = [ "nautilus" ];
   };
   "Mod+D" = {
     hotkey-overlay.title = "Run an Application: fuzzel";
@@ -228,7 +237,6 @@
     action.toggle-keyboard-shortcuts-inhibit = [ ];
   };
 
-  "Mod+Shift+E".action.quit = [ ];
   "Ctrl+Alt+Delete".action.quit = [ ];
 
   "Mod+Shift+P".action.power-off-monitors = [ ];

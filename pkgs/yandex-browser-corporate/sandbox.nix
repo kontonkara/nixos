@@ -284,6 +284,11 @@ mkNixPak {
             "/etc/opt/yandex/browser"
           ]
           [ "${spoofedMachineId}" "/etc/machine-id" ]
+          # Pulse/PipeWire auth cookie; synthetic HOME would not see it otherwise.
+          [
+            (hostAppDir "/.config/pulse")
+            "${sandboxHome}/.config/pulse"
+          ]
         ];
 
         bind.dev = [ "/dev/dri" ];
@@ -297,6 +302,8 @@ mkNixPak {
           XDG_DATA_HOME = "${sandboxHome}/.local/share";
           XDG_STATE_HOME = "${sandboxHome}/.local/state";
           XDG_RUNTIME_DIR = sloth.runtimeDir;
+          PULSE_SERVER = runtimePath "/pulse/native";
+          PIPEWIRE_REMOTE = "pipewire-0";
           XDG_DOWNLOAD_DIR = "${sandboxHome}/downloads";
           XDG_SESSION_TYPE = "wayland";
           GDK_BACKEND = "wayland";
