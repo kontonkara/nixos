@@ -31,6 +31,7 @@
       audio.enable = true;
       bluetooth.enable = true;
       boot.enable = true;
+      ccache.enable = true;
       core.enable = true;
       graphics = {
         amd = {
