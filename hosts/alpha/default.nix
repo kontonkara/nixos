@@ -33,6 +33,10 @@
       boot.enable = true;
       ccache.enable = true;
       core.enable = true;
+      environment = {
+        enable = true;
+        gaming.enable = true;
+      };
       graphics = {
         amd = {
           enable = true;
