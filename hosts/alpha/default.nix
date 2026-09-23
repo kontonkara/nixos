@@ -41,6 +41,7 @@
         };
       };
       services.ly.enable = true;
+      services.sunshine.enable = true;
       locale.enable = true;
       network.enable = true;
       packages.enable = true;

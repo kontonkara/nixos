@@ -78,22 +78,27 @@ in
         ${username} = {
           programs = {
             niri = {
-              settings = {
-                input = import ./input.nix;
-                outputs = import ./outputs.nix;
-                layout = (import ./layout.nix) // (import ./decoration.nix);
-                window-rules = import ./rules.nix;
-                spawn-at-startup = import ./startup.nix;
-                binds = import ./binds.nix;
+              settings =
+                let
+                  decoration = import ./decoration.nix;
+                in
+                {
+                  input = import ./input.nix;
+                  outputs = import ./outputs.nix;
+                  layout = import ./layout.nix;
+                  inherit (decoration) prefer-no-csd animations;
+                  window-rules = import ./rules.nix;
+                  spawn-at-startup = import ./startup.nix;
+                  binds = import ./binds.nix;
 
-                hotkey-overlay = {
-                  skip-at-startup = true;
+                  hotkey-overlay = {
+                    skip-at-startup = true;
+                  };
+                  xwayland-satellite = {
+                    enable = true;
+                  };
+                  screenshot-path = "~/Pictures/Screenshots/%Y-%m-%dT%H:%M:%S.png";
                 };
-                xwayland-satellite = {
-                  enable = true;
-                };
-                screenshot-path = "~/Pictures/Screenshots/%Y-%m-%dT%H:%M:%S.png";
-              };
             };
           };
         };
