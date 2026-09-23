@@ -14,6 +14,9 @@
       obsidian.enable = true;
       vscode.enable = true;
       niri.enable = true;
+      xdg.enable = true;
+      gtk.enable = true;
+      dconf.enable = true;
     };
 
     programs = {
