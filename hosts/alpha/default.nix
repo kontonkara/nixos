@@ -13,12 +13,12 @@
       starship.enable = true;
       obsidian.enable = true;
       vscode.enable = true;
+      niri.enable = true;
     };
 
     programs = {
       firefox.enable = true;
       fish.enable = true;
-      niri.enable = true;
       yandex-browser-corporate.enable = true;
     };
 

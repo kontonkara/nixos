@@ -15,6 +15,11 @@
       url = "github:nixpak/nixpak";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    niri = {
+      url = "github:sodiboo/niri-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.niri-stable.url = "github:YaLTeR/niri/main";
+    };
     llm-agents = {
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -22,7 +27,7 @@
   };
 
   outputs =
-    { self, nixpkgs, sops-nix, home-manager, ... }@inputs:
+    { self, nixpkgs, sops-nix, home-manager, niri, ... }@inputs:
     let
       inherit (nixpkgs) lib;
 
@@ -90,6 +95,7 @@
             sharedModules
             ++ hostModules host
             ++ [
+              niri.nixosModules.niri
               sops-nix.nixosModules.sops
               home-manager.nixosModules.home-manager
             ];
