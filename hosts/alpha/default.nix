@@ -45,8 +45,13 @@
           dynamicBoost.enable = true;
         };
       };
+      services.gvfs.enable = true;
+      services.localsearch.enable = true;
       services.ly.enable = true;
       services.sunshine.enable = true;
+      services.tinysparql.enable = true;
+      services.udisks2.enable = true;
+      services.upower.enable = true;
       locale.enable = true;
       network.enable = true;
       packages.enable = true;
