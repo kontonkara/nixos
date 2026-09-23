@@ -9,10 +9,10 @@ in
       system = {
         graphics = {
           nvidia = {
-            enable = lib.mkEnableOption "NVIDIA hybrid graphics";
+            enable = lib.mkEnableOption "nvidia hybrid graphics";
 
             dynamicBoost = {
-              enable = lib.mkEnableOption "NVIDIA Dynamic Boost power balancing";
+              enable = lib.mkEnableOption "nvidia dynamic boost power balancing";
             };
           };
         };

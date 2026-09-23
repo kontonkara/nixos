@@ -8,7 +8,7 @@ in
     modules = {
       programs = {
         niri = {
-          enable = lib.mkEnableOption "niri Wayland compositor";
+          enable = lib.mkEnableOption "niri wayland compositor";
         };
       };
     };

@@ -40,6 +40,7 @@
           dynamicBoost.enable = true;
         };
       };
+      services.ly.enable = true;
       locale.enable = true;
       network.enable = true;
       packages.enable = true;

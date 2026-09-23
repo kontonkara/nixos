@@ -4,7 +4,7 @@ let
   cfg = config.modules.home.starship;
 in
 {
-  options.modules.home.starship.enable = lib.mkEnableOption "Starship shell-prompt configuration";
+  options.modules.home.starship.enable = lib.mkEnableOption "starship shell-prompt configuration";
 
   config = lib.mkIf cfg.enable {
     home-manager = {

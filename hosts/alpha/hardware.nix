@@ -50,7 +50,8 @@
       fsType = "btrfs";
     };
 
-  boot.initrd.luks.devices."data".device = "/dev/disk/by-uuid/616c4598-89ac-4e5e-b522-4fd98a6bf5ae";
+  # No boot.initrd.luks.devices."data": the data volume is opened by
+  # unlock-data.service after sops-nix, not in the initrd.
 
   swapDevices = [ ];
 

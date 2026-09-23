@@ -9,7 +9,7 @@ in
     modules = {
       programs = {
         yandex-browser-corporate = {
-          enable = lib.mkEnableOption "corporate Yandex Browser in a NixPak sandbox";
+          enable = lib.mkEnableOption "corporate yandex browser in a nixpak sandbox";
 
           licenseSecretPath = lib.mkOption {
             type = lib.types.str;

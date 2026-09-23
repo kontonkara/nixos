@@ -8,7 +8,7 @@ in
     modules = {
       home = {
         vscode = {
-          enable = lib.mkEnableOption "Visual Studio Code home configuration";
+          enable = lib.mkEnableOption "visual studio code home configuration";
         };
       };
     };

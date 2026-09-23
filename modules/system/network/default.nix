@@ -8,7 +8,7 @@ in
     modules = {
       system = {
         network = {
-          enable = lib.mkEnableOption "NetworkManager";
+          enable = lib.mkEnableOption "networkmanager";
         };
       };
     };

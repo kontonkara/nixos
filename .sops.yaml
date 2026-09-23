@@ -7,3 +7,9 @@ creation_rules:
       - age:
           - *kontonkara
           - *alpha
+  # Binary sops payloads (LUKS keyfiles, keytabs, ...), one file = one secret.
+  - path_regex: secrets/[^/.]+$
+    key_groups:
+      - age:
+          - *kontonkara
+          - *alpha

@@ -8,7 +8,7 @@ in
     modules = {
       home = {
         obsidian = {
-          enable = lib.mkEnableOption "Obsidian";
+          enable = lib.mkEnableOption "obsidian";
         };
       };
     };

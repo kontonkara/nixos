@@ -8,7 +8,7 @@ in
     modules = {
       system = {
         audio = {
-          enable = lib.mkEnableOption "PipeWire audio";
+          enable = lib.mkEnableOption "pipewire audio";
         };
       };
     };

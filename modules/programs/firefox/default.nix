@@ -8,7 +8,7 @@ in
     modules = {
       programs = {
         firefox = {
-          enable = lib.mkEnableOption "Firefox";
+          enable = lib.mkEnableOption "firefox";
         };
       };
     };

@@ -8,7 +8,7 @@ in
     modules = {
       home = {
         git = {
-          enable = lib.mkEnableOption "Git version-control tooling";
+          enable = lib.mkEnableOption "git version-control tooling";
         };
       };
     };
