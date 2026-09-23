@@ -10,6 +10,7 @@
       apps.enable = true;
       git.enable = true;
       fish.enable = true;
+      firefox.enable = true;
       kitty.enable = true;
       starship.enable = true;
       yazi.enable = true;
@@ -22,7 +23,6 @@
     };
 
     programs = {
-      firefox.enable = true;
       fish.enable = true;
       yandex-browser-corporate.enable = true;
     };
