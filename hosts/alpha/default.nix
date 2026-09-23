@@ -29,6 +29,7 @@
 
     system = {
       audio.enable = true;
+      bluetooth.enable = true;
       boot.enable = true;
       core.enable = true;
       graphics = {
