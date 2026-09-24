@@ -52,67 +52,35 @@
   };
 
   outputs =
-    { self, nixpkgs, chaotic, sops-nix, home-manager, niri, ... }@inputs:
+    { nixpkgs, chaotic, sops-nix, home-manager, niri, ... }@inputs:
     let
       inherit (nixpkgs) lib;
 
       username = "kontonkara";
-      system = "x86_64-linux";
 
-      discoverModules =
-        {
-          root,
-          matches,
-          excludedDirectories ? [ ],
-        }:
-        let
-          walk =
-            directory:
-            let
-              entries = builtins.readDir directory;
-            in
-            lib.concatMap (
-              name:
-              let
-                entryType = entries.${name};
-                path = directory + "/${name}";
-              in
-              if entryType == "directory" then
-                if builtins.elem name excludedDirectories then [ ] else walk path
-              else if entryType == "regular" && matches name then
-                [ path ]
-              else
-                [ ]
-            ) (builtins.attrNames entries);
-        in
-        walk root;
-
-      sharedModules =
-        (discoverModules {
-          root = ./modules;
-          matches = name: name == "default.nix";
-        })
-        ++ (discoverModules {
-          root = ./users;
-          matches = name: name == "default.nix";
-        });
+      # Every default.nix under modules/ and users/ is imported as a module
+      # gated by its own enable option, so packages live in pkgs/, not here.
+      # Other files next to it (layouts, patches) are imported by hand.
+      sharedModules = lib.fileset.toList (
+        lib.fileset.unions (
+          map (lib.fileset.fileFilter (file: file.name == "default.nix")) [
+            ./modules
+            ./users
+          ]
+        )
+      );
 
       hostModules =
-        host:
-        discoverModules {
-          root = ./hosts/${host};
-          matches = name: lib.hasSuffix ".nix" name;
-        };
+        host: lib.fileset.toList (lib.fileset.fileFilter (file: file.hasExt "nix") ./hosts/${host});
 
+      # The system comes from nixpkgs.hostPlatform in the host's hardware.nix.
       mkHost =
         host:
         lib.nixosSystem {
-          inherit system;
           specialArgs = {
             inherit
               host
               inputs
-              self
               username
               ;
           };

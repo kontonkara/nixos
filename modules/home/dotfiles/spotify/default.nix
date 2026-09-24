@@ -1,9 +1,9 @@
-{ config, lib, inputs, username, ... }:
+{ config, lib, pkgs, inputs, username, ... }:
 
 let
   cfg = config.modules.home.spotify;
 
-  spicePkgs = inputs.spicetify-nix.legacyPackages.x86_64-linux;
+  spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 
   hmConfig = config.home-manager.users.${username};
   hmStylix = hmConfig.stylix;

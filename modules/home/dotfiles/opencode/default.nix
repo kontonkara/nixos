@@ -1,4 +1,4 @@
-{ config, lib, inputs, username, ... }:
+{ config, lib, pkgs, inputs, username, ... }:
 
 let
   cfg = config.modules.home.opencode;
@@ -27,7 +27,7 @@ in
               enable = true;
               # Upstream's release binary, bumped with the other llm-agents
               # tools rather than rebuilt from source like nixpkgs' opencode.
-              package = inputs.llm-agents.packages.x86_64-linux.opencode;
+              package = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.opencode;
 
               settings = {
                 # It can't replace a store binary: every start would only

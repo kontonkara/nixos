@@ -1,4 +1,4 @@
-{ config, lib, inputs, username, ... }:
+{ config, lib, pkgs, inputs, username, ... }:
 
 let
   cfg = config.modules.home.mimo-code;
@@ -23,7 +23,7 @@ in
         ${username} = {
           home = {
             packages = [
-              inputs.llm-agents.packages.x86_64-linux.mimo-code
+              inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.mimo-code
             ];
           };
 
