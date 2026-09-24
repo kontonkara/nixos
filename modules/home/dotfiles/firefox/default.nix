@@ -71,6 +71,12 @@ in
                 DisableFirefoxStudies = true;
                 DisablePocket = true;
                 DisableTelemetry = true;
+                # DoH would resolve proxied domains to real IPs and skip the
+                # sing-box fakeip route.
+                DNSOverHTTPS = {
+                  Enabled = false;
+                  Locked = true;
+                };
                 EnableTrackingProtection = {
                   Value = true;
                   Locked = false;

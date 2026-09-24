@@ -54,6 +54,7 @@
       services.gvfs.enable = true;
       services.localsearch.enable = true;
       services.ly.enable = true;
+      services.sing-box.enable = true;
       services.sunshine.enable = true;
       services.tinysparql.enable = true;
       services.udisks2.enable = true;
