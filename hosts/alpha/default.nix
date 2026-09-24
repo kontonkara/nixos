@@ -66,6 +66,7 @@
       services.sing-box.enable = true;
       services.sunshine.enable = true;
       services.tinysparql.enable = true;
+      services.udev.enable = true;
       services.udisks2.enable = true;
       services.upower.enable = true;
       locale.enable = true;
