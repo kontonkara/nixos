@@ -36,9 +36,9 @@
   # ── [audio] ──────────────────────────────────────────────────────────────
   audio = {
     enable_overdrive = false; # allow volume above 100% (up to 150%)
-    enable_sounds = false; # master switch for UI sound effects
+    enable_sounds = true; # CHANGED (default: false) master switch for UI sound effects
     notification_sound = ""; # sound file for notifications; "" = bundled notification.wav
-    sound_volume = 0.5; # UI sound volume; 0.0–1.0
+    sound_volume = 0.25; # CHANGED (default: 0.5) UI sound volume; 0.0–1.0
     volume_change_sound = ""; # sound file for volume feedback; "" = bundled volume-change.wav
   };
 
@@ -70,6 +70,7 @@
       capsule_group = [ ]; # shared capsules { id, members, fill, padding, opacity, accordion, … }, used as "group:<id>" in a lane
       capsule_opacity = 1.0; # capsule background opacity; 0.0–1.0
       capsule_padding = 6.0; # padding inside capsules in px, before scale; 0–48
+      capsule_radius = 4.0; # CHANGED (default: unset = pill, half the capsule height) capsule, workspace pill and hover highlight corner radius in px, as the bar's radius; 0 = square; 0–80
       capsule_thickness = 0.76; # capsule size across the bar, fraction of thickness; 0.1–1.0
       center = [
         "clock"
@@ -150,15 +151,15 @@
 
   # ── [control_center] ─────────────────────────────────────────────────────
   control_center = {
-    hidden_tabs = [ ]; # tabs to hide: media audio monitor system network bluetooth weather calendar notifications screen-time power
-    show_session_button = true; # session-actions button in the Home header
-    show_shortcut_labels = true; # text labels under the Home shortcut icons
+    hidden_tabs = [ "monitor" "calendar" ]; # CHANGED (default: [ ]) tabs to hide: media audio monitor system network bluetooth weather calendar notifications screen-time power
+    show_session_button = false; # CHANGED (default: true) session-actions button in the Home header
+    show_shortcut_labels = false; # CHANGED (default: true) text labels under the Home shortcut icons
     sidebar = "compact"; # full | compact | none; sidebar on Home / plain open
-    sidebar_section = "compact"; # full | compact | none; sidebar when opened straight to a tab
+    sidebar_section = "none"; # CHANGED (default: "compact") full | compact | none; sidebar when opened straight to a tab
     width = 700; # full-sidebar width in px (compact/none scale down from it); 600–1200
 
     calendar = {
-      show_events_card = true; # event list beside the month grid
+      show_events_card = false; # CHANGED (default: true) event list beside the month grid
       show_week_numbers = false; # ISO 8601 week numbers beside the month grid
     };
 
@@ -183,7 +184,7 @@
   # Widgets are placed in edit mode, which saves them to settings.toml
   # (widget_order and widget.<id> stay unset here).
   desktop_widgets = {
-    enabled = true; # show widgets on the desktop
+    enabled = false; # CHANGED (default: true) show widgets on the desktop
     schema_version = 2; # layout format version, a migration marker; leave as is
 
     grid = {
@@ -205,7 +206,7 @@
     concave_edge_corners = true; # carve concave corners on the screen-edge side; needs margin_edge = 0
     cross_axis_padding = 8; # padding between icons and the screen edge in px; 0–100
     enabled = true; # CHANGED (default: false) show the dock
-    icon_size = 48; # icon size in px before ui_scale; 16–128
+    icon_size = 40; # CHANGED (default: 48) icon size in px before ui_scale; 16–128
     inactive_opacity = 0.85; # unfocused app icon opacity; 0.0–1.0
     inactive_scale = 0.85; # unfocused app icon scale; 0.1–1.0
     item_spacing = 6; # gap between items in px; 0–100
@@ -215,7 +216,7 @@
     launcher_position = "none"; # none | start | end; launcher button on the dock
     layer = "top"; # top | overlay (above fullscreen windows)
     magnification = true; # magnify icons near the pointer (macOS style)
-    magnification_scale = 1.45; # maximum magnification at the pointer, 1.0 = off; 1.0–2.0
+    magnification_scale = 1.3; # CHANGED (default: 1.45) maximum magnification at the pointer, 1.0 = off; 1.0–2.0
     main_axis_padding = 16; # padding before the first and after the last icon in px; 0–100
     margin_edge = 8; # CHANGED (default: 0) gap to the screen edge in px; > 0 floats the dock; 0–100
     margin_ends = 0; # inset from both ends in px; 0–500
@@ -225,10 +226,10 @@
     # radius seeds all four corners, but the explicit radius_* keys below win:
     # change them together.
     radius = 16; # corner radius in px; 0–80
-    radius_bottom_left = 16; # 0–80
-    radius_bottom_right = 16; # 0–80
-    radius_top_left = 16; # 0–80
-    radius_top_right = 16; # 0–80
+    radius_bottom_left = 8; # CHANGED (default: 16) 0–80
+    radius_bottom_right = 8; # CHANGED (default: 16) 0–80
+    radius_top_left = 8; # CHANGED (default: 16) 0–80
+    radius_top_right = 8; # CHANGED (default: 16) 0–80
     reserve_space = false; # CHANGED (default: true) reserve an exclusive zone so windows don't cover the dock
     shadow = true; # cast the global [shell.shadow]
     show_dots = true; # CHANGED (default: false) running-window dots below the icons
@@ -401,21 +402,21 @@
     offset_y = 8; # vertical margin from the screen/bar edge in px
     position = "top_right"; # top_right | top_left | top_center | bottom_right | bottom_left | bottom_center
     scale = 1.0; # toast size on top of ui_scale; 0.5–2.5
-    show_actions = true; # action buttons; off = clicking the toast runs its default action
+    show_actions = false; # CHANGED (default: true) action buttons; off = clicking the toast runs its default action
     show_app_name = true; # sender app name in toasts
   };
 
   # ── [osd] ────────────────────────────────────────────────────────────────
   osd = {
     # background_opacity: set by stylix (modules/home/desktop/stylix), stylix.opacity.popups, currently 1.0 (Noctalia default: 0.97); 0.0–1.0
-    border = true; # outline around OSD popups
+    border = false; # CHANGED (default: true) outline around OSD popups
     enabled = true; # master switch for all OSD popups
     monitors = [ ]; # connectors that show OSDs; empty = all
     offset_x = 20; # horizontal margin from the screen edge in px; >= 0
     offset_y = 8; # vertical margin from the screen edge in px; >= 0
     orientation = "horizontal"; # horizontal | vertical (volume/brightness sliders)
-    position = "top_right"; # CHANGED (default: "top_center") top_right | top_left | top_center | bottom_* | center_right | center_left
-    position_vertical = "top_center"; # same values; used when orientation = "vertical"
+    position = "bottom_center"; # CHANGED (default: "top_center") top_right | top_left | top_center | bottom_* | center_right | center_left
+    position_vertical = "top_right"; # CHANGED (default: "top_center") same values; used when orientation = "vertical"
     scale = 1.0; # OSD size on top of ui_scale; 0.5–2.5
 
     # Which events show an OSD popup.
@@ -425,7 +426,7 @@
       caffeine = true; # idle inhibitor toggled
       dnd = true; # Do Not Disturb toggled
       keyboard_backlight = true; # keyboard backlight level changed
-      keyboard_layout = false; # CHANGED (default: true) keyboard layout switched
+      keyboard_layout = true; # keyboard layout switched
       lock_keys = true; # Caps/Num/Scroll Lock changed
       media = false; # CHANGED (default: true) new track started playing
       nightlight = true; # night light toggled
@@ -471,8 +472,8 @@
   # app_icon_colorize).
   shell = {
     app_icon_colorize = false; # recolor app icons to the palette
-    avatar_path = ""; # avatar image path (cropped/resized automatically)
-    button_borders = true; # outlines around buttons
+    avatar_path = "/home/kontonkara/pictures/.face.webp"; # CHANGED (default: "") avatar image path (cropped/resized automatically)
+    button_borders = false; # CHANGED (default: true) outlines around buttons
     card_borders = false; # CHANGED (default: true) outlines around section cards in panels and Settings
     clipboard_auto_paste = "off"; # CHANGED (default: "auto") paste after picking an entry: off | auto | ctrl_v | ctrl_shift_v | shift_insert
     clipboard_confirm_clear_history = true; # ask before clearing history or deleting unpinned entries
@@ -483,17 +484,17 @@
     # are never read at all; this additionally stops the shell from
     # re-owning a selection once its source app goes away.
     clipboard_keep_from_closed_apps = false; # CHANGED (default: true) keep the last copy pasteable after its app exits
-    corner_radius_scale = 0.2; # CHANGED (default: 1.0) corner radius multiplier, 0 = square; 0.0–2.0
+    corner_radius_scale = 0.25; # CHANGED (default: 1.0) corner radius multiplier, 0 = square; 0.0–2.0
     date_format = "%A, %x"; # default date format (strftime) for UI without its own setting
     disable_mipmaps = false; # startup only: turn off texture mipmaps if downscaled images glitch
     external_ip_enabled = false; # resolve the public IP (api.noctalia.dev) for the network tab
     # font_family: set by stylix (modules/home/desktop/stylix), stylix.fonts.sansSerif.name, currently "Inter" (Noctalia default: "sans-serif")
-    input_borders = true; # outlines around text fields and other inputs
+    input_borders = false; # CHANGED (default: true) outlines around text fields and other inputs
     # Recommended with the systemd service: apps launched from the
     # shell are not killed when the service restarts.
     launch_apps_as_systemd_services = true; # CHANGED (default: false) run launched apps in their own systemd units
     launch_apps_custom_command = ""; # wrapper for launched apps; $CMD = the app command
-    niri_overview_type_to_launch_enabled = false; # open the launcher when typing in the niri overview
+    niri_overview_type_to_launch_enabled = true; # CHANGED (default: false) open the launcher when typing in the niri overview
     offline_mode = false; # block all outgoing network requests
     password_style = "default"; # password mask: default (filled circles) | random (icons)
     # Replaces niri-flake's polkit-kde agent (disabled in default.nix): same
@@ -529,12 +530,12 @@
     launcher = {
       app_grid = false; # icon grid with labels when results are apps only
       auto_paste = "auto"; # paste after copy activations (calculator, emoji, …): off | auto | ctrl_v | ctrl_shift_v | shift_insert
-      categories = true; # category filters (F6 reveals and cycles them)
+      categories = false; # CHANGED (default: true) category filters (F6 reveals and cycles them)
       compact = false; # smaller icons and tighter rows
       fetch_exchange_rates = true; # fetch currency rates from online sources
       pinned = [ ]; # desktop entry ids shown first when the launcher opens
       provider_prefix = "/"; # prefix character for provider trigger words ("/calc", …)
-      show_app_actions = false; # also list .desktop actions
+      show_app_actions = true; # CHANGED (default: false) also list .desktop actions
       show_app_origin_indicator = true; # package-origin badges on app results
       show_icons = true; # app icons in results
       sort_by_usage = true; # boost frequently used apps, add a Recently Used filter
@@ -554,12 +555,12 @@
     # bottom_right. open_near_click_* opens at the clicked widget instead of
     # the bar center.
     panel = {
-      borders = true; # outline on floating panels
+      borders = false; # CHANGED (default: true) outline on floating panels
       clipboard_placement = "floating"; # attached | floating
       clipboard_position = "center";
-      control_center_placement = "floating"; # CHANGED (default: "attached")
+      control_center_placement = "floating"; # CHANGED (default: "attached") attached | floating; also the calendar and media panels, which are its tabs
       control_center_position = "auto";
-      floating_layer = "overlay"; # top | overlay; use top if IME candidate windows end up behind panels
+      floating_layer = "top"; # CHANGED (default: "overlay") top | overlay; use top if IME candidate windows end up behind panels
       floating_offset = 8; # gap between a floating panel and the bar in px; 0–100
       launcher_placement = "floating"; # attached | floating
       launcher_position = "center";
@@ -574,7 +575,7 @@
       session_placement = "floating"; # CHANGED (default: "attached")
       session_position = "center"; # CHANGED (default: "auto")
       shadow = true; # cast the global [shell.shadow] from panels
-      transparency_mode = "solid"; # solid | soft | glass; panel and card translucency
+      transparency_mode = "soft"; # CHANGED (default: "solid") solid | soft | glass; panel and card translucency
       wallpaper_placement = "floating"; # CHANGED (default: "attached")
       wallpaper_position = "center"; # CHANGED (default: "auto")
     };
@@ -690,8 +691,8 @@
     };
 
     shadow = {
-      alpha = 0.55; # shadow opacity, times each surface's background opacity; 0.0–1.0
-      direction = "down_right"; # CHANGED (default: "down") center | up | down | left | right | up_left | up_right | down_left | down_right
+      alpha = 0.5; # CHANGED (default: 0.55) shadow opacity, times each surface's background opacity; 0.0–1.0
+      direction = "down"; # center | up | down | left | right | up_left | up_right | down_left | down_right
     };
 
     window_switcher = {
@@ -731,7 +732,7 @@
       disk_used_critical_threshold = 95.0; # %
       disk_used_pct_activity_threshold = 80.0; # %
       disk_used_pct_critical_threshold = 95.0; # %
-      enabled = true; # background sampling of CPU, memory, network, temperature and disk stats
+      enabled = false; # CHANGED (default: true) background sampling of CPU, memory, network, temperature and disk stats
       # 0 disables GPU sampling entirely, so NVML never touches the dGPU
       # (the control center's system tab would otherwise poll it).
       gpu_poll_seconds = 0.0; # CHANGED (default: 5.0) GPU temperature, usage, VRAM
@@ -779,8 +780,7 @@
 
   # ── [wallpaper] ──────────────────────────────────────────────────────────
   # Optional, unset: monitor.<connector> = { enabled, fill_color, directory,
-  # directory_light, directory_dark } (with per_monitor_directories), and
-  # default.path, which stylix would set only from stylix.image (unset).
+  # directory_light, directory_dark } (with per_monitor_directories).
   wallpaper = {
     directory = "~/pictures/wallpapers"; # CHANGED (default: "" = XDG Pictures) folder of the wallpaper picker
     directory_dark = ""; # folder used in dark mode; "" = directory
@@ -792,13 +792,13 @@
     per_monitor_directories = false; # separate folders per monitor (monitor.<connector>)
     transition = [
       "fade"
-      "disc"
-      "stripes"
-      "wipe"
-      "honeycomb"
     ]; # CHANGED (default: fade wipe disc stripes zoom honeycomb) one picked at random per change; fade wipe disc stripes zoom honeycomb
     transition_duration = 1500.0; # transition length in ms; 100–30000
-    transition_on_startup = false; # animate the first wallpaper at startup
+    transition_on_startup = true; # CHANGED (default: false) animate the first wallpaper at startup; fades in over niri's base00 background instead of popping in
+
+    default = {
+      path = "/home/kontonkara/pictures/wallpapers/shadow-shape-holo.jpeg"; # CHANGED (default: "" = none) the wallpaper; per-monitor picks from the picker go to monitors.<connector>.path
+    };
 
     automation = {
       enabled = false; # cycle wallpapers on a timer
@@ -826,6 +826,7 @@
   widget = {
     # Optional, unset: display (icon_and_text | icon_only | text_only), show_empty_label.
     active_window = {
+      enabled = false; # CHANGED (default: true) show this widget
       icon_size = 14.0; # app icon size
       max_length = 145; # CHANGED (default: 260) maximum width
       min_length = 80.0; # minimum width
@@ -837,6 +838,7 @@
     # hide_when_plugged, hide_when_full, device (UPower selector, "auto"), warning_color.
     battery = {
       display_mode = "graphic"; # CHANGED (default: "glyph") none | glyph | graphic (battery shape with fill)
+      hide_when_plugged = true; # CHANGED (default: false) hide while on AC power
       type = "battery";
     };
 
@@ -855,6 +857,7 @@
     # Optional, unset: glyph (default "noctalia"), custom_image_colorize.
     "control-center" = {
       custom_image = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg"; # CHANGED (default: "" = glyph) image instead of the glyph
+      custom_image_colorize = true; # CHANGED (default: false) tint the custom image with the widget's icon color
       type = "control-center";
     };
 
@@ -945,6 +948,7 @@
     # Optional, unset: hidden, pinned, match_adjacent_spacing, drawer_columns,
     # drawer_item_size, detached_panel.
     tray = {
+      detached_panel = true; # CHANGED (default: false) open the drawer as a floating panel, not anchored to the bar edge
       drawer = true; # CHANGED (default: false) one tray button opening a drawer instead of inline icons
       hide_passive = false; # CHANGED (default: true) hide items with Passive status
       type = "tray";
@@ -960,7 +964,7 @@
     # inactive_pill_size, urgent_color, change_color_on_hover, focused_output_only.
     workspaces = {
       empty_color = "secondary"; # empty workspace pills
-      focused_color = "secondary"; # CHANGED (default: "primary") focused workspace pill
+      focused_color = "primary"; # focused workspace pill
       font_weight = 700; # CHANGED (default: the bar's font_weight, 500) label weight, 100–1000
       hide_when_empty = true; # CHANGED (default: false) hide workspaces without windows
       label_source = "id"; # id (number) | name
