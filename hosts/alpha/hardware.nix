@@ -42,7 +42,8 @@
   fileSystems."/boot" =
     { device = "/dev/disk/by-uuid/97BE-C2C8";
       fsType = "vfat";
-      options = [ "fmask=0022" "dmask=0022" ];
+      # 0077: bootctl warns the random seed on a world-readable ESP is a hole.
+      options = [ "fmask=0077" "dmask=0077" ];
     };
 
   fileSystems."/data" =

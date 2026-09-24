@@ -29,6 +29,10 @@ in
       loader = {
         systemd-boot = {
           enable = true;
+          # The editor allows init=/bin/sh; each generation's initrd is ~75 MB
+          # on a 1 GB ESP.
+          editor = false;
+          configurationLimit = 10;
         };
         efi = {
           canTouchEfiVariables = true;
@@ -71,7 +75,9 @@ in
         if ${pkgs.cryptsetup}/bin/cryptsetup status data >/dev/null 2>&1; then
           exit 0
         fi
+        # --allow-discards: the DRAM-less data SSD needs TRIM the most.
         ${pkgs.cryptsetup}/bin/cryptsetup open \
+          --allow-discards \
           --key-file=${dataKeyFile} \
           /dev/disk/by-uuid/${dataUuid} \
           data

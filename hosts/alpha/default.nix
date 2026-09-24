@@ -66,6 +66,23 @@
       };
       packages.enable = true;
       secrets.enable = true;
+      storage = {
+        enable = true;
+        btrfs = {
+          mountPoints = [
+            "/"
+            "/home"
+            "/nix"
+            "/var/log"
+            "/data"
+          ];
+          scrub.fileSystems = [
+            "/"
+            "/data"
+          ];
+        };
+        luks.discardDevices = [ "system" ];
+      };
     };
 
     users = {
