@@ -54,6 +54,14 @@ let
   # can't accidentally trust some future VPN that grabs tun0.
   tunInterface = "sing0";
   directDnsServer = "1.1.1.1";
+  # Docker and libvirt bridges. Their containers and VMs resolve through
+  # sing-box too: docker hands them the host's nameserver, libvirt's dnsmasq
+  # forwards to it.
+  guestBridges = [
+    "docker0"
+    "br-+"
+    "virbr+"
+  ];
 in
 {
   options = {
@@ -92,6 +100,12 @@ in
       # DNS over TCP timed out and truncated answers never resolved.
       firewall = {
         trustedInterfaces = [ tunInterface ];
+        # auto_redirect REDIRECTs guests' TCP to a FakeIP onto sing-box's
+        # random-port listener on the host, so it arrives as new INPUT that
+        # nixos-fw refused. Accept exactly those redirected connections.
+        extraCommands = lib.concatMapStrings (bridge: ''
+          iptables -w -A nixos-fw -i ${bridge} -m conntrack --ctstate DNAT --ctorigdst ${fakeIpRange} -j nixos-fw-accept
+        '') guestBridges;
       };
     };
 

@@ -28,7 +28,11 @@ in
             "render"
             "uinput"
             "video"
-          ];
+          ]
+          # Both are root-equivalent: the docker socket and the system libvirt
+          # instance. /dev/kvm is already 0666, so no kvm group.
+          ++ lib.optional config.virtualisation.docker.enable "docker"
+          ++ lib.optional config.virtualisation.libvirtd.enable "libvirtd";
           hashedPasswordFile = config.sops.secrets."kontonkara".path;
         };
       };

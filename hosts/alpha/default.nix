@@ -48,6 +48,7 @@
       gamescope.enable = true;
       nh.enable = true;
       steam.enable = true;
+      virt-manager.enable = true;
       yandex-browser-corporate.enable = true;
     };
 
@@ -106,7 +107,10 @@
         enable = true;
         iwlwifi.enable = true;
       };
-      packages.enable = true;
+      packages = {
+        enable = true;
+        lab.enable = true;
+      };
       scx.enable = true;
       secrets.enable = true;
       storage = {
@@ -125,6 +129,10 @@
           ];
         };
         luks.discardDevices = [ "system" ];
+      };
+      virtualisation = {
+        docker.enable = true;
+        libvirtd.enable = true;
       };
     };
 
