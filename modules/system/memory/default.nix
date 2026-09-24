@@ -33,6 +33,11 @@ in
         };
       };
 
+      # CachyOS builds zswap on by default; in front of zram every swapped page
+      # would be compressed twice (its own udev rule that turns zswap off is
+      # a CachyOS-distro file NixOS doesn't have).
+      kernelParams = [ "zswap.enabled=0" ];
+
       # Nix 2.34 builds in /nix/var/nix/builds, so /tmp only holds small
       # scratch files; RAM is only used for what's actually there.
       tmp = {

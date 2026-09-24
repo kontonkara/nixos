@@ -65,6 +65,14 @@ in
           interval = "monthly";
         };
       };
+
+      # CachyOS's elevator patch gives multi-queue NVMe mq-deadline instead
+      # of upstream's none (its distro ships a udev rule NixOS lacks).
+      udev = {
+        extraRules = ''
+          ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ATTR{queue/scheduler}="none"
+        '';
+      };
     };
 
     # Keep weekly trim and monthly scrubs off the battery.

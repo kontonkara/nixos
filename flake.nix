@@ -3,6 +3,12 @@
     nixpkgs = {
       url = "github:nixos/nixpkgs/nixos-unstable";
     };
+    chaotic = {
+      url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
+      # No nixpkgs follows: nyx-overlay builds its packages on nyx's own
+      # nixpkgs pin, and nyx-cache only holds kernels built from that pin.
+      inputs.home-manager.follows = "home-manager";
+    };
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -38,7 +44,7 @@
   };
 
   outputs =
-    { self, nixpkgs, sops-nix, home-manager, niri, stylix, ... }@inputs:
+    { self, nixpkgs, chaotic, sops-nix, home-manager, niri, stylix, ... }@inputs:
     let
       inherit (nixpkgs) lib;
 
@@ -106,6 +112,7 @@
             sharedModules
             ++ hostModules host
             ++ [
+              chaotic.nixosModules.nyx-overlay
               niri.nixosModules.niri
               sops-nix.nixosModules.sops
               home-manager.nixosModules.home-manager

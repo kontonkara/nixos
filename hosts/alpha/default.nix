@@ -70,6 +70,13 @@
       services.udev.enable = true;
       services.udisks2.enable = true;
       services.upower.enable = true;
+      kernel = {
+        enable = true;
+        # Either one means a local clang thinlto kernel build instead of
+        # nyx-cache.
+        lean.enable = true;
+        amdgpu.builtIn.enable = true;
+      };
       locale.enable = true;
       memory.enable = true;
       msi-ec = {
@@ -85,6 +92,7 @@
         iwlwifi.enable = true;
       };
       packages.enable = true;
+      scx.enable = true;
       secrets.enable = true;
       storage = {
         enable = true;
