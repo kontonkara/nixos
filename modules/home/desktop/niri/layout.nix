@@ -18,8 +18,8 @@
     inactive.color = "#505050";
   };
 
-  # Active/inactive colors (and the cursor) come from niri-flake's stylix
-  # module: base0D and base03.
+  # The inactive color (and the cursor) come from niri-flake's stylix
+  # module (base03); default.nix sets the active one to the accent.
   border = {
     enable = true;
     width = 3;

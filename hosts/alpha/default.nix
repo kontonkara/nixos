@@ -18,6 +18,7 @@
       nautilus.enable = true;
       zoxide.enable = true;
       eza.enable = true;
+      vivid.enable = true;
       bat.enable = true;
       fd.enable = true;
       fzf.enable = true;
@@ -29,6 +30,7 @@
       opencode.enable = true;
       mimo-code.enable = true;
       keepassxc.enable = true;
+      telegram-desktop.enable = true;
       vesktop.enable = true;
       obsidian.enable = true;
       zed.enable = true;

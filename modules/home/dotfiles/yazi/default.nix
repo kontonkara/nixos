@@ -2,6 +2,11 @@
 
 let
   cfg = config.modules.home.yazi;
+
+  hmConfig = config.home-manager.users.${username};
+  hmStylix = hmConfig.stylix;
+  colors = hmConfig.lib.stylix.colors.withHashtag;
+  accent = colors.${config.modules.home.stylix.accent};
 in
 {
   options = {
@@ -204,6 +209,134 @@ in
               # The theme (colors, icons, filetype rules) comes from stylix's
               # yazi target; most keys of the old hand-written one (hovered,
               # mode_normal, permissions_*, …) no longer exist in yazi 26.
+              # On top of it: the accent where Catppuccin's yazi theme puts
+              # its accent (hovered file, selection, normal mode, borders),
+              # and the active tab. Directories keep stylix's blue: a file type
+              # color, not UI.
+              theme = lib.mkIf (hmStylix.enable && hmStylix.targets.yazi.enable) {
+                mgr = {
+                  marker_selected = lib.mkForce {
+                    fg = accent;
+                    bg = accent;
+                  };
+                  count_selected = lib.mkForce {
+                    fg = colors.base00;
+                    bg = accent;
+                  };
+                };
+
+                tabs = {
+                  active = lib.mkForce {
+                    fg = colors.base00;
+                    bg = accent;
+                    bold = true;
+                  };
+                  inactive = lib.mkForce {
+                    fg = accent;
+                    bg = colors.base01;
+                  };
+                };
+
+                mode = {
+                  normal_main = lib.mkForce {
+                    fg = colors.base00;
+                    bg = accent;
+                    bold = true;
+                  };
+                  normal_alt = lib.mkForce {
+                    fg = accent;
+                    bg = colors.base00;
+                  };
+                };
+
+                indicator = {
+                  current = lib.mkForce {
+                    fg = colors.base00;
+                    bg = accent;
+                    bold = true;
+                  };
+                };
+
+                pick = {
+                  border = lib.mkForce {
+                    fg = accent;
+                  };
+                };
+
+                input = {
+                  border = lib.mkForce {
+                    fg = accent;
+                  };
+                };
+
+                tasks = {
+                  border = lib.mkForce {
+                    fg = accent;
+                  };
+                };
+
+                # Not set by stylix: yazi's preset "blue" would be the
+                # terminal's blue.
+                which = {
+                  border = {
+                    fg = accent;
+                  };
+                };
+
+                confirm = {
+                  border = {
+                    fg = accent;
+                  };
+                  title = {
+                    fg = accent;
+                  };
+                };
+
+                spot = {
+                  border = {
+                    fg = accent;
+                  };
+                  title = {
+                    fg = accent;
+                  };
+                  tbl_cell = {
+                    fg = accent;
+                    reversed = true;
+                  };
+                };
+
+                # Stylix still writes these as [completion] and help's
+                # on/run/desc/footer, which yazi 26 renamed to [cmp] and
+                # chord/action; forced so the dead help keys go too.
+                cmp = {
+                  border = {
+                    fg = accent;
+                  };
+                  active = {
+                    fg = accent;
+                    bg = colors.base03;
+                  };
+                  inactive = {
+                    fg = colors.base05;
+                  };
+                };
+
+                help = lib.mkForce {
+                  border = {
+                    fg = accent;
+                  };
+                  chord = {
+                    fg = colors.magenta;
+                  };
+                  action = {
+                    fg = colors.base05;
+                  };
+                  hovered = {
+                    fg = accent;
+                    bg = colors.base03;
+                  };
+                };
+              };
             };
           };
         };

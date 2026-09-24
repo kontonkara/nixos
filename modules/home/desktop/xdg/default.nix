@@ -4,6 +4,7 @@ let
   cfg = config.modules.home.xdg;
 
   hmXdg = config.home-manager.users.${username}.xdg;
+  hmStylix = config.home-manager.users.${username}.stylix;
 in
 {
   options = {
@@ -53,7 +54,7 @@ in
             # in the per-user profile, both on XCURSOR_PATH. Setting any
             # pointerCursor option would switch Home Manager's cursor config
             # on even without a cursor to configure.
-            pointerCursor = lib.mkIf (config.stylix.enable && config.stylix.cursor != null) {
+            pointerCursor = lib.mkIf (hmStylix.enable && hmStylix.cursor != null) {
               dotIcons = {
                 enable = false;
               };

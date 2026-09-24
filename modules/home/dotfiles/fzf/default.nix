@@ -2,6 +2,10 @@
 
 let
   cfg = config.modules.home.fzf;
+
+  hmConfig = config.home-manager.users.${username};
+  hmStylix = hmConfig.stylix;
+  accent = hmConfig.lib.stylix.colors.withHashtag.${config.modules.home.stylix.accent};
 in
 {
   options = {
@@ -42,6 +46,20 @@ in
                 "--preview-window=right:60%:wrap"
                 "--scrollbar='|'"
               ];
+
+              # The roles catppuccin/nix gave the accent while its fzf port
+              # had one; stylix colors them base0D, base0A and base0C.
+              colors = lib.mkIf (hmStylix.enable && hmStylix.targets.fzf.enable) (
+                lib.genAttrs [
+                  "header"
+                  "hl"
+                  "hl+"
+                  "info"
+                  "marker"
+                  "pointer"
+                  "prompt"
+                ] (_: lib.mkForce accent)
+              );
             };
           };
         };

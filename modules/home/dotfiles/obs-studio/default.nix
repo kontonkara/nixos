@@ -1,7 +1,18 @@
-{ config, lib, pkgs, username, ... }:
+{ config, lib, pkgs, inputs, username, ... }:
 
 let
   cfg = config.modules.home.obs-studio;
+
+  hmConfig = config.home-manager.users.${username};
+
+  # Catppuccin's theme for OBS 30.2+: a base theme and a style per flavor.
+  catppuccin = pkgs.fetchFromGitHub {
+    owner = "catppuccin";
+    repo = "obs";
+    rev = "054a297d303a5bac4f1652a13b17d78a13201c0e";
+    hash = "sha256-zFg7dgxLIK3K1KpLdEgphH2JpdMwVTovr+oKiAqdLEE=";
+  };
+  theme = "com.obsproject.Catppuccin.Mocha.Peach";
 in
 {
   options = {
@@ -34,6 +45,49 @@ in
                 # voice); stock OBS on Linux only captures whole devices.
                 pkgs.obs-studio-plugins.obs-pipewire-audio-capture
               ];
+            };
+          };
+
+          # OBS loads user themes from the files directly in themes/.
+          xdg = {
+            configFile = {
+              "obs-studio/themes/Catppuccin.obt" = {
+                source = "${catppuccin}/themes/Catppuccin.obt";
+              };
+              "obs-studio/themes/Catppuccin_Mocha.ovt" = {
+                source = "${catppuccin}/themes/Catppuccin_Mocha.ovt";
+              };
+              # Catppuccin's accent is blue with lavender for hover and focus,
+              # and nothing else uses those two; this style turns them into
+              # peach and rosewater.
+              "obs-studio/themes/Catppuccin_Mocha_Peach.ovt" = {
+                text = ''
+                  @OBSThemeMeta {
+                      name: 'Mocha Peach';
+                      id: '${theme}';
+                      extends: 'com.obsproject.Catppuccin.Mocha';
+                      dark: 'true';
+                  }
+
+                  @OBSThemeVars {
+                      --ctp_blue: var(--ctp_peach);
+                      --ctp_lavender: var(--ctp_rosewater);
+                  }
+                '';
+              };
+            };
+          };
+
+          # The theme choice is a key in user.ini, which OBS keeps rewriting,
+          # so only that key is set. OBS writes the file from memory when it
+          # quits, which undoes a switch made while it's open until the next.
+          home = {
+            activation = {
+              obsTheme = inputs.home-manager.lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+                run mkdir -p "${hmConfig.xdg.configHome}/obs-studio"
+                run ${lib.getExe pkgs.crudini} --ini-options=nospace --set \
+                  "${hmConfig.xdg.configHome}/obs-studio/user.ini" Appearance Theme ${theme}
+              '';
             };
           };
         };

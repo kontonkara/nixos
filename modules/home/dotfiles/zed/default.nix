@@ -5,6 +5,11 @@ let
 
   flake = ''(builtins.getFlake "/home/${username}/nixos")'';
 
+  hmConfig = config.home-manager.users.${username};
+  hmStylix = hmConfig.stylix;
+  colors = hmConfig.lib.stylix.colors;
+  accent = colors.withHashtag.${config.modules.home.stylix.accent};
+
   zedPatched =
     (pkgs.zed-editor.override {
       # Only needed on machines other Zed clients connect to.
@@ -202,6 +207,52 @@ in
                 telemetry = {
                   diagnostics = false;
                   metrics = false;
+                };
+                # Stylix's theme uses base0D both for UI accents and for
+                # functions in syntax, so only UI colors are repainted: the
+                # roles Catppuccin's Zed theme gives its accent, plus the
+                # focused border and the local cursor and selection.
+                theme_overrides = lib.mkIf (hmStylix.enable && hmStylix.targets.zed.enable) {
+                  "Base16 ${colors.scheme-name}" = {
+                    "border.focused" = accent;
+                    "border.selected" = accent;
+                    "editor.active_line_number" = accent;
+                    # 9%, as in Catppuccin's theme.
+                    "editor.document_highlight.bracket_background" = "${accent}17";
+                    "icon.accent" = accent;
+                    "panel.indent_guide_hover" = accent;
+                    "text.accent" = accent;
+                    players = [
+                      {
+                        cursor = accent;
+                        background = accent;
+                        selection = "${accent}30";
+                      }
+                    ];
+                    # Keywords take the accent, and the roles the theme gives
+                    # the accent's color (numbers, constants, booleans…) take
+                    # the keywords' mauve.
+                    syntax =
+                      lib.genAttrs [ "keyword" "selector" ] (_: {
+                        color = accent;
+                      })
+                      // {
+                        emphasis = {
+                          color = accent;
+                          font_style = "italic";
+                        };
+                      }
+                      // lib.genAttrs [
+                        "attribute"
+                        "boolean"
+                        "constant"
+                        "link_uri"
+                        "number"
+                        "variable.special"
+                      ] (_: {
+                        color = colors.withHashtag.base0E;
+                      });
+                  };
                 };
                 window_decorations = "server";
                 terminal = {

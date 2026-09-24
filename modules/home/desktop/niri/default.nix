@@ -2,6 +2,10 @@
 
 let
   cfg = config.modules.home.niri;
+
+  hmConfig = config.home-manager.users.${username};
+  hmStylix = hmConfig.stylix;
+  accent = hmConfig.lib.stylix.colors.withHashtag.${config.modules.home.stylix.accent};
 in
 {
   options = {
@@ -107,7 +111,15 @@ in
                 {
                   input = import ./input.nix;
                   outputs = import ./outputs.nix;
-                  layout = import ./layout.nix;
+                  layout = lib.recursiveUpdate (import ./layout.nix) {
+                    # niri-flake's stylix module defaults it to base0D, blue,
+                    # and has no colors.override.
+                    border = {
+                      active = lib.mkIf (hmStylix.enable && hmStylix.targets.niri.enable) {
+                        color = accent;
+                      };
+                    };
+                  };
                   inherit (decoration) prefer-no-csd animations;
                   inherit (rules) window-rules layer-rules;
                   spawn-at-startup = import ./startup.nix;

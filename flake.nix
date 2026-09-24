@@ -44,7 +44,7 @@
   };
 
   outputs =
-    { self, nixpkgs, chaotic, sops-nix, home-manager, niri, stylix, ... }@inputs:
+    { self, nixpkgs, chaotic, sops-nix, home-manager, niri, ... }@inputs:
     let
       inherit (nixpkgs) lib;
 
@@ -116,8 +116,6 @@
               niri.nixosModules.niri
               sops-nix.nixosModules.sops
               home-manager.nixosModules.home-manager
-              # Inert until modules.home.stylix sets stylix.enable.
-              stylix.nixosModules.stylix
             ];
         };
     in

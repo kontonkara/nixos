@@ -2,6 +2,11 @@
 
 let
   cfg = config.modules.home.kitty;
+
+  hmConfig = config.home-manager.users.${username};
+  hmStylix = hmConfig.stylix;
+  colors = hmConfig.lib.stylix.colors.withHashtag;
+  accent = colors.${config.modules.home.stylix.accent};
 in
 {
   options = {
@@ -68,6 +73,17 @@ in
                 "--allow-fallback=shifted,ascii kitty_mod+n" = "new_os_window_with_cwd";
                 "kitty_mod+enter" = "new_window_with_cwd";
               };
+
+              # The accent on the active tab and window border, as Catppuccin's
+              # kitty theme does. After stylix's include, which sets them from
+              # base00 and base03; settings would land before it.
+              extraConfig = lib.mkIf (hmStylix.enable && hmStylix.targets.kitty.enable) (
+                lib.mkAfter ''
+                  active_tab_foreground ${colors.base00}
+                  active_tab_background ${accent}
+                  active_border_color ${accent}
+                ''
+              );
             };
           };
         };

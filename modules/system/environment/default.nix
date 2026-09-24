@@ -1,9 +1,10 @@
-{ config, lib, ... }:
+{ config, lib, username, ... }:
 
 let
   cfg = config.modules.system.environment;
 
-  qtFromStylix = config.stylix.enable && config.stylix.targets.qt.enable;
+  hmStylix = config.home-manager.users.${username}.stylix;
+  qtFromStylix = hmStylix.enable && hmStylix.targets.qt.enable;
 in
 {
   options = {
@@ -29,9 +30,9 @@ in
         # already gets server-side decorations.
 
         # Qt only picks the gtk3 theme by itself on GNOME/XFCE/MATE/…,
-        # not when XDG_CURRENT_DESKTOP=niri. Stylix's qt target sets
-        # qt5ct (+ Kvantum) in environment.variables instead, which these
-        # sessionVariables are merged into.
+        # not when XDG_CURRENT_DESKTOP=niri. Stylix's Home Manager qt target
+        # sets qt5ct (+ Kvantum) in the user's environment.d instead; two
+        # values from different layers would race.
         QT_QPA_PLATFORMTHEME = lib.mkIf (!qtFromStylix) "gtk3";
 
         # nixpkgs Electron wrappers (obsidian, vesktop, …) read this to add
