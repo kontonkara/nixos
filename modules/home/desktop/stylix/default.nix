@@ -40,6 +40,40 @@ let
     // {
       withHashtag = remap colors.withHashtag;
     };
+
+  # Kvantum's selection highlight is base0E; focus and pressed frames and
+  # links are base0D.
+  qtOverride = accentFor [
+    "base0D"
+    "base0E"
+  ];
+
+  # Stylix's Kvantum theme puts the window on base01 and palette(light) on
+  # base03, while its GTK theme has windows on base00 and cards on base01: Qt
+  # apps came out darker, and KeePassXC's unlock card (palette(light)) a
+  # bright gray. Same SVG and colors, with the palette of the GTK theme.
+  kvantumGtk =
+    let
+      name = "Base16KvantumGtk";
+      qtColors = lib.recursiveUpdate colors qtOverride;
+      render =
+        template: extension:
+        qtColors {
+          # A string is taken as the template text, not its path.
+          template = builtins.readFile "${inputs.stylix}/modules/qt/${template}";
+          inherit extension;
+        };
+    in
+    pkgs.runCommandLocal "base16-kvantum-gtk" { } ''
+      directory="$out/share/Kvantum/${name}"
+      mkdir --parents "$directory"
+      sed \
+        -e 's/^window\.color=.*/window.color=${colors.withHashtag.base00}/' \
+        -e 's/^light\.color=.*/light.color=${colors.withHashtag.base01}/' \
+        -e 's/^mid\.light\.color=.*/mid.light.color=${colors.withHashtag.base01}/' \
+        ${render "kvconfig.mustache" ".kvconfig"} > "$directory/${name}.kvconfig"
+      cp ${render "kvantum.svg.mustache" ".svg"} "$directory/${name}.svg"
+    '';
 in
 {
   options = {
@@ -175,13 +209,8 @@ in
                   # File dialogs via xdg-desktop-portal-gtk, as with the old
                   # gtk3 platform theme.
                   standardDialogs = "xdgdesktopportal";
-                  # Kvantum's selection highlight is base0E; focus and pressed
-                  # frames and links are base0D.
                   colors = {
-                    override = accentFor [
-                      "base0D"
-                      "base0E"
-                    ];
+                    override = qtOverride;
                   };
                 };
                 # XWayland cursor and Xresources palette.
@@ -310,6 +339,17 @@ in
                   };
                   opacity = {
                     enable = false;
+                  };
+                };
+              };
+            };
+
+            qt = {
+              kvantum = {
+                themes = [ kvantumGtk ];
+                settings = {
+                  General = {
+                    theme = lib.mkForce "Base16KvantumGtk";
                   };
                 };
               };
