@@ -1,0 +1,66 @@
+diff --git a/src/platform/linux/input/inputtino_keyboard.cpp b/src/platform/linux/input/inputtino_keyboard.cpp
+index 72c4569..825caab 100644
+--- a/src/platform/linux/input/inputtino_keyboard.cpp
++++ b/src/platform/linux/input/inputtino_keyboard.cpp
+@@ -2,6 +2,12 @@
+  * @file src/platform/linux/input/inputtino_keyboard.cpp
+  * @brief Definitions for inputtino keyboard input handling.
+  */
++// standard includes
++#include <cstdlib>
++#include <string>
++#include <sys/wait.h>
++#include <unistd.h>
++
+ // lib includes
+ #include <boost/locale.hpp>
+ #include <inputtino/input.hpp>
+@@ -170,7 +176,48 @@ namespace platf::keyboard {
+     }
+   }
+ 
++  /**
++   * Types text through the Wayland virtual-keyboard protocol.
++   *
++   * wtype uploads a keymap holding exactly the keysyms it needs, so the
++   * compositor delivers ordinary key events for any codepoint. Unlike the
++   * ISO 14755 fallback below this reaches every client, not just the ones
++   * carrying an input method that implements the sequence.
++   */
++  bool unicode_via_wtype(const std::string &text) {
++    if (!std::getenv("WAYLAND_DISPLAY")) {
++      return false;
++    }
++
++    pid_t pid = fork();
++    if (pid < 0) {
++      BOOST_LOG(warning) << "Unicode, unable to fork for wtype"sv;
++      return false;
++    }
++
++    if (pid == 0) {
++      execl("@wtype@", "wtype", "--", text.c_str(), nullptr);
++      _exit(127);
++    }
++
++    int status = 0;
++    if (waitpid(pid, &status, 0) < 0) {
++      return false;
++    }
++
++    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
++      return true;
++    }
++
++    BOOST_LOG(warning) << "Unicode, wtype failed, falling back to ISO 14755"sv;
++    return false;
++  }
++
+   void unicode(input_raw_t *raw, char *utf8, int size) {
++    if (unicode_via_wtype(std::string(utf8, size))) {
++      return;
++    }
++
+     if (raw->keyboard) {
+       /* Reading input text as UTF-8 */
+       auto utf8_str = boost::locale::conv::to_utf<wchar_t>(utf8, utf8 + size, "UTF-8");
