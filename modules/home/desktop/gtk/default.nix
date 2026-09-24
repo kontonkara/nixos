@@ -71,9 +71,6 @@ in
               font.package
               monoFont.package
             ];
-            sessionVariables = {
-              MONOSPACE_FONT = "${monoFont.name} ${toString monoFont.size}";
-            };
           };
 
           fonts.fontconfig.enable = true;
