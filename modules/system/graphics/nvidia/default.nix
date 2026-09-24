@@ -40,6 +40,10 @@ in
         moduleParams = {
           nvidia = {
             NVreg_EnableResizableBar = 1;
+            # PreserveVideoMemoryAllocations (set by powerManagement) dumps used
+            # VRAM here on suspend; the default /tmp is a RAM-backed tmpfs now,
+            # which NVIDIA's README warns against.
+            NVreg_TemporaryFilePath = "/var/tmp";
           };
         };
         modesetting = {

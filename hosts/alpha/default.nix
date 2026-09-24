@@ -63,6 +63,7 @@
       services.udisks2.enable = true;
       services.upower.enable = true;
       locale.enable = true;
+      memory.enable = true;
       network = {
         enable = true;
         iwlwifi.enable = true;
