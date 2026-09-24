@@ -27,8 +27,9 @@ in
               gtk-application-prefer-dark-theme = 1;
               gtk-decoration-layout = ":";
             };
-            # No prefer-dark here: libadwaita warns it's unsupported and takes
-            # the dark scheme from colorScheme (dconf/portal) anyway.
+            # colorScheme still writes prefer-dark here: libadwaita apps log
+            # that it's unsupported, but GTK 4.22 picks a named theme's dark
+            # variant (adw-gtk3's gtk-dark.css) only from it.
             gtk4.extraConfig = {
               gtk-decoration-layout = ":";
             };

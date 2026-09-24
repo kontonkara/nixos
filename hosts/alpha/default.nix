@@ -14,6 +14,7 @@
       kitty.enable = true;
       starship.enable = true;
       yazi.enable = true;
+      nautilus.enable = true;
       zoxide.enable = true;
       eza.enable = true;
       bat.enable = true;
