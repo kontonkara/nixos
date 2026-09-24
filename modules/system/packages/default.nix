@@ -22,6 +22,8 @@ in
         xwayland-satellite
         sops
         age
+        # MSI GPU MUX switcher (efivar + EC; effective after a reboot).
+        (callPackage ../../../pkgs/msi-gpu-switcher { })
       ];
     };
   };

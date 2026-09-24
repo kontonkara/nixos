@@ -209,6 +209,8 @@ in
                     { type = "notification"; }
                     { type = "caffeine"; }
                     { type = "nightlight"; }
+                    # Switches power-profiles-daemon profiles.
+                    { type = "power_profile"; }
                   ];
                 };
 

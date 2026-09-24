@@ -39,6 +39,12 @@ in
         };
       };
       kernelPackages = pkgs.linuxPackages_latest;
+
+      # Writable EC over debugfs: msi-gpu-switcher flips the MUX bits there.
+      kernelModules = [ "ec_sys" ];
+      extraModprobeConfig = ''
+        options ec_sys write_support=1
+      '';
     };
 
     # Open /data only in the real system, after sops-nix has installed the
