@@ -39,6 +39,7 @@
       nix-index.enable = true;
       direnv.enable = true;
       mangohud.enable = true;
+      obs-studio.enable = true;
       stylix.enable = true;
     };
 
