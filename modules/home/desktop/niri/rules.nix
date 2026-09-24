@@ -30,6 +30,20 @@
       ];
       block-out-from = "screencast";
     }
+
+    # Steam's toasts open as regular windows; float them into the corner
+    # (niri wiki, Application Issues).
+    {
+      matches = [ {
+        app-id = "steam";
+        title = "^notificationtoasts_\\d+_desktop$";
+      } ];
+      default-floating-position = {
+        x = 10;
+        y = 10;
+        relative-to = "bottom-right";
+      };
+    }
   ];
 
   layer-rules = [

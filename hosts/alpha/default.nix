@@ -22,11 +22,15 @@
       dconf.enable = true;
       nix-index.enable = true;
       direnv.enable = true;
+      mangohud.enable = true;
     };
 
     programs = {
       fish.enable = true;
+      gamemode.enable = true;
+      gamescope.enable = true;
       nh.enable = true;
+      steam.enable = true;
       yandex-browser-corporate.enable = true;
     };
 
