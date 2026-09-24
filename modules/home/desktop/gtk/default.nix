@@ -73,7 +73,18 @@ in
             ];
           };
 
-          fonts.fontconfig.enable = true;
+          fonts = {
+            fontconfig = {
+              enable = true;
+              # Generic families resolved to DejaVu, so web pages and apps
+              # without their own font (kitty included) didn't match GTK.
+              defaultFonts = {
+                sansSerif = [ font.name ];
+                monospace = [ monoFont.name ];
+                emoji = [ "Noto Color Emoji" ];
+              };
+            };
+          };
         };
       };
     };

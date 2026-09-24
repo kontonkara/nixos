@@ -33,9 +33,9 @@ in
               videos = "$HOME/videos";
               templates = "$HOME/templates";
               publicShare = "$HOME/public";
-              extraConfig = {
-                XDG_PROJECTS_DIR = "$HOME/projects";
-              };
+              # HM has a first-class option now; its ~/Projects default was
+              # being created on every switch.
+              projects = "$HOME/projects";
             };
 
             mimeApps.enable = true;
