@@ -33,9 +33,6 @@ in
               telegram-desktop
               nautilus
               spotify
-              # Not programs.anki: HM would link prefs21.db (profiles, sync
-              # login) read-only from the store.
-              anki
               inputs.llm-agents.packages.x86_64-linux.mimo-code
               inputs.llm-agents.packages.x86_64-linux.claude-code
             ];

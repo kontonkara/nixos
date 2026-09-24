@@ -31,6 +31,7 @@
       obsidian.enable = true;
       vscode.enable = true;
       zed.enable = true;
+      anki.enable = true;
       niri.enable = true;
       noctalia.enable = true;
       xdg.enable = true;

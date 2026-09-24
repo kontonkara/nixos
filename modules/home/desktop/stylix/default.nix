@@ -165,6 +165,11 @@ in
                     };
                   };
                 };
+                # ReColor add-on in programs.anki.addons, which
+                # modules.home.anki installs without programs.anki itself.
+                anki = {
+                  enable = true;
+                };
 
                 fish = {
                   enable = true;
