@@ -26,6 +26,12 @@ in
     };
 
     nix = {
+      # Flake-only: drops the installer's stale nixos-26.05 channel from
+      # NIX_PATH; <nixpkgs> keeps resolving to the flake's nixpkgs.
+      channel = {
+        enable = false;
+      };
+
       settings = {
         experimental-features = [
           "nix-command"
@@ -50,6 +56,11 @@ in
           "@wheel"
         ];
       };
+
+      # Local mesa/niri/kernel-module builds shouldn't stutter the desktop.
+      # The IO class is left alone: NVMe here uses the `none` scheduler,
+      # which ignores ioprio.
+      daemonCPUSchedPolicy = "idle";
     };
 
     hardware = {
