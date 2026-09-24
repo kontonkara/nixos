@@ -29,6 +29,39 @@ in
       };
     };
 
+    # Whenever niri renders on the RTX (MUX in dGPU mode, outputs wired to
+    # it) the driver keeps freed VRAM pooled and niri grows by gigabytes. The
+    # 615 driver ships this profile for KWin/mutter/wlroots/Hyprland but not
+    # niri (niri wiki, Nvidia).
+    environment = {
+      etc = {
+        "nvidia/nvidia-application-profiles-rc.d/50-limit-free-buffer-pool-in-wayland-compositors.json" = {
+          text = builtins.toJSON {
+            rules = [
+              {
+                pattern = {
+                  feature = "procname";
+                  matches = "niri";
+                };
+                profile = "Limit Free Buffer Pool On Wayland Compositors";
+              }
+            ];
+            profiles = [
+              {
+                name = "Limit Free Buffer Pool On Wayland Compositors";
+                settings = [
+                  {
+                    key = "GLVidHeapReuseRatio";
+                    value = 0;
+                  }
+                ];
+              }
+            ];
+          };
+        };
+      };
+    };
+
     hardware = {
       nvidia = {
         open = true;
