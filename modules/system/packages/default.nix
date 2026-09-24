@@ -19,7 +19,6 @@ in
       systemPackages = with pkgs; [
         vim
         wget
-        fuzzel
         xwayland-satellite
         sops
         age

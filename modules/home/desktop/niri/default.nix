@@ -100,6 +100,13 @@ in
                     enable = true;
                   };
                   screenshot-path = "~/pictures/screenshots/%Y-%m-%dT%H:%M:%S.png";
+
+                  debug = {
+                    # Noctalia niri guide: lets notification actions and tray
+                    # clicks focus apps (Telegram, Electron) that send
+                    # activation tokens with invalid serials.
+                    honor-xdg-activation-with-invalid-serial = [ ];
+                  };
                 };
             };
           };

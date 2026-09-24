@@ -44,12 +44,32 @@
         relative-to = "bottom-right";
       };
     }
+
+    # Noctalia's settings window (Noctalia niri guide).
+    {
+      matches = [ { app-id = "^dev\\.noctalia\\.Noctalia$"; } ];
+      open-floating = true;
+      default-column-width = {
+        fixed = 1080;
+      };
+      default-window-height = {
+        fixed = 920;
+      };
+    }
   ];
 
   layer-rules = [
+    # Noctalia's blurred wallpaper copy ([backdrop]) shows in the overview.
     {
-      matches = [ { namespace = "^swww-daemon$"; } ];
+      matches = [ { namespace = "^noctalia-backdrop$"; } ];
       place-within-backdrop = true;
+    }
+
+    # Hide toasts from portal screencasts only; Sunshine (wlr-screencopy)
+    # and screenshots still see them.
+    {
+      matches = [ { namespace = "^noctalia-notification$"; } ];
+      block-out-from = "screencast";
     }
   ];
 }

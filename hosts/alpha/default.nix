@@ -17,6 +17,7 @@
       obsidian.enable = true;
       vscode.enable = true;
       niri.enable = true;
+      noctalia.enable = true;
       xdg.enable = true;
       gtk.enable = true;
       dconf.enable = true;

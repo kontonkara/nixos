@@ -19,71 +19,56 @@
     action.spawn = [ "nautilus" ];
   };
   "Mod+D" = {
-    hotkey-overlay.title = "Run an Application: fuzzel";
-    action.spawn = [ "fuzzel" ];
+    hotkey-overlay.title = "Run an Application: Noctalia";
+    action.spawn-sh = "noctalia msg panel-toggle launcher";
   };
   "Super+Alt+L" = {
-    hotkey-overlay.title = "Lock the Screen: swaylock";
-    action.spawn = [ "swaylock" ];
+    hotkey-overlay.title = "Lock the Screen: Noctalia";
+    action.spawn-sh = "noctalia msg session lock";
   };
 
-  "Super+Alt+S" = {
-    allow-when-locked = true;
-    hotkey-overlay.hidden = true;
-    action.spawn-sh = "pkill orca || exec orca";
-  };
-
+  # Volume, brightness and media go through Noctalia so its OSD shows.
   "XF86AudioRaiseVolume" = {
     allow-when-locked = true;
-    action.spawn-sh = "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+ -l 1.0";
+    action.spawn-sh = "noctalia msg volume-up 10";
   };
   "XF86AudioLowerVolume" = {
     allow-when-locked = true;
-    action.spawn-sh = "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-";
+    action.spawn-sh = "noctalia msg volume-down 10";
   };
   "XF86AudioMute" = {
     allow-when-locked = true;
-    action.spawn-sh = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
+    action.spawn-sh = "noctalia msg volume-mute";
   };
   "XF86AudioMicMute" = {
     allow-when-locked = true;
-    action.spawn-sh = "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle";
+    action.spawn-sh = "noctalia msg mic-mute";
   };
 
   "XF86AudioPlay" = {
     allow-when-locked = true;
-    action.spawn-sh = "playerctl play-pause";
+    action.spawn-sh = "noctalia msg media toggle";
   };
   "XF86AudioStop" = {
     allow-when-locked = true;
-    action.spawn-sh = "playerctl stop";
+    action.spawn-sh = "noctalia msg media stop";
   };
   "XF86AudioPrev" = {
     allow-when-locked = true;
-    action.spawn-sh = "playerctl previous";
+    action.spawn-sh = "noctalia msg media previous";
   };
   "XF86AudioNext" = {
     allow-when-locked = true;
-    action.spawn-sh = "playerctl next";
+    action.spawn-sh = "noctalia msg media next";
   };
 
   "XF86MonBrightnessUp" = {
     allow-when-locked = true;
-    action.spawn = [
-      "brightnessctl"
-      "--class=backlight"
-      "set"
-      "+10%"
-    ];
+    action.spawn-sh = "noctalia msg brightness-up 10";
   };
   "XF86MonBrightnessDown" = {
     allow-when-locked = true;
-    action.spawn = [
-      "brightnessctl"
-      "--class=backlight"
-      "set"
-      "10%-"
-    ];
+    action.spawn-sh = "noctalia msg brightness-down 10";
   };
 
   "Mod+O" = {
