@@ -18,7 +18,9 @@
     niri = {
       url = "github:sodiboo/niri-flake";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.niri-stable.url = "github:YaLTeR/niri/main";
+      # pkgs.niri-unstable is what the niri module uses; niri-flake's own
+      # pin of it lags behind upstream, so track niri main directly.
+      inputs.niri-unstable.url = "github:niri-wm/niri";
     };
     llm-agents = {
       url = "github:numtide/llm-agents.nix";

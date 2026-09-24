@@ -19,6 +19,17 @@
       } ];
       open-floating = true;
     }
+
+    # Black out secrets in portal screencasts (calls, OBS, browser sharing).
+    # Not "screen-capture": Sunshine uses wlr-screencopy, and these windows
+    # must stay usable when streaming to Moonlight.
+    {
+      matches = [
+        { app-id = "^org\\.keepassxc\\.KeePassXC$"; }
+        { app-id = "^org\\.telegram\\.desktop$"; }
+      ];
+      block-out-from = "screencast";
+    }
   ];
 
   layer-rules = [

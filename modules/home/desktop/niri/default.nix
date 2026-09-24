@@ -48,7 +48,8 @@ in
               "gnome"
               "gtk"
             ];
-            "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+            # No FileChooser override: with Nautilus installed the GNOME
+            # portal gives the GTK4 chooser (the gtk pin dated from Nemo).
             "org.freedesktop.impl.portal.ScreenCast" = [ "gnome" ];
             "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
             "org.freedesktop.impl.portal.Access" = [ "gnome" ];
