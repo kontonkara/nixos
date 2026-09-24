@@ -42,7 +42,10 @@ in
               mutableExtensionsDir = false;
 
               argvSettings = {
-                "disable-hardware-acceleration" = false;
+                # Chromium's GL path on radeonsi keeps page-faulting the iGPU
+                # (SQC read of 0x3f800000) even with the terminal renderer off;
+                # each fault stalls the GPU ~2 s and can take niri down.
+                "disable-hardware-acceleration" = true;
                 "enable-crash-reporter" = false;
                 "password-store" = "gnome-libsecret";
               };
@@ -126,6 +129,10 @@ in
                     "security.workspace.trust.untrustedFiles" = "open";
                     "telemetry.telemetryLevel" = "off";
                     "terminal.integrated.defaultProfile.linux" = "fish";
+                    # The WebGL terminal renderer makes radeonsi page-fault the
+                    # iGPU (SQC read of 0x3f800000); a GPU reset then takes niri
+                    # and the session down. microsoft/vscode#238088
+                    "terminal.integrated.gpuAcceleration" = "off";
                     "terminal.integrated.cursorBlinking" = true;
                     "terminal.integrated.profiles.linux" = {
                       fish = {
