@@ -55,6 +55,10 @@ in
           "root"
           "@wheel"
         ];
+        # The legacy CLI's ~/.nix-profile and ~/.nix-defexpr go under
+        # $XDG_STATE_HOME/nix. Nothing installs into either: Home Manager uses
+        # /etc/profiles/per-user (useUserPackages) and channels are off.
+        use-xdg-base-directories = true;
       };
 
       # Local mesa/niri/kernel-module builds shouldn't stutter the desktop.

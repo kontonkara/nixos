@@ -39,6 +39,10 @@ in
                 decorations = "auto";
                 diff-context = "3";
                 italic-text = "always";
+                # bat maps .envrc to DotENV, but direnv runs it as bash.
+                map-syntax = [
+                  ".envrc:Bourne Again Shell (bash)"
+                ];
                 pager = "less -FR";
                 paging = "auto";
                 style = "numbers,changes,header";

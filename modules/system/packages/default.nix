@@ -11,7 +11,7 @@ in
           enable = lib.mkEnableOption "base system packages";
 
           lab = {
-            enable = lib.mkEnableOption "homelab clis (talos, kubernetes, flux, opentofu)";
+            enable = lib.mkEnableOption "homelab clis (talos, kubernetes, flux)";
           };
         };
       };
@@ -42,13 +42,11 @@ in
         fluxcd
         cilium-cli
         stern
-        opentofu
         virt-viewer
         dnsutils
         tcpdump
         jq
         yq-go
-        shellcheck
       ];
     };
   };

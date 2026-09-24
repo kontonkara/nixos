@@ -26,9 +26,20 @@ in
 
               interactiveShellInit = ''
                 set -g fish_greeting
+
+                # fzf.fish: ISO dates like eza's long-iso (the default is
+                # month-day), eza trees for directories, delta for git diffs.
+                set -g fzf_history_time_format "%F %R"
+                set -g fzf_preview_dir_cmd eza --tree --level=2 --group-directories-first --color=always --icons=always
+                set -g fzf_diff_highlighter delta --paging=never --width=20
               '';
 
               shellAbbrs = {
+                # bash's `!!` (e.g. `sudo !!`), expanded in place before it runs.
+                "!!" = {
+                  position = "anywhere";
+                  function = "last_history_item";
+                };
                 ".." = "cd ..";
                 "..." = "cd ../..";
                 c = "code";
@@ -76,6 +87,13 @@ in
               };
 
               functions = {
+                last_history_item = {
+                  description = "print the previous command line";
+                  body = ''
+                    echo -- $history[1]
+                  '';
+                };
+
                 mkcd = {
                   description = "create a directory and enter it";
                   body = ''
@@ -89,6 +107,15 @@ in
                   '';
                 };
               };
+
+              # Command wrappers that ship no completions: complete the wrapped
+              # command and its arguments, as fish does for sudo.
+              completions = lib.genAttrs [
+                "gamemoderun"
+                "mangohud"
+                "nvidia-offload"
+                "steam-run"
+              ] (command: "complete --command ${command} --no-files --arguments '(__fish_complete_subcommand)'");
 
               plugins = [
                 {
@@ -118,11 +145,14 @@ in
           };
 
           # Runtime deps of the plugins: fzf.fish needs fd/bat for directory
-          # search and previews, done needs jq (niri window id) and notify-send.
+          # search and previews (eza/delta for the ones set above), done needs
+          # jq (niri window id) and notify-send.
           home = {
             packages = [
               pkgs.fd
               pkgs.bat
+              pkgs.eza
+              pkgs.delta
               pkgs.jq
               pkgs.libnotify
             ];

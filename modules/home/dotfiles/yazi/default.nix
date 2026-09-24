@@ -1,4 +1,4 @@
-{ config, lib, username, ... }:
+{ config, lib, pkgs, username, ... }:
 
 let
   cfg = config.modules.home.yazi;
@@ -21,63 +21,77 @@ in
           programs = {
             yazi = {
               enable = true;
+              # Adds `y` (HM's shellWrapperName default since stateVersion
+              # 26.05), which cds to yazi's last directory on exit.
               enableFishIntegration = true;
-              shellWrapperName = "y";
+
+              plugins = {
+                # Git status signs in the linemode; fed by the fetchers below.
+                git = {
+                  package = pkgs.yaziPlugins.git;
+                  setup = true;
+                };
+                full-border = {
+                  package = pkgs.yaziPlugins.full-border;
+                  setup = true;
+                };
+                smart-enter = pkgs.yaziPlugins.smart-enter;
+                chmod = pkgs.yaziPlugins.chmod;
+              };
 
               settings = {
                 mgr = {
-                  ratio = [
-                    1
-                    4
-                    3
-                  ];
                   sort_by = "natural";
-                  sort_dir_first = true;
-                  sort_sensitive = false;
-                  sort_reverse = false;
                   linemode = "size";
-                  show_hidden = false;
-                  show_symlink = true;
                 };
 
                 preview = {
                   max_width = 1000;
                   max_height = 1000;
-                  image_delay = 30;
-                  image_filter = "triangle";
-                  image_quality = 75;
                 };
 
                 tasks = {
                   file_workers = 5;
-                  plugin_workers = 5;
-                  fetch_workers = 5;
                   preload_workers = 5;
-                  process_workers = 5;
                   bizarre_retry = 5;
                 };
 
+                # GUI apps are orphans: niri has no xdg-open backend, so
+                # xdg-open waits for the app, which would otherwise sit in the
+                # task list and trigger the quit prompt.
                 opener = {
                   edit = [
                     {
                       run = "code %s";
-                      block = true;
+                      orphan = true;
                       desc = "Edit with VS Code";
-                      for = "unix";
+                    }
+                    {
+                      run = "zeditor %s";
+                      orphan = true;
+                      desc = "Edit with Zed";
+                    }
+                    # Bulk rename/create edit a temp file with the first
+                    # blocking opener and read it back once that exits.
+                    {
+                      run = "code --wait %s";
+                      block = true;
+                      desc = "Edit with VS Code (wait)";
                     }
                   ];
+                  # %s1 runs xdg-open once per file; it takes one argument.
                   open = [
                     {
-                      run = "xdg-open %s";
+                      run = "xdg-open %s1";
+                      orphan = true;
                       desc = "Open with default app";
-                      for = "linux";
                     }
                   ];
                   reveal = [
                     {
                       run = "xdg-open %d1";
+                      orphan = true;
                       desc = "Reveal in default file manager";
-                      for = "linux";
                     }
                   ];
                 };
@@ -85,24 +99,9 @@ in
                 open = {
                   prepend_rules = [
                     {
-                      url = "*/";
-                      use = [
-                        "edit"
-                        "open"
-                        "reveal"
-                      ];
-                    }
-                    {
                       mime = "text/*";
                       use = [
                         "edit"
-                        "open"
-                        "reveal"
-                      ];
-                    }
-                    {
-                      mime = "image/*";
-                      use = [
                         "open"
                         "reveal"
                       ];
@@ -129,6 +128,21 @@ in
                         "open"
                         "reveal"
                       ];
+                    }
+                  ];
+                };
+
+                plugin = {
+                  prepend_fetchers = [
+                    {
+                      url = "*";
+                      run = "git";
+                      group = "git";
+                    }
+                    {
+                      url = "*/";
+                      run = "git";
+                      group = "git";
                     }
                   ];
                 };
@@ -172,10 +186,21 @@ in
                       run = "seek -5";
                       desc = "Scroll preview up";
                     }
+                    # No --block: yazi would hide until the new kitty closes.
                     {
                       on = [ "T" ];
-                      run = "shell --block --orphan 'kitty --working-directory \"$PWD\"'";
+                      run = "shell --orphan 'kitty --working-directory \"$PWD\"'";
                       desc = "Open kitty here";
+                    }
+                    {
+                      on = [ "l" ];
+                      run = "plugin smart-enter";
+                      desc = "Enter the child directory, or open the file";
+                    }
+                    {
+                      on = [ "c" "m" ];
+                      run = "plugin chmod";
+                      desc = "Chmod on selected files";
                     }
                   ];
                 };

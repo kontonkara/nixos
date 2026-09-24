@@ -32,7 +32,6 @@ in
               nvtopPackages.amd
               telegram-desktop
               spotify
-              inputs.llm-agents.packages.x86_64-linux.mimo-code
               inputs.llm-agents.packages.x86_64-linux.claude-code
             ];
           };

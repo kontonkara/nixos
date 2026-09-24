@@ -180,7 +180,23 @@ in
                 fzf = {
                   enable = true;
                 };
+                # bat, fzf.fish previews and man pages; delta keeps its own
+                # base16 syntax theme on the terminal palette.
+                bat = {
+                  enable = true;
+                };
                 yazi = {
+                  enable = true;
+                };
+                # Also adds a top-level ui.skin that k9s rejects;
+                # modules.home.k9s forces its settings.
+                k9s = {
+                  enable = true;
+                };
+                kubecolor = {
+                  enable = true;
+                };
+                opencode = {
                   enable = true;
                 };
                 mangohud = {

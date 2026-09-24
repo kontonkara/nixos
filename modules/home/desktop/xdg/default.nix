@@ -2,6 +2,8 @@
 
 let
   cfg = config.modules.home.xdg;
+
+  hmXdg = config.home-manager.users.${username}.xdg;
 in
 {
   options = {
@@ -39,6 +41,35 @@ in
             };
 
             mimeApps.enable = true;
+          };
+
+          home = {
+            # For the Home Manager modules that support it: gtk2
+            # (~/.gtkrc-2.0 moves to ~/.config/gtk-2.0/gtkrc, GTK2_RC_FILES
+            # follows) and kubecolor (~/.kube/color.yaml).
+            preferXdgDirectories = true;
+
+            # Cursor links also go to ~/.local/share/icons, and the theme sits
+            # in the per-user profile, both on XCURSOR_PATH. Setting any
+            # pointerCursor option would switch Home Manager's cursor config
+            # on even without a cursor to configure.
+            pointerCursor = lib.mkIf (config.stylix.enable && config.stylix.cursor != null) {
+              dotIcons = {
+                enable = false;
+              };
+            };
+
+            sessionVariables = {
+              # For interactive bash started from fish; a file directly in the
+              # state dir needs no directory created first.
+              HISTFILE = "${hmXdg.stateHome}/bash_history";
+            };
+          };
+
+          # Nothing loads it at login under niri; Home Manager only merges it
+          # into a running X server on activation.
+          xresources = {
+            path = "${hmXdg.configHome}/X11/xresources";
           };
         };
       };

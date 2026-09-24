@@ -4,7 +4,15 @@ let
   cfg = config.modules.home.starship;
 in
 {
-  options.modules.home.starship.enable = lib.mkEnableOption "starship shell-prompt configuration";
+  options = {
+    modules = {
+      home = {
+        starship = {
+          enable = lib.mkEnableOption "starship shell-prompt configuration";
+        };
+      };
+    };
+  };
 
   config = lib.mkIf cfg.enable {
     home-manager = {
@@ -18,7 +26,9 @@ in
               settings = {
                 add_newline = false;
                 command_timeout = 1000;
-                format = "$directory$git_branch$git_status$nix_shell$cmd_duration$character";
+                # git_commit shows the hash on a detached HEAD, git_state a
+                # rebase, merge or bisect in progress.
+                format = "$directory$git_branch$git_commit$git_state$git_status$nix_shell$cmd_duration$character";
                 right_format = "$status$jobs";
                 scan_timeout = 30;
 
@@ -50,14 +60,18 @@ in
                   behind = "⇣";
                   diverged = "⇕";
                   untracked = "?";
-                  stashed = "$";
+                  # Symbols are format strings: a bare `$` fails to parse and
+                  # the stash marker never shows.
+                  stashed = "\\$";
                   modified = "*";
                   staged = "+";
                   renamed = "»";
                   deleted = "-";
                 };
 
-                hostname.disabled = true;
+                hostname = {
+                  disabled = true;
+                };
 
                 jobs = {
                   format = "[$symbol$number]($style) ";
@@ -71,14 +85,20 @@ in
                   symbol = "nix ";
                 };
 
-                package.disabled = true;
+                package = {
+                  disabled = true;
+                };
 
                 status = {
                   disabled = false;
                   format = "[$symbol$status]($style) ";
+                  # Plain text like the other symbols; the default is an emoji.
+                  symbol = "x ";
                 };
 
-                username.disabled = true;
+                username = {
+                  disabled = true;
+                };
               };
             };
           };

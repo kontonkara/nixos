@@ -27,16 +27,20 @@ in
               defaultCommand = "fd --type f";
 
               defaultOptions = [
-                "--bind=ctrl-d:preview-page-down,ctrl-u:preview-page-up"
+                # Ctrl+/ hides the preview in narrow windows; Alt+/ still
+                # toggles line wrap.
+                "--bind=ctrl-d:preview-page-down,ctrl-u:preview-page-up,ctrl-/:toggle-preview"
                 "--border=rounded"
                 "--cycle"
                 "--height=45%"
                 "--info=inline"
                 "--layout=reverse"
                 "--marker=+"
-                "--pointer=>"
+                # Quoted: fzf splits FZF_DEFAULT_OPTS like a shell and silently
+                # drops everything after a bare `>` or `|`, stylix's colors too.
+                "--pointer='>'"
                 "--preview-window=right:60%:wrap"
-                "--scrollbar=|"
+                "--scrollbar='|'"
               ];
             };
           };

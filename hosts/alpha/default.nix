@@ -9,6 +9,7 @@
     home = {
       apps.enable = true;
       git.enable = true;
+      ssh.enable = true;
       fish.enable = true;
       firefox.enable = true;
       kitty.enable = true;
@@ -22,11 +23,11 @@
       fzf.enable = true;
       ripgrep.enable = true;
       htop.enable = true;
-      btop.enable = true;
       procs.enable = true;
       tealdeer.enable = true;
       k9s.enable = true;
       opencode.enable = true;
+      mimo-code.enable = true;
       keepassxc.enable = true;
       vesktop.enable = true;
       obsidian.enable = true;
@@ -40,6 +41,9 @@
       dconf.enable = true;
       nix-index.enable = true;
       direnv.enable = true;
+      kubecolor.enable = true;
+      opentofu.enable = true;
+      shellcheck.enable = true;
       mangohud.enable = true;
       obs-studio.enable = true;
       stylix.enable = true;
