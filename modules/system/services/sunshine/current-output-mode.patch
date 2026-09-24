@@ -1,0 +1,15 @@
+--- a/src/platform/linux/wayland.cpp
++++ b/src/platform/linux/wayland.cpp
+@@ -156,6 +156,12 @@
+     std::int32_t height,
+     std::int32_t refresh
+   ) {
++    // Outputs advertise every mode they know (niri keeps a custom mode set
++    // earlier); only the current one matches the frames screencopy delivers.
++    if (!(flags & WL_OUTPUT_MODE_CURRENT)) {
++      return;
++    }
++
+     viewport.width = width;
+     viewport.height = height;
+ 
