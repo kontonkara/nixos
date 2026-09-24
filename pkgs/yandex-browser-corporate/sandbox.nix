@@ -4,35 +4,98 @@
   pkgs,
   unwrapped,
   customisation,
-  licenseSeedPath,
-  passwordStore,
-  extraArgs,
   appId,
+  licenseSeedPath,
+  keyStorage,
+  migrateFromKeyring,
+  extraArgs,
   extraManagedPolicies,
+  extraRootCertificates,
+  graphicsDriver,
+  renderNode,
+  fontconfigEtc,
+  extraFonts,
+  iconThemes,
+  cursorThemes,
+  persistentHome,
+  homeBinds,
+  downloadDir,
+  runtimeSubdir,
+  userDataDir,
+  isolateNetwork,
+  timeZone,
+  debugPort,
 }:
 
 let
-  extraArgsString = lib.concatStringsSep " " (map lib.escapeShellArg extraArgs);
+  sandboxHome = "/home/yandex-browser";
+  profileDir =
+    if userDataDir == null then "${sandboxHome}/.config/yandex-browser" else userDataDir;
+
+  # Chromium's OS-level key storage (cookies, passwords, card data):
+  #   portal  - a per-app secret from org.freedesktop.portal.Secret; the
+  #             sandbox never sees the user's keyring. Chromium only asks the
+  #             portal when a keyring store is selected, so it runs as
+  #             gnome-libsecret with the Secret Service itself filtered out.
+  #   keyring - the Secret Service itself (whole login keyring reachable).
+  #   basic   - Chromium's built-in fixed key; relies on disk encryption.
+  passwordStore =
+    {
+      portal = "gnome-libsecret";
+      keyring = "gnome-libsecret";
+      basic = "basic";
+    }
+    .${keyStorage};
+
+  features = [
+    # VA-API decode/encode on the Mesa iGPU, zero-copy into the compositor.
+    "AcceleratedVideoDecodeLinuxGL"
+    "AcceleratedVideoDecodeLinuxZeroCopyGL"
+    "AcceleratedVideoEncoder"
+    # Camera through the xdg Camera portal instead of raw /dev/video*.
+    "WebRtcPipeWireCamera"
+    # Two-finger swipe for back/forward.
+    "TouchpadOverscrollHistoryNavigation"
+  ]
+  ++ lib.optional (keyStorage == "portal") "SecretPortalKeyProviderUseForEncryption";
+
+  flags = [
+    "--ozone-platform=wayland"
+    "--enable-wayland-ime"
+    "--wayland-text-input-version=3"
+    "--password-store=${passwordStore}"
+    "--enable-features=${lib.concatStringsSep "," features}"
+  ]
+  ++ lib.optional (userDataDir != null) "--user-data-dir=${profileDir}"
+  ++ lib.optional (debugPort != null) "--remote-debugging-port=${toString debugPort}"
+  ++ extraArgs;
+
+  # One directory, files named after their certutil nickname.
+  rootCertificates = pkgs.runCommandLocal "yandex-browser-root-certificates" { } ''
+    mkdir $out
+    ${lib.concatMapStrings (file: ''
+      cp ${file} $out/${baseNameOf file}
+    '') extraRootCertificates}
+  '';
 
   managedPolicies = pkgs.writeText "managed_policies.json" (
     builtins.toJSON (
       {
-        # Route downloads through the FileChooser/Document portal instead of
-        # silently dropping files into ~/downloads.
-        PromptForDownloadLocation = true;
         # Tray keep-alive is more trouble than worth in a sandbox.
         BackgroundModeEnabled = false;
+        # The sandbox cannot see or change the host's default browser;
+        # that is set declaratively (makeDefaultBrowser) instead.
+        DefaultBrowserSettingEnabled = false;
       }
+
       // (builtins.fromJSON (builtins.readFile "${customisation}/managed/managed_policies.json"))
       // extraManagedPolicies
     )
   );
 
-  # Yandex 26.4 emits 0x0 xdg_surface geometry from its custom titlebar.
-  # Intercept sendmsg and rewrite those requests (see the C source).
   waylandWireSanitizer = pkgs.stdenv.mkDerivation {
     pname = "yandex-browser-wayland-wire-sanitizer";
-    version = "1";
+    version = "2";
     src = ./wayland-wire-sanitizer.c;
     dontUnpack = true;
     buildPhase = ''
@@ -50,49 +113,65 @@ let
     '';
   };
 
-  # Partner data the first-run helper reads from /var/lib/yandex/browser.
-  # Vendor files plus the customisation deb, with clids.xml's leading
-  # whitespace stripped so the XML declaration is first.
+  browserDir = "${unwrapped}/opt/yandex/browser";
+
+  singletonClient = pkgs.stdenv.mkDerivation {
+    pname = "yandex-browser-singleton-client";
+    version = "1";
+    src = ./singleton-client.c;
+    dontUnpack = true;
+    buildPhase = ''
+      runHook preBuild
+      $CC -std=c11 -O2 -Wall -Wextra -Werror "$src" -o singleton-client
+      runHook postBuild
+    '';
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 singleton-client "$out/bin/singleton-client"
+      runHook postInstall
+    '';
+  };
+
+  # CHROME_WRAPPER: what Chromium may run, with all of its switches, to
+  # relaunch itself from inside the same sandbox.
+  relaunch = pkgs.writeShellScript "yandex-browser-corporate-relaunch" ''
+    exec ${browserDir}/yandex_browser "$@"
+  '';
+
+  # Partner data the first-run helper reads from /var/lib/yandex/browser:
+  # vendor files plus the customisation deb (which wins where both exist).
+  # partner_config / brand_config are signed ("//sig\n{json}") and must stay
+  # byte-for-byte; clids.xml is already sanitised in unwrapped.
   partnerData = pkgs.runCommandLocal "yandex-browser-corporate-partner-data" { } ''
     target=$out/var/lib/yandex/browser
     mkdir -p "$target"
 
-    # partner_config / brand_config are signed ("//sig\n{json}"). Never
-    # rewrite them: the signature covers the body byte-for-byte.
-    for file in partner_config master_preferences brand_config; do
+    for file in partner_config master_preferences brand_config clids.xml; do
       if [[ -f ${unwrapped}/opt/yandex/browser/$file ]]; then
-        install -Dm644 ${unwrapped}/opt/yandex/browser/$file "$target/$file"
+        install -m644 ${unwrapped}/opt/yandex/browser/$file "$target/$file"
       fi
     done
 
-    # clids.xml is plain XML with junk before the declaration.
-    for source in \
-        ${unwrapped}/opt/yandex/browser/clids.xml \
-        ${customisation}/customization/clids.xml; do
-      if [[ -f $source ]]; then
-        sed -e '/<?xml/,$!d' -e 's/^[[:space:]]*//' "$source" >"$target/clids.xml"
-        chmod 644 "$target/clids.xml"
-      fi
-    done
-
-    if [[ -f ${customisation}/customization/distrib_info ]]; then
-      install -Dm644 ${customisation}/customization/distrib_info "$target/distrib_info"
+    if [[ -f ${customisation}/customization/clids.xml ]]; then
+      sed -e '/<?xml/,$!d' -e 's/^[[:space:]]*//' \
+        ${customisation}/customization/clids.xml >"$target/clids.xml"
     fi
 
-    # Corporate customisation wins for partner_config / master_preferences.
-    for file in partner_config master_preferences; do
+    for file in partner_config master_preferences distrib_info; do
       if [[ -f ${customisation}/customization/$file ]]; then
-        install -Dm644 ${customisation}/customization/$file "$target/$file"
+        install -m644 ${customisation}/customization/$file "$target/$file"
       fi
     done
 
-    cp -a ${customisation}/customization/resources "$target/" 2>/dev/null || true
-    cp -a ${customisation}/customization/Extensions "$target/" 2>/dev/null || true
+    for directory in resources Extensions; do
+      if [[ -d ${customisation}/customization/$directory ]]; then
+        cp -a ${customisation}/customization/$directory "$target/"
+      fi
+    done
   '';
 
   browserEnv = pkgs.runCommandLocal "yandex-browser-corporate-env" { } ''
-    mkdir -p $out/etc/opt/yandex/browser/policies/managed
-    cp ${managedPolicies} \
+    install -Dm644 ${managedPolicies} \
       $out/etc/opt/yandex/browser/policies/managed/managed_policies.json
   '';
 
@@ -102,9 +181,8 @@ let
     + "\n"
   );
 
-  # org.gtk.Settings.FileChooser lives in gtk3, under nixpkgs'
-  # share/gsettings-schemas/<name>/glib-2.0/schemas. GSETTINGS_SCHEMA_DIR
-  # must be a single merged directory or the save dialog aborts.
+  # org.gtk.Settings.FileChooser lives in gtk3's schemas. GSETTINGS_SCHEMA_DIR
+  # must be a single compiled directory or GTK dialogs abort.
   gtkSchemas = pkgs.runCommandLocal "yandex-browser-gsettings-schemas" { } ''
     mkdir -p $out/share/glib-2.0/schemas
     for xml in \
@@ -115,115 +193,201 @@ let
     ${pkgs.glib.dev}/bin/glib-compile-schemas $out/share/glib-2.0/schemas
   '';
 
-  app = pkgs.runCommandLocal "yandex-browser-corporate-app" { } ''
-    mkdir -p $out/bin $out/opt/yandex/browser
-    cp -a ${unwrapped}/opt/. $out/opt/
-    cp -a ${unwrapped}/share $out/
-    chmod -R u+w $out/opt $out/share
+  # Inside the sandbox xdg-open must not try to run host programs: GLib
+  # notices /.flatpak-info and routes URIs and files through the OpenURI
+  # portal, which opens them with the host's default handler (and translates
+  # sandbox paths via the passed file descriptor).
+  portalShims = pkgs.writeShellScriptBin "xdg-open" ''
+    exec ${pkgs.glib.bin}/bin/gio open "$@"
+  '';
 
-    # clids.xml only — the other files in opt/yandex/browser are signed.
-    if [[ -f $out/opt/yandex/browser/clids.xml ]]; then
-      sed -e '/<?xml/,$!d' -e 's/^[[:space:]]*//' \
-        $out/opt/yandex/browser/clids.xml \
-        >$out/opt/yandex/browser/clids.xml.tmp
-      mv $out/opt/yandex/browser/clids.xml.tmp $out/opt/yandex/browser/clids.xml
-    fi
-
-    rm -f $out/share/applications/*.desktop
-    sed \
-      -e "s|^Exec=.*|Exec=$out/bin/yandex-browser-corporate %U|" \
-      -e '/^NoDisplay=/d' \
-      ${unwrapped}/share/applications/yandex-browser.desktop \
-      >$out/share/applications/${appId}.desktop
-    echo "StartupWMClass=${appId}" >>$out/share/applications/${appId}.desktop
-
-    for size in 16 24 32 48 64 128 256; do
-      install -Dm644 $out/opt/yandex/browser/product_logo_$size.png \
-        $out/share/icons/hicolor/''${size}x''${size}/apps/yandex-browser.png
-    done
-
+  # The launcher (running inside the sandbox) is the nixpak app.
+  launcher = pkgs.runCommandLocal "yandex-browser-corporate-launcher" { } ''
+    mkdir -p $out/bin
     substitute ${./launcher.sh} $out/bin/yandex-browser-corporate \
       --replace-fail @bash@ ${pkgs.bash} \
-      --replace-fail @browser@ $out/opt/yandex/browser \
-      --replace-fail @licenseSeed@ ${licenseSeedPath} \
-      --replace-fail @coreutils@ ${pkgs.coreutils} \
-      --replace-fail @utilLinux@ ${pkgs.util-linux} \
-      --replace-fail @xz@ ${pkgs.xz} \
+      --replace-fail @browser@ ${browserDir} \
+      --replace-fail @licenseSeed@ ${lib.escapeShellArg (lib.escapeShellArg licenseSeedPath)} \
+      --replace-fail @path@ ${
+        lib.makeBinPath [
+          portalShims
+          pkgs.coreutils
+          pkgs.util-linux
+          pkgs.xz
+          pkgs.nss.tools
+        ]
+      } \
       --replace-fail @waylandWireSanitizer@ ${waylandWireSanitizer} \
-      --replace-fail @passwordStore@ ${passwordStore} \
-      --replace-fail @appId@ ${appId} \
-      --replace-fail @extraArgs@ "${extraArgsString}"
+      --replace-fail @rootCertificates@ ${rootCertificates} \
+      --replace-fail @userDataDir@ ${lib.escapeShellArg (lib.escapeShellArg profileDir)} \
+      --replace-fail @singletonClient@ ${singletonClient}/bin/singleton-client \
+      --replace-fail @relaunch@ ${relaunch} \
+      --replace-fail @flags@ ${lib.escapeShellArg (lib.escapeShellArgs flags)}
     chmod +x $out/bin/yandex-browser-corporate
   '';
 
-  sandboxHome = "/home/yandex-browser";
+  # Fonts: mirror the host's fontconfig (same families, aliases, hinting)
+  # and add the user's own font packages on top.
+  hostFonts = fontconfigEtc != null;
+  fontconfigEtcRef = pkgs.runCommandLocal "yandex-browser-fontconfig-etc" { } ''
+    ln -s ${fontconfigEtc} $out
+  '';
+  fontsConf = pkgs.writeText "yandex-browser-fonts.conf" ''
+    <?xml version="1.0"?>
+    <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+    <fontconfig>
+      <include ignore_missing="no">/etc/fonts/fonts.conf</include>
+      ${lib.concatMapStringsSep "\n  " (font: "<dir>${font}/share/fonts</dir>") extraFonts}
+    </fontconfig>
+  '';
+
+  dataDirs = [
+    pkgs.hicolor-icon-theme
+    pkgs.adwaita-icon-theme
+    pkgs.shared-mime-info
+    pkgs.gsettings-desktop-schemas
+    pkgs.gtk3
+  ]
+  ++ iconThemes
+  ++ cursorThemes;
+  cursorDirs = cursorThemes ++ [ pkgs.adwaita-icon-theme ];
 in
 mkNixPak {
   config =
-    {
-      sloth,
-      ...
-    }:
+    { config, sloth, ... }:
     let
-      hostAppDir = suffix: sloth.mkdir (sloth.concat' sloth.homeDir suffix);
       runtimePath = suffix: sloth.concat' sloth.runtimeDir suffix;
-      runtimeAppDir = suffix: sloth.mkdir (runtimePath suffix);
+      home = suffix: "${sandboxHome}${suffix}";
+      # Host paths are given as "$HOME/..." so they work for any user.
+      hostPath =
+        path:
+        if lib.hasPrefix "$HOME/" path then
+          sloth.concat' sloth.homeDir (lib.removePrefix "$HOME" path)
+        else
+          path;
     in
     {
-      app.package = app;
+      app.package = launcher;
       app.binPath = "bin/yandex-browser-corporate";
 
       flatpak.appId = appId;
 
+      # Session bus through xdg-dbus-proxy. Portals cover files, URIs,
+      # screencast, camera, notifications, settings and the secret key; no
+      # direct keyring, dconf, file manager or accessibility bus access.
       dbus.enable = true;
       dbus.policies = {
         "org.freedesktop.DBus" = "talk";
-        "org.freedesktop.Notifications" = "talk";
         "org.freedesktop.portal.*" = "talk";
-        "org.freedesktop.secrets" = "talk";
-        "org.freedesktop.FileManager1" = "talk";
-        "org.freedesktop.login1" = "talk";
-        "ca.desrt.dconf" = "talk";
-        "org.kde.kwallet5" = "talk";
-        "org.kde.kwallet6" = "talk";
-        "com.canonical.AppMenu.Registrar" = "talk";
-        "org.kde.StatusNotifierWatcher" = "talk";
-        "org.mpris.MediaPlayer2.*" = "own";
+        "org.freedesktop.Notifications" = "talk";
+        "org.mpris.MediaPlayer2.chromium.*" = "own";
         "${appId}" = "own";
         "${appId}.*" = "own";
+      }
+      // lib.optionalAttrs (keyStorage == "keyring" || migrateFromKeyring) {
+        "org.freedesktop.secrets" = "talk";
       };
 
-      gpu.enable = true;
-      gpu.provider = "nixos";
+      # GPU devices are bound by hand below (only the chosen render node).
+      gpu.enable = false;
 
-      fonts.enable = true;
-      fonts.fonts = with pkgs; [
-        dejavu_fonts
-        liberation_ttf
-        noto-fonts
-        noto-fonts-color-emoji
-      ];
+      fonts = lib.mkIf (!hostFonts) {
+        enable = true;
+        fonts = [
+          pkgs.dejavu_fonts
+          pkgs.liberation_ttf
+          pkgs.noto-fonts
+          pkgs.noto-fonts-color-emoji
+        ]
+        ++ extraFonts;
+      };
 
       etc.sslCertificates.enable = true;
       locale.enable = true;
-      timeZone = {
+      # A named zone (plus TZ) lets ICU report "Europe/Minsk" to web pages
+      # instead of a bare offset read from a copied /etc/localtime.
+      timeZone =
+        if timeZone == null then
+          {
+            enable = true;
+            provider = "host";
+          }
+        else
+          {
+            enable = true;
+            provider = "bundle";
+            zone = timeZone;
+          };
+
+      # Own network namespace: the internet and LAN work through pasta, but
+      # services bound to the host's loopback (proxies' control APIs, dev
+      # servers, CUPS, ...) are unreachable.
+      pasta = lib.mkIf isolateNetwork {
         enable = true;
-        provider = "host";
+        mode = "isolate";
+        args = lib.mkIf (debugPort != null) (
+          lib.mkForce [
+            "--config-net"
+            "--no-dhcp"
+            "--no-dhcpv6"
+            "--no-ra"
+            "--no-map-gw"
+            "--tcp-ns"
+            "none"
+            "--udp-ns"
+            "none"
+            # Debug builds only: expose DevTools on the host's loopback.
+            "--tcp-ports"
+            "127.0.0.1/${toString debugPort}"
+            "--host-lo-to-ns-lo"
+            "--udp-ports"
+            "none"
+            "--ns-ifname"
+            "eth0"
+            "--address"
+            "192.168.1.100"
+            "--netmask"
+            "255.255.255.0"
+            "--gateway"
+            "192.168.1.1"
+            "--mac-addr"
+            "52:54:00:12:34:56"
+            "--dns-forward"
+            "192.168.1.1"
+            "--search"
+            "none"
+          ]
+        );
       };
 
       bubblewrap = {
         network = true;
-        # IPC namespace is not shared: Chromium only needs Wayland/pulse/pipewire.
+        # IPC namespace is not shared: Chromium only needs Wayland/PipeWire.
         shareIpc = false;
         dieWithParent = true;
+        clearEnv = true;
+        # Only the closure of the browser, drivers and themes is visible.
+        bindEntireStore = false;
+        extraStorePaths = [
+          graphicsDriver
+          gtkSchemas
+          config.locale.package
+        ]
+        ++ dataDirs
+        ++ lib.optionals hostFonts [
+          fontconfigEtcRef
+          fontsConf
+        ]
+        ++ lib.optional (timeZone != null) pkgs.tzdata
+        ++ extraFonts;
+
         apivfs = {
           proc = true;
           dev = true;
         };
 
-        # Chromium loads it via dlopen on every render process.
-        extraStorePaths = [ waylandWireSanitizer ];
-
+        # Wayland comes from the wl-security-context listener (restricted
+        # client: no screencopy, data-control, layer-shell, virtual input).
         sockets = {
           wayland = true;
           pipewire = true;
@@ -231,46 +395,37 @@ mkNixPak {
           x11 = false;
         };
 
-        # NOT tmpfs: Chromium's SingletonSocket and our wrapper flock must
-        # survive across launches so a second start forwards to the first
-        # instead of both claiming the profile ("opened incorrectly").
         bind.rw = [
+          # Shared by every launch: Chromium's SingletonSocket dir and the
+          # launcher's flock must survive so a second start forwards to the
+          # first instance.
           [
-            (runtimeAppDir "/yandex-browser-tmp")
+            (sloth.mkdir (runtimePath "/app/${runtimeSubdir}/tmp"))
             "/tmp"
           ]
-          # Preserve browser state, but under a synthetic HOME so the real
-          # home is neither visible nor named.
+          # Persistent synthetic HOME (like ~/.var/app/<id>): profile, Mesa
+          # shader cache, fontconfig cache, NSS certificate DB. The real home
+          # is neither visible nor named.
           [
-            (hostAppDir "/.yandex/browser")
-            "${sandboxHome}/.yandex/browser"
+            (sloth.mkdir (hostPath persistentHome))
+            sandboxHome
           ]
+        ]
+        # Pre-existing profile locations stay where they are on the host.
+        ++ lib.mapAttrsToList (inner: outer: [
+          (hostPath outer)
+          (home "/${inner}")
+        ]) homeBinds
+        ++ [
           [
-            (hostAppDir "/.config/yandex-browser")
-            "${sandboxHome}/.config/yandex-browser"
+            (sloth.mkdir (hostPath downloadDir))
+            (home "/downloads")
           ]
+          # Only documents granted to this app, as Flatpak does.
           [
-            (hostAppDir "/.cache/yandex-browser")
-            "${sandboxHome}/.cache/yandex-browser"
+            (runtimePath "/doc/by-app/${appId}")
+            (runtimePath "/doc")
           ]
-          [
-            (hostAppDir "/.local/share/yandex-browser")
-            "${sandboxHome}/.local/share/yandex-browser"
-          ]
-          [
-            (hostAppDir "/.local/state/yandex-browser-corporate")
-            "${sandboxHome}/.local/state/yandex-browser-corporate"
-          ]
-          # Downloads must land under the synthetic HOME too, otherwise
-          # Chromium resolves ~/downloads inside the sandbox and the write
-          # goes to an invisible, non-persistent path.
-          [
-            (sloth.mkdir sloth.xdgDownloadDir)
-            "${sandboxHome}/downloads"
-          ]
-          sloth.runtimeDir
-          # Document portal grants land here.
-          (runtimePath "/doc")
         ];
 
         bind.ro = [
@@ -283,50 +438,78 @@ mkNixPak {
             "${browserEnv}/etc/opt/yandex/browser"
             "/etc/opt/yandex/browser"
           ]
-          [ "${spoofedMachineId}" "/etc/machine-id" ]
-          # Pulse/PipeWire auth cookie; synthetic HOME would not see it otherwise.
           [
-            (hostAppDir "/.config/pulse")
-            "${sandboxHome}/.config/pulse"
+            "${spoofedMachineId}"
+            "/etc/machine-id"
+          ]
+          [
+            "${graphicsDriver}"
+            "/run/opengl-driver"
+          ]
+          # libdrm/Mesa identify the GPU through sysfs. Only the GPUs' own
+          # device directories (found by the entrypoint): the rest of the PCI
+          # tree carries NIC MAC addresses and disk/USB serial numbers.
+          "/sys/dev/char"
+        ]
+        ++ map (
+          slot: sloth.envOr "YANDEX_BROWSER_GPU_SYSFS_${toString slot}" "/nonexistent"
+        ) (lib.range 0 3)
+        ++ lib.optionals hostFonts [
+          [
+            "${fontconfigEtc}"
+            "/etc/fonts"
           ]
         ];
 
-        bind.dev = [ "/dev/dri" ];
+        bind.dev =
+          if renderNode == null then
+            [ "/dev/dri" ]
+          else
+            [
+              [
+                renderNode
+                "/dev/dri/renderD128"
+              ]
+            ];
 
         env = {
           HOME = sandboxHome;
-          USER = sloth.envOr "USER" "browser";
-          LOGNAME = sloth.envOr "LOGNAME" "browser";
-          XDG_CONFIG_HOME = "${sandboxHome}/.config";
-          XDG_CACHE_HOME = "${sandboxHome}/.cache";
-          XDG_DATA_HOME = "${sandboxHome}/.local/share";
-          XDG_STATE_HOME = "${sandboxHome}/.local/state";
+          USER = "yandex-browser";
+          LOGNAME = "yandex-browser";
+          LANG = sloth.envOr "LANG" "en_US.UTF-8";
+          XDG_CONFIG_HOME = home "/.config";
+          XDG_CACHE_HOME = home "/.cache";
+          XDG_DATA_HOME = home "/.local/share";
+          XDG_STATE_HOME = home "/.local/state";
           XDG_RUNTIME_DIR = sloth.runtimeDir;
-          PULSE_SERVER = runtimePath "/pulse/native";
-          PIPEWIRE_REMOTE = "pipewire-0";
-          XDG_DOWNLOAD_DIR = "${sandboxHome}/downloads";
           XDG_SESSION_TYPE = "wayland";
+          XDG_CURRENT_DESKTOP = sloth.envOr "XDG_CURRENT_DESKTOP" "";
+          WAYLAND_DISPLAY = sloth.env "WAYLAND_DISPLAY";
+          PULSE_SERVER = sloth.concat [
+            "unix:"
+            sloth.runtimeDir
+            "/pulse/native"
+          ];
           GDK_BACKEND = "wayland";
-          QT_QPA_PLATFORM = "wayland";
           GTK_USE_PORTAL = "1";
-          MOZ_ENABLE_WAYLAND = "1";
-          NIXOS_OZONE_WL = "1";
-          YANDEX_LICENSE_SECRET_PATH = licenseSeedPath;
+          NO_AT_BRIDGE = "1";
+          XDG_DATA_DIRS = lib.makeSearchPath "share" dataDirs;
+          GSETTINGS_SCHEMA_DIR = "${gtkSchemas}/share/glib-2.0/schemas";
+          XCURSOR_PATH = lib.concatMapStringsSep ":" (p: "${p}/share/icons") cursorDirs;
+          XCURSOR_THEME = sloth.envOr "XCURSOR_THEME" "Adwaita";
+          XCURSOR_SIZE = sloth.envOr "XCURSOR_SIZE" "24";
+          # Mesa only: the dGPU's userspace driver is never loaded, so
+          # the browser cannot wake it up.
           LIBVA_DRIVERS_PATH = "/run/opengl-driver/lib/dri";
           __EGL_VENDOR_LIBRARY_DIRS = "/run/opengl-driver/share/glvnd/egl_vendor.d";
-          # Hybrid AMD iGPU + NVIDIA dGPU: point the loader at both RADV and NVK.
-          VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json:/run/opengl-driver/share/vulkan/icd.d/nouveau_icd.x86_64.json";
-          VK_LAYER_PATH = "/run/opengl-driver/share/vulkan/explicit_layer.d";
-          # gtk3 carries org.gtk.Settings.FileChooser; without it the save
-          # dialog aborts the process.
-          XDG_DATA_DIRS = lib.makeSearchPath "share" [
-            pkgs.adwaita-icon-theme
-            pkgs.hicolor-icon-theme
-            pkgs.shared-mime-info
-            pkgs.gsettings-desktop-schemas
-            pkgs.gtk3
-          ];
-          GSETTINGS_SCHEMA_DIR = "${gtkSchemas}/share/glib-2.0/schemas";
+          YANDEX_LICENSE_RESEED = sloth.envOr "YANDEX_LICENSE_RESEED" "0";
+        }
+        // lib.optionalAttrs (timeZone != null) {
+          TZ = timeZone;
+          TZDIR = "${pkgs.tzdata}/share/zoneinfo";
+        }
+        // lib.optionalAttrs hostFonts {
+          FONTCONFIG_FILE = "${fontsConf}";
         };
       };
     };

@@ -2,7 +2,9 @@
 
 #include <dlfcn.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <pthread.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,29 +15,49 @@
 #include <unistd.h>
 
 /*
- * Yandex Browser Corporate native-Wayland geometry sanitizer, final quiet version.
+ * Yandex Browser Corporate native-Wayland geometry sanitizer.
+ *
+ * Yandex's custom titlebar sends xdg_surface.set_window_geometry (and
+ * xdg_positioner sizes) of 0x0. The xdg-shell spec makes that an
+ * invalid_size protocol error, and compositors that enforce it (KWin,
+ * Smithay-based niri) disconnect the client, killing the browser.
  *
  * Chromium bundles its own hidden libwayland-client, so patching the public
- * libwayland-client does not affect Ozone. LD_PRELOAD also propagates to
- * renderer/utility children, so the interposer must not probe arbitrary fds
- * with syscalls forbidden by Chromium's seccomp sandbox.
- *
- * This final version performs NO socket-probing syscalls and does not interpose
- * connect(). On sendmsg() it only inspects the already-present userspace
- * iovec bytes. An fd becomes a Wayland candidate only after an exact
- * wl_display.get_registry(new_id) request is observed. It becomes useful for
- * mutation only after that registry subsequently binds "xdg_wm_base" and
- * creates the corresponding xdg_surface/xdg_positioner object IDs.
+ * libwayland-client does not affect Ozone. The interposer performs NO
+ * socket-probing syscalls and does not interpose connect(). On sendmsg() it
+ * only inspects the already-present userspace iovec bytes. An fd becomes a
+ * Wayland candidate only after an exact wl_display.get_registry(new_id)
+ * request is observed. It becomes useful for mutation only after that
+ * registry subsequently binds "xdg_wm_base" and creates the corresponding
+ * xdg_surface/xdg_positioner object IDs.
  *
  * Unrelated Chromium Mojo/IPC sockets are passed to the real sendmsg()
  * unchanged. No Wayland proxy is introduced; DMA-BUF, explicit sync, input,
- * buffers, app_id, etc. still go directly to KWin.
+ * buffers, app_id, etc. still go directly to the compositor.
+ *
+ * Only the browser process owns the Wayland connection. LD_PRELOAD has to
+ * stay in the environment (Chromium relaunches itself with its own
+ * environment), so every child process loads the library too; there it
+ * detects that it isn't the browser and passes calls straight through.
+ *
+ * Fork safety: Chromium closes every fd, the Wayland socket included, in
+ * freshly forked children before exec, and it forks with raw clone() so
+ * pthread_atfork handlers don't run. A child must never wait for the lock
+ * (another thread may have held it at fork time, and would never release it
+ * in the child): all state is owned by the process that loaded us, and any
+ * other pid passes straight through. Non-Wayland sendmsg()/close() never
+ * take the lock at all, and symbols are resolved without pthread_once
+ * (other libraries' constructors may call close() before ours runs).
+ *
+ * Partial writes: when sendmsg() sends only part of a buffer, libwayland
+ * later resends the remainder from its own, unclamped copy, starting in the
+ * middle of a message. The rewritten tail of that message is kept per fd and
+ * laid over the start of the next sendmsg(), so clamping survives the split.
  */
 
 typedef ssize_t (*sendmsg_fn)(int, const struct msghdr *, int);
 typedef int (*close_fn)(int);
 
-static pthread_once_t symbols_once = PTHREAD_ONCE_INIT;
 static sendmsg_fn real_sendmsg;
 static close_fn real_close;
 
@@ -53,24 +75,142 @@ struct fd_state {
     struct idset xdg_wm_bases;
     struct idset xdg_surfaces;
     struct idset xdg_positioners;
+    /* Rewritten bytes of a message that the last sendmsg() cut short. */
+    unsigned char *carry;
+    size_t carry_len;
     struct fd_state *next;
 };
 
 static pthread_mutex_t states_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct fd_state *states;
 
+/* fd + 1 of every tracked connection (0 = free slot), readable without the
+ * lock so close() on anything else stays lock-free. A browser has one or two
+ * Wayland connections; if the table is full a new one just isn't sanitised. */
+#define MAX_TRACKED 8
+static atomic_int tracked_fds[MAX_TRACKED];
+
+static int is_tracked(int fd)
+{
+    int i;
+    for (i = 0; i < MAX_TRACKED; ++i)
+        if (atomic_load_explicit(&tracked_fds[i], memory_order_acquire) == fd + 1)
+            return 1;
+    return 0;
+}
+
+static int track_fd(int fd)
+{
+    int i, expected;
+    for (i = 0; i < MAX_TRACKED; ++i) {
+        expected = 0;
+        if (atomic_compare_exchange_strong(&tracked_fds[i], &expected, fd + 1))
+            return 1;
+    }
+    return 0;
+}
+
+static void untrack_fd(int fd)
+{
+    int i, expected;
+    for (i = 0; i < MAX_TRACKED; ++i) {
+        expected = fd + 1;
+        atomic_compare_exchange_strong(&tracked_fds[i], &expected, 0);
+    }
+}
+
+/* True in every process except the browser itself: zygotes, renderers,
+ * GPU/utility processes ("--type=..."), crashpad and anything the browser
+ * spawns (xdg-open, update helpers). */
+static int passthrough;
+/* The process whose Wayland connections we track; forked children differ. */
+static pid_t owner_pid;
+
+#define BROWSER_SUFFIX "/yandex_browser"
+
+__attribute__((constructor))
+static void detect_role(void)
+{
+    char buf[4096];
+    ssize_t len = 0, n;
+    size_t off, arg_len;
+    int fd = open("/proc/self/cmdline", O_RDONLY | O_CLOEXEC);
+
+    owner_pid = getpid();
+    if (fd < 0)
+        return;
+    while (len < (ssize_t)sizeof(buf) - 1 &&
+           (n = read(fd, buf + len, sizeof(buf) - 1 - (size_t)len)) > 0)
+        len += n;
+    close(fd);
+    buf[len] = '\0';
+
+    /* argv[0] must be the browser binary... */
+    arg_len = strlen(buf);
+    if (arg_len < sizeof(BROWSER_SUFFIX) - 1 ||
+        strcmp(buf + arg_len - (sizeof(BROWSER_SUFFIX) - 1), BROWSER_SUFFIX) != 0) {
+        passthrough = 1;
+        return;
+    }
+    /* ...without a child process type. */
+    for (off = arg_len + 1; off < (size_t)len; off += strlen(buf + off) + 1) {
+        if (strncmp(buf + off, "--type=", 7) == 0) {
+            passthrough = 1;
+            return;
+        }
+    }
+}
+
+static void reset_lock_in_child(void)
+{
+    /* Another thread may have held the lock at fork(); only this thread
+     * exists in the child. */
+    pthread_mutex_init(&states_lock, NULL);
+}
+
+/* Idempotent, so a race between threads only repeats harmless work. */
+__attribute__((constructor))
 static void resolve_symbols(void)
 {
-    *(void **)(&real_sendmsg) = dlsym(RTLD_NEXT, "sendmsg");
-    *(void **)(&real_close) = dlsym(RTLD_NEXT, "close");
+    static atomic_int atfork_registered;
+    void *sendmsg_sym = dlsym(RTLD_NEXT, "sendmsg");
+    void *close_sym = dlsym(RTLD_NEXT, "close");
 
-    if (!real_sendmsg || !real_close) {
+    if (!sendmsg_sym || !close_sym) {
         const char *e = dlerror();
         dprintf(STDERR_FILENO,
                 "yandex-wayland-wire: symbol resolution failed: %s\n",
                 e ? e : "unknown error");
         _exit(127);
     }
+
+    __atomic_store_n((void **)&real_sendmsg, sendmsg_sym, __ATOMIC_RELEASE);
+    __atomic_store_n((void **)&real_close, close_sym, __ATOMIC_RELEASE);
+
+    if (!atomic_exchange(&atfork_registered, 1))
+        pthread_atfork(NULL, NULL, reset_lock_in_child);
+}
+
+static sendmsg_fn get_real_sendmsg(void)
+{
+    sendmsg_fn fn;
+    *(void **)&fn = __atomic_load_n((void **)&real_sendmsg, __ATOMIC_ACQUIRE);
+    if (!fn) {
+        resolve_symbols();
+        *(void **)&fn = __atomic_load_n((void **)&real_sendmsg, __ATOMIC_ACQUIRE);
+    }
+    return fn;
+}
+
+static close_fn get_real_close(void)
+{
+    close_fn fn;
+    *(void **)&fn = __atomic_load_n((void **)&real_close, __ATOMIC_ACQUIRE);
+    if (!fn) {
+        resolve_symbols();
+        *(void **)&fn = __atomic_load_n((void **)&real_close, __ATOMIC_ACQUIRE);
+    }
+    return fn;
 }
 
 static int idset_contains(const struct idset *set, uint32_t id)
@@ -139,6 +279,10 @@ static struct fd_state *get_state_locked(int fd)
     s = calloc(1, sizeof(*s));
     if (!s)
         return NULL;
+    if (!track_fd(fd)) {
+        free(s);
+        return NULL;
+    }
 
     s->fd = fd;
     s->next = states;
@@ -159,7 +303,9 @@ static void remove_state_locked(int fd)
             idset_free(&s->xdg_wm_bases);
             idset_free(&s->xdg_surfaces);
             idset_free(&s->xdg_positioners);
+            free(s->carry);
             free(s);
+            untrack_fd(fd);
             return;
         }
 
@@ -319,13 +465,14 @@ static int read_wire_string(const struct msghdr *msg, size_t off,
  * extremely unlikely. Even after that, no mutation occurs until an actual
  * wl_registry.bind("xdg_wm_base", ...) is observed.
  */
-static int parse_messages(struct fd_state *s, const struct msghdr *msg)
+static int parse_messages(struct fd_state *s, const struct msghdr *msg,
+                          size_t start)
 {
     const size_t total = iov_total(msg);
-    size_t off = 0;
+    size_t off = start;
     int saw_valid_message = 0;
 
-    if (total < 8)
+    if (total < start + 8)
         return 0;
 
     while (total - off >= 8) {
@@ -427,51 +574,105 @@ static int parse_messages(struct fd_state *s, const struct msghdr *msg)
     return saw_valid_message;
 }
 
+/* End of the message that contains byte `pos`, walking message headers from
+ * `start` (a message boundary). 0 if the stream can't be followed. */
+static size_t message_end(const unsigned char *buf, size_t total, size_t start,
+                          size_t pos)
+{
+    size_t off = start;
+
+    while (off + 8 <= total) {
+        uint32_t word;
+        uint16_t size;
+
+        memcpy(&word, buf + off + 4, sizeof(word));
+        size = (uint16_t)(word >> 16);
+        if (size < 8 || (size & 3u))
+            return 0;
+        if (pos < off + size)
+            return off + size;
+        off += size;
+    }
+    return 0;
+}
+
+/* After a partial send, remember the rewritten remainder of the message it
+ * stopped in. Called with the lock held. */
+static void remember_carry(struct fd_state *s, const unsigned char *buf,
+                           size_t total, size_t start, size_t sent)
+{
+    size_t end;
+    unsigned char *copy;
+
+    if (sent < s->carry_len) {
+        /* Still inside the carried message. */
+        memmove(s->carry, s->carry + sent, s->carry_len - sent);
+        s->carry_len -= sent;
+        return;
+    }
+
+    s->carry_len = 0;
+    if (sent >= total)
+        return;
+
+    end = message_end(buf, total, start, sent);
+    if (end <= sent || end > total)
+        return;
+
+    copy = realloc(s->carry, end - sent);
+    if (!copy)
+        return;
+    memcpy(copy, buf + sent, end - sent);
+    s->carry = copy;
+    s->carry_len = end - sent;
+}
+
 ssize_t sendmsg(int fd, const struct msghdr *msg, int flags)
 {
     struct fd_state *s;
     struct msghdr rewritten;
     struct iovec rewritten_iov;
     unsigned char *buffer = NULL;
+    size_t total = 0, start = 0;
     ssize_t result;
     int saved_errno;
-
-    pthread_once(&symbols_once, resolve_symbols);
 
     /*
      * No probing syscalls here. For tiny/non-iovec IPC messages, immediately
      * fall through to libc.
      */
-    if (!msg || !msg->msg_iov || msg->msg_iovlen == 0)
-        return real_sendmsg(fd, msg, flags);
+    if (passthrough || !msg || !msg->msg_iov || msg->msg_iovlen == 0)
+        return get_real_sendmsg()(fd, msg, flags);
+
+    if (!is_tracked(fd)) {
+        /*
+         * Start tracking only a buffer that begins with a strictly valid
+         * wl_display.get_registry request; everything else (Mojo IPC, the
+         * bulk of all sendmsg calls) goes straight through without the lock.
+         */
+        uint32_t object_id = 0, word = 0, registry_id = 0;
+
+        total = iov_total(msg);
+        if (!(total >= 12 &&
+              read_u32(msg, 0, &object_id) &&
+              read_u32(msg, 4, &word) &&
+              object_id == 1 &&
+              (uint16_t)(word & 0xffffu) == 1 &&
+              (uint16_t)(word >> 16) == 12 &&
+              read_u32(msg, 8, &registry_id) &&
+              registry_id >= 2 &&
+              registry_id < 0xff000000u))
+            return get_real_sendmsg()(fd, msg, flags);
+    }
+    if (getpid() != owner_pid)
+        return get_real_sendmsg()(fd, msg, flags);
 
     pthread_mutex_lock(&states_lock);
 
-    s = find_state_locked(fd);
-    if (!s) {
-        /*
-         * Allocate state lazily only for a buffer that begins with a strictly
-         * valid wl_display.get_registry request. This prevents state growth
-         * from arbitrary Mojo sockets.
-         */
-        uint32_t object_id = 0, word = 0, registry_id = 0;
-        const size_t total = iov_total(msg);
-
-        if (total >= 12 &&
-            read_u32(msg, 0, &object_id) &&
-            read_u32(msg, 4, &word) &&
-            object_id == 1 &&
-            (uint16_t)(word & 0xffffu) == 1 &&
-            (uint16_t)(word >> 16) == 12 &&
-            read_u32(msg, 8, &registry_id) &&
-            registry_id >= 2 &&
-            registry_id < 0xff000000u) {
-            s = get_state_locked(fd);
-        }
-    }
+    s = get_state_locked(fd);
 
     if (s) {
-        const size_t total = iov_total(msg);
+        total = iov_total(msg);
 
         if (total) {
             /* sendmsg's input may be read-only or shared with another caller.
@@ -489,20 +690,36 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags)
                 errno = EFAULT;
                 return -1;
             }
+
+            /* The buffer starts with the rest of a message we already
+             * rewrote: lay our version over libwayland's. */
+            start = s->carry_len < total ? s->carry_len : total;
+            if (start)
+                memcpy(buffer, s->carry, start);
+
             rewritten = *msg;
             rewritten_iov.iov_base = buffer;
             rewritten_iov.iov_len = total;
             rewritten.msg_iov = &rewritten_iov;
             rewritten.msg_iovlen = 1;
             msg = &rewritten;
-            (void)parse_messages(s, msg);
+            (void)parse_messages(s, msg, start);
         }
     }
 
     pthread_mutex_unlock(&states_lock);
 
-    result = real_sendmsg(fd, msg, flags);
+    result = get_real_sendmsg()(fd, msg, flags);
     saved_errno = errno;
+
+    if (buffer && result >= 0) {
+        pthread_mutex_lock(&states_lock);
+        s = find_state_locked(fd);
+        if (s)
+            remember_carry(s, buffer, total, start, (size_t)result);
+        pthread_mutex_unlock(&states_lock);
+    }
+
     free(buffer);
     errno = saved_errno;
     return result;
@@ -510,11 +727,13 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags)
 
 int close(int fd)
 {
-    pthread_once(&symbols_once, resolve_symbols);
+    /* Lock-free for everything but tracked Wayland connections: this also
+     * runs in forked children that are about to exec. */
+    if (!passthrough && is_tracked(fd) && getpid() == owner_pid) {
+        pthread_mutex_lock(&states_lock);
+        remove_state_locked(fd);
+        pthread_mutex_unlock(&states_lock);
+    }
 
-    pthread_mutex_lock(&states_lock);
-    remove_state_locked(fd);
-    pthread_mutex_unlock(&states_lock);
-
-    return real_close(fd);
+    return get_real_close()(fd);
 }

@@ -1,68 +1,158 @@
 #!@bash@/bin/bash
-# Seeds the rotating corporate license, then execs Chromium.
+# Runs inside the sandbox (as PID 2 of its PID namespace; the sandbox ends
+# when this script does). Forwards to a running instance, or prepares the
+# profile and runs Chromium.
 set -euo pipefail
 
 browser_dir=@browser@
 license_seed=@licenseSeed@
-export PATH=@coreutils@/bin:@utilLinux@/bin:@xz@/bin:$PATH
+# xdg-open/gio shims first: Chromium hands URLs and files to them.
+export PATH=@path@
 
-# Yandex's custom titlebar emits xdg_surface.set_window_geometry with 0x0,
-# which KWin rejects and takes the process down (e.g. on right-click).
-# Sanitize the Wayland wire stream instead of patching libwayland-client.
-export LD_PRELOAD="@waylandWireSanitizer@/lib/libyandex-wayland-wire-sanitizer.so${LD_PRELOAD:+:$LD_PRELOAD}"
+profile_dir=@userDataDir@
 
-# HOME is the synthetic sandbox home. Live license copy is owned by the
-# browser and rotated via license-renewal; the sops secret is only a seed.
-license_file=${YANDEX_LICENSE_FILE:-$HOME/.yandex/browser/license}
-profile_dir=${XDG_CONFIG_HOME:-$HOME/.config}/yandex-browser
-
-mkdir -p "$(dirname "$license_file")" "$profile_dir"
-if [[ ${YANDEX_LICENSE_RESEED-0} == 1 ]]; then
-    install -Dm600 "$license_seed" "$license_file"
-elif [[ -r $license_seed && ! -s $license_file ]]; then
-    install -Dm600 "$license_seed" "$license_file"
-elif [[ ! -r $license_seed ]]; then
-    echo "yandex-browser-corporate: license seed $license_seed is not readable" >&2
-fi
-
-if [[ ${YANDEX_BROWSER_WRAPPER_DEBUG-0} == 1 ]]; then
-    mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/yandex-browser-corporate"
-    {
-        echo "seed=$license_seed"
-        echo "license_file=$license_file"
-        echo "args=$*"
-    } >>"${XDG_STATE_HOME:-$HOME/.local/state}/yandex-browser-corporate/wrapper.log"
-fi
-
-# Chromium's hostname-PID SingletonLock survives PID-namespace reuse after a
-# hard kill. Drop it when we are the only wrapper holding this lock. The lock
-# lives in the shared /tmp so concurrent starts serialise correctly.
+# /tmp is shared by every launch. Whoever holds this lock owns the profile;
+# the fd is inherited by the browser and held for its whole lifetime.
 exec {guard_fd}>/tmp/.yandex-browser-corporate.lock
-if flock -n "$guard_fd"; then
-    rm -f "$profile_dir/SingletonCookie" \
-          "$profile_dir/SingletonLock" \
-          "$profile_dir/SingletonSocket"
-    # Stale Yandex desktop-browser runtime dirs from a previous primary.
-    rm -rf /tmp/.ru.yandex.desktop.browser.* 2>/dev/null || true
-    # Unclean shutdown leftovers. We hold the only wrapper lock, so no
-    # other instance is using these databases. Without this Chromium
-    # reports "Your profile opened incorrectly" (UKM/LevelDB/Passman).
-    find "$profile_dir" \( -name '*-journal' -o -name '*-wal' -o -name '*-shm' \) \
-        -type f -delete 2>/dev/null || true
-    find "$profile_dir" -name LOCK -type f -delete 2>/dev/null || true
+tries=0
+until flock -n "$guard_fd"; do
+    # Another launch owns the profile: hand it our arguments. Never exec
+    # Chromium here, its stale-lock check can't work across sandboxes (see
+    # singleton-client.c) and would open the profile a second time.
+    status=0
+    @singletonClient@ "$profile_dir/SingletonSocket" "$browser_dir/yandex_browser" "$@" || status=$?
+    case $status in
+        0) exit 0 ;;
+        2)
+            # Still starting up (or shutting down): retry for up to 30 s.
+            if (( ++tries >= 150 )); then
+                echo "yandex-browser-corporate: the running instance does not accept launches" >&2
+                exit 1
+            fi
+            sleep 0.2
+            ;;
+        *)
+            echo "yandex-browser-corporate: the running instance does not respond" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# From here on this is the only instance.
+
+# The sops secret is only a seed: the browser renews the live copy itself.
+# After rotating the secret, reseed with YANDEX_LICENSE_RESEED=1.
+license_file=$HOME/.yandex/browser/license
+mkdir -p "${license_file%/*}" "$profile_dir"
+if [[ ${YANDEX_LICENSE_RESEED-0} == 1 || ! -s $license_file ]]; then
+    if [[ -r $license_seed ]]; then
+        install -m600 "$license_seed" "$license_file"
+    else
+        echo "yandex-browser-corporate: license seed $license_seed is not readable" >&2
+    fi
 fi
 
-export CHROME_WRAPPER=$0
+# Chromium takes its default download folder from user-dirs.dirs; ~/downloads
+# is the host's download dir bound into the sandbox. Older profiles remember
+# ~/Downloads as the "Save as" folder, so keep that name pointing at it too.
+printf 'XDG_DOWNLOAD_DIR="$HOME/downloads"\n' >"$XDG_CONFIG_HOME/user-dirs.dirs"
+if [[ ! -e $HOME/Downloads && ! -L $HOME/Downloads ]]; then
+    ln -s downloads "$HOME/Downloads"
+fi
+
+# Extra roots (Yandex's internal PKI) go into the sandbox's own NSS database,
+# which Chromium trusts for every request, including the security event
+# connector that ignores policy-provided roots. The host is not touched.
+# Roots we added are recorded so ones dropped from the configuration are
+# removed again. A failure only costs that trust, never the start.
+nssdb=$HOME/.pki/nssdb
+managed_roots=$nssdb/nixpak-managed-roots
+mkdir -p "$nssdb"
+if [[ ! -e $nssdb/cert9.db ]]; then
+    certutil -d "sql:$nssdb" -N --empty-password ||
+        echo "yandex-browser-corporate: could not create $nssdb" >&2
+fi
+wanted_roots=()
+for cert in @rootCertificates@/*; do
+    [[ -e $cert ]] || continue
+    name=${cert##*/}
+    name=${name%.pem}
+    wanted_roots+=("$name")
+    certutil -d "sql:$nssdb" -A -t C,, -n "$name" -i "$cert" ||
+        echo "yandex-browser-corporate: could not add root $name" >&2
+done
+if [[ -r $managed_roots ]]; then
+    while IFS= read -r name; do
+        [[ -n $name && " ${wanted_roots[*]} " != *" $name "* ]] || continue
+        certutil -d "sql:$nssdb" -D -n "$name" ||
+            echo "yandex-browser-corporate: could not remove root $name" >&2
+    done <"$managed_roots"
+fi
+printf '%s\n' "${wanted_roots[@]}" >"$managed_roots"
+
+# SingletonLock stores hostname-pid, and PIDs inside the sandbox's PID
+# namespace repeat between launches, so after a crash a stale lock can look
+# alive and Chromium refuses the profile. We hold the lock above, so these
+# are leftovers.
+rm -f "$profile_dir/SingletonLock" \
+      "$profile_dir/SingletonSocket" \
+      "$profile_dir/SingletonCookie"
+rm -rf /tmp/.ru.yandex.desktop.browser.*
+
+# Relaunching (after changing flags or some settings) runs CHROME_WRAPPER
+# with all of the browser's switches.
+export CHROME_WRAPPER=@relaunch@
 export CHROME_VERSION_EXTRA=stable
 export GNOME_DISABLE_CRASH_DIALOG=SET_BY_GOOGLE_CHROME
 
-exec -a "$browser_dir/yandex_browser" "$browser_dir/yandex_browser" \
-    --ozone-platform=wayland \
-    --enable-wayland-ime \
-    --qt-version=6 \
-    --password-store=@passwordStore@ \
-    --class=@appId@ \
-    --ignore-gpu-blocklist \
-    --enable-features=AcceleratedVideoEncoder,VaapiIgnoreDriverChecks \
-    @extraArgs@ \
-    "$@"
+# Chromium handles SIGTERM/SIGINT/SIGHUP with a clean shutdown; this shell
+# must not end before it (the sandbox, and the browser with it, would be
+# killed), so it only waits. A trap, not an ignore: Chromium gets the
+# default disposition back.
+trap : TERM INT HUP
+
+# The Wayland wire sanitizer only acts in the browser process, which owns
+# the Wayland connection; child processes inherit it (as does a relaunched
+# browser) and it passes their calls straight through.
+export LD_PRELOAD=@waylandWireSanitizer@/lib/libyandex-wayland-wire-sanitizer.so
+"$browser_dir/yandex_browser" @flags@ "$@" &
+browser=$!
+status=0
+while kill -0 "$browser" 2>/dev/null; do
+    wait "$browser" && status=0 || status=$?
+done
+
+# A relaunched browser is started by the old one and outlives it: keep the
+# sandbox up while a browser process (or its relauncher) is left. Chromium
+# rewrites its process title, so its cmdline may be one space-joined string.
+# A child the old browser forked that never reached exec has the same
+# command line but a single thread; a relaunched browser gains threads right
+# away, so single-threaded ones only count during a short grace period.
+browser_alive() {
+    local grace=$1 proc args cmdline key value threads
+    for proc in /proc/[0-9]*; do
+        [[ ${proc#/proc/} == "$$" ]] && continue
+        { mapfile -d '' -t args <"$proc/cmdline"; } 2>/dev/null || continue
+        cmdline=" ${args[*]} "
+        [[ $cmdline == *"/yandex_browser "* ]] || continue
+        [[ $cmdline == *" --type="* && $cmdline != *" --type=relauncher "* ]] && continue
+        threads=1
+        {
+            while read -r key value _; do
+                if [[ $key == Threads: ]]; then
+                    threads=$value
+                    break
+                fi
+            done <"$proc/status"
+        } 2>/dev/null || continue
+        (( threads > 1 || grace > 0 )) && return 0
+    done
+    return 1
+}
+grace=5
+while browser_alive "$grace"; do
+    sleep 1
+    (( grace > 0 )) && grace=$((grace - 1))
+done
+
+exit "$status"

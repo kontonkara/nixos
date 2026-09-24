@@ -188,6 +188,13 @@ stdenv.mkDerivation (finalAttrs: {
     # setuid helper is unused inside NixPak's user namespace
     chmod u-s "$out/opt/yandex/browser/yandex_browser-sandbox"
 
+    # clids.xml is plain XML with junk before the declaration. Every other
+    # partner file here is signed and must stay byte-for-byte.
+    clids=$out/opt/yandex/browser/clids.xml
+    if [[ -f $clids ]]; then
+      sed -i -e '/<?xml/,$!d' -e 's/^[[:space:]]*//' "$clids"
+    fi
+
     runHook postInstall
   '';
 
