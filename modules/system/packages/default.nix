@@ -19,6 +19,9 @@ in
       systemPackages = with pkgs; [
         vim
         wget
+        pciutils
+        usbutils
+        nvme-cli
         xwayland-satellite
         sops
         age

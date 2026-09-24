@@ -21,10 +21,23 @@ in
           home = {
             packages = with pkgs; [
               tree
+              binutils
+              duf
+              dust
+              file
+              unzip
+              wl-clipboard
+              # AMD backend only: the NVIDIA one calls nvmlInit at start-up and
+              # keeps the RTX out of D3cold while nvtop is open.
+              nvtopPackages.amd
               telegram-desktop
-              keepassxc
               nautilus
+              spotify
+              # Not programs.anki: HM would link prefs21.db (profiles, sync
+              # login) read-only from the store.
+              anki
               inputs.llm-agents.packages.x86_64-linux.mimo-code
+              inputs.llm-agents.packages.x86_64-linux.claude-code
             ];
           };
 
