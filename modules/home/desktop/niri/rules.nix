@@ -27,6 +27,7 @@
       matches = [
         { app-id = "^org\\.keepassxc\\.KeePassXC$"; }
         { app-id = "^org\\.telegram\\.desktop$"; }
+        { app-id = "^yandex-browser$"; }
       ];
       block-out-from = "screencast";
     }

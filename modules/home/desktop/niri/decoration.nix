@@ -14,15 +14,18 @@
         };
       };
 
-      # CSS cubic-bezier(0.16, 1, 0.3, 1) — long smooth tail (easeOutExpo-like).
+      # easeOutBack, CSS cubic-bezier(0.34, 1.2, 0.64, 1): a new window grows
+      # a hair past its size and settles back, a small pop. niri's own
+      # open animation takes the unclamped progress for the scale (opacity
+      # stays clamped), so this costs nothing over the plain curve.
       open-out = {
         easing = {
-          duration-ms = 240;
+          duration-ms = 280;
           curve = "cubic-bezier";
           curve-args = [
-            0.16
-            1.0
-            0.3
+            0.34
+            1.2
+            0.64
             1.0
           ];
         };

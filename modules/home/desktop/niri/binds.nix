@@ -7,24 +7,23 @@
   };
   "Mod+E" = {
     hotkey-overlay.title = "Open a File Browser: yazi";
-    action.spawn = [
-      "kitty"
-      "--class"
-      "yazi"
-      "yazi"
-    ];
+    action.spawn = [ "kitty" "--class" "yazi" "yazi" ];
   };
   "Mod+Shift+E" = {
     hotkey-overlay.title = "Open a File Browser (GUI): nautilus";
     action.spawn = [ "nautilus" ];
   };
-  "Mod+D" = {
+  "Mod+R" = {
     hotkey-overlay.title = "Run an Application: Noctalia";
     action.spawn-sh = "noctalia msg panel-toggle launcher";
   };
-  "Super+Alt+L" = {
+  "Mod+L" = {
     hotkey-overlay.title = "Lock the Screen: Noctalia";
     action.spawn-sh = "noctalia msg session lock";
+  };
+  "Mod+P" = {
+    hotkey-overlay.title = "Session Menu: Noctalia";
+    action.spawn-sh = "noctalia msg panel-toggle session";
   };
 
   # Volume, brightness and media go through Noctalia so its OSD shows.
@@ -85,19 +84,11 @@
   "Mod+Down".action.focus-window-down = [ ];
   "Mod+Up".action.focus-window-up = [ ];
   "Mod+Right".action.focus-column-right = [ ];
-  "Mod+H".action.focus-column-left = [ ];
-  "Mod+J".action.focus-window-down = [ ];
-  "Mod+K".action.focus-window-up = [ ];
-  "Mod+L".action.focus-column-right = [ ];
 
   "Mod+Ctrl+Left".action.move-column-left = [ ];
   "Mod+Ctrl+Down".action.move-window-down = [ ];
   "Mod+Ctrl+Up".action.move-window-up = [ ];
   "Mod+Ctrl+Right".action.move-column-right = [ ];
-  "Mod+Ctrl+H".action.move-column-left = [ ];
-  "Mod+Ctrl+J".action.move-window-down = [ ];
-  "Mod+Ctrl+K".action.move-window-up = [ ];
-  "Mod+Ctrl+L".action.move-column-right = [ ];
 
   "Mod+Home".action.focus-column-first = [ ];
   "Mod+End".action.focus-column-last = [ ];
@@ -108,19 +99,11 @@
   "Mod+Shift+Down".action.focus-monitor-down = [ ];
   "Mod+Shift+Up".action.focus-monitor-up = [ ];
   "Mod+Shift+Right".action.focus-monitor-right = [ ];
-  "Mod+Shift+H".action.focus-monitor-left = [ ];
-  "Mod+Shift+J".action.focus-monitor-down = [ ];
-  "Mod+Shift+K".action.focus-monitor-up = [ ];
-  "Mod+Shift+L".action.focus-monitor-right = [ ];
 
   "Mod+Shift+Ctrl+Left".action.move-column-to-monitor-left = [ ];
   "Mod+Shift+Ctrl+Down".action.move-column-to-monitor-down = [ ];
   "Mod+Shift+Ctrl+Up".action.move-column-to-monitor-up = [ ];
   "Mod+Shift+Ctrl+Right".action.move-column-to-monitor-right = [ ];
-  "Mod+Shift+Ctrl+H".action.move-column-to-monitor-left = [ ];
-  "Mod+Shift+Ctrl+J".action.move-column-to-monitor-down = [ ];
-  "Mod+Shift+Ctrl+K".action.move-column-to-monitor-up = [ ];
-  "Mod+Shift+Ctrl+L".action.move-column-to-monitor-right = [ ];
 
   "Mod+Page_Down".action.focus-workspace-down = [ ];
   "Mod+Page_Up".action.focus-workspace-up = [ ];
@@ -192,11 +175,10 @@
   "Mod+Comma".action.consume-window-into-column = [ ];
   "Mod+Period".action.expel-window-from-column = [ ];
 
-  "Mod+R".action.switch-preset-column-width = [ ];
-  "Mod+Shift+R".action.switch-preset-column-width-back = [ ];
+  "Mod+Y".action.switch-preset-column-width = [ ];
+  "Mod+Shift+Y".action.switch-preset-window-height = [ ];
 
-  "Mod+Ctrl+Shift+R".action.switch-preset-window-height = [ ];
-  "Mod+Ctrl+R".action.reset-window-height = [ ];
+  "Mod+Ctrl+Y".action.reset-window-height = [ ];
 
   "Mod+F".action.maximize-column = [ ];
   "Mod+Shift+F".action.fullscreen-window = [ ];
