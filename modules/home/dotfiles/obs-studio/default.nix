@@ -1,4 +1,4 @@
-{ config, lib, username, ... }:
+{ config, lib, pkgs, username, ... }:
 
 let
   cfg = config.modules.home.obs-studio;
@@ -29,6 +29,11 @@ in
           programs = {
             obs-studio = {
               enable = true;
+              plugins = [
+                # Per-application audio sources (a game without Vesktop's
+                # voice); stock OBS on Linux only captures whole devices.
+                pkgs.obs-studio-plugins.obs-pipewire-audio-capture
+              ];
             };
           };
         };

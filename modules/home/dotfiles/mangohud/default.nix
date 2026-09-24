@@ -39,6 +39,9 @@ in
                 cpu_mhz = true;
                 cpu_temp = true;
                 gpu_stats = true;
+                # The stats always come from pci_dev; the name is the device
+                # the game renders on, so a missing nvidia-offload shows up.
+                gpu_name = true;
                 gpu_load_change = true;
                 gpu_core_clock = true;
                 gpu_mem_clock = true;
@@ -52,6 +55,8 @@ in
                 wine = true;
                 # Shows which sync Proton uses — a quick NTsync check.
                 winesync = true;
+                # Whether gamemoderun took effect.
+                gamemode = true;
                 fps = true;
                 frametime = true;
                 frame_timing = true;
