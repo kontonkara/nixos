@@ -100,10 +100,10 @@ in
                   };
                 };
 
+                # Palette (custom "stylix"), dark mode, font and the dock,
+                # notification and OSD opacity come from stylix's noctalia target.
                 theme = {
-                  mode = "dark";
-                  source = "builtin";
-                  builtin = "Catppuccin";
+                  # Noctalia's own app templates would fight stylix over the same files.
                   templates = {
                     enable_builtin_templates = false;
                     enable_community_templates = false;
@@ -162,13 +162,11 @@ in
                 notification = {
                   position = "top_right";
                   layer = "overlay";
-                  background_opacity = 1.0;
                   keep_dismissed_in_history = false;
                 };
 
                 osd = {
                   position = "top_right";
-                  background_opacity = 1.0;
                   kinds = {
                     keyboard_layout = false;
                     media = false;
@@ -221,7 +219,6 @@ in
                   margin_edge = 8;
                   active_monitor_only = true;
                   show_dots = true;
-                  background_opacity = 1.0;
                 };
 
                 bar = {

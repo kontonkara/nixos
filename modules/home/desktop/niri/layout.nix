@@ -18,11 +18,11 @@
     inactive.color = "#505050";
   };
 
+  # Active/inactive colors (and the cursor) come from niri-flake's stylix
+  # module: base0D and base03.
   border = {
     enable = true;
     width = 3;
-    active.color = "#7fc8ff";
-    inactive.color = "#505050";
     urgent.color = "#9b0000";
   };
 

@@ -24,6 +24,7 @@
       nix-index.enable = true;
       direnv.enable = true;
       mangohud.enable = true;
+      stylix.enable = true;
     };
 
     programs = {

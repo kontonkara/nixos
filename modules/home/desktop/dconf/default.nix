@@ -21,15 +21,9 @@ in
           dconf = {
             enable = true;
             settings = {
+              # Theme, icon, cursor, font and color-scheme keys come from Home
+              # Manager's gtk module and modules/home/desktop/stylix.
               "org/gnome/desktop/interface" = {
-                color-scheme = "prefer-dark";
-                gtk-theme = "Adwaita-dark";
-                icon-theme = "Papirus-Dark";
-                cursor-theme = "Bibata-Modern-Classic";
-                cursor-size = 24;
-                font-name = "Inter 11";
-                monospace-font-name = "JetBrains Mono 11";
-                document-font-name = "Inter 11";
                 font-antialiasing = "rgba";
                 font-hinting = "slight";
               };

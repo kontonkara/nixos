@@ -2,6 +2,8 @@
 
 let
   cfg = config.modules.system.environment;
+
+  qtFromStylix = config.stylix.enable && config.stylix.targets.qt.enable;
 in
 {
   options = {
@@ -27,8 +29,10 @@ in
         # already gets server-side decorations.
 
         # Qt only picks the gtk3 theme by itself on GNOME/XFCE/MATE/…,
-        # not when XDG_CURRENT_DESKTOP=niri.
-        QT_QPA_PLATFORMTHEME = "gtk3";
+        # not when XDG_CURRENT_DESKTOP=niri. Stylix's qt target sets
+        # qt5ct (+ Kvantum) in environment.variables instead, which these
+        # sessionVariables are merged into.
+        QT_QPA_PLATFORMTHEME = lib.mkIf (!qtFromStylix) "gtk3";
 
         # nixpkgs Electron wrappers (vscode, obsidian, …) read this to add
         # Wayland IME/text-input-v3 and window-decoration flags.

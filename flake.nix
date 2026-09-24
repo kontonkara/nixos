@@ -30,10 +30,15 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    stylix = {
+      # master tracks nixos-unstable (release-XX.YY branches follow stable).
+      url = "github:nix-community/stylix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { self, nixpkgs, sops-nix, home-manager, niri, ... }@inputs:
+    { self, nixpkgs, sops-nix, home-manager, niri, stylix, ... }@inputs:
     let
       inherit (nixpkgs) lib;
 
@@ -104,6 +109,8 @@
               niri.nixosModules.niri
               sops-nix.nixosModules.sops
               home-manager.nixosModules.home-manager
+              # Inert until modules.home.stylix sets stylix.enable.
+              stylix.nixosModules.stylix
             ];
         };
     in

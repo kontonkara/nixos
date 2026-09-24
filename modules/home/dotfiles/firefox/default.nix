@@ -37,6 +37,10 @@ in
                   "browser.startup.page" = 3;
                   "browser.toolbars.bookmarks.visibility" = "never";
 
+                  # Enable extensions Nix drops into the profile (stylix's
+                  # Firefox Color) instead of waiting for about:addons.
+                  "extensions.autoDisableScopes" = 0;
+
                   "browser.search.suggest.enabled" = false;
                   "browser.urlbar.showSearchSuggestionsFirst" = false;
                   "browser.urlbar.suggest.bookmark" = false;
