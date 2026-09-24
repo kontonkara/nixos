@@ -31,7 +31,11 @@ in
     programs = {
       niri = {
         enable = true;
-        package = pkgs.niri-unstable;
+        # Adds the `scaling-mode` output option and `niri msg output <name> scaling-mode`.
+        # Must be rebased when flake.lock bumps niri-unstable.
+        package = pkgs.niri-unstable.overrideAttrs (old: {
+          patches = (old.patches or [ ]) ++ [ ./niri-scaling-mode.patch ];
+        });
       };
     };
 
@@ -76,9 +80,25 @@ in
 
     home-manager = {
       users = {
-        ${username} = {
+        ${username} = { options, ... }: {
           programs = {
             niri = {
+              # niri-flake's settings schema has no `scaling-mode` and niri doesn't merge
+              # duplicate `output` sections, so append it to the rendered eDP-1 node.
+              config =
+                let
+                  extraOutputNodes = {
+                    "eDP-1" = [ (inputs.niri.lib.kdl.leaf "scaling-mode" "full") ];
+                  };
+                  addExtra =
+                    node:
+                    let
+                      extra = extraOutputNodes.${lib.head node.arguments} or [ ];
+                    in
+                    if node.name == "output" then node // { children = node.children ++ extra; } else node;
+                in
+                map addExtra (lib.remove null (lib.flatten options.programs.niri.config.default));
+
               settings =
                 let
                   decoration = import ./decoration.nix;

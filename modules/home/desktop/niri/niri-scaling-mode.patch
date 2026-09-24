@@ -1,0 +1,503 @@
+From b4fcd85ea20bfb6886df02dd14e5e36cd10863eb Mon Sep 17 00:00:00 2001
+From: Nikita Konton <kontonkara@gmail.com>
+Date: Thu, 24 Sep 2026 02:09:54 +0300
+Subject: [PATCH] Add per-output scaling-mode config and IPC action
+
+Expose the "scaling mode" DRM connector property, which controls how the
+display engine scales a mode that doesn't match the native resolution of
+the panel: "full" (stretch), "full-aspect", "center" or "none".
+
+It is set together with the other connector properties (max bpc, HDR
+reset) on connect, on session resume and on every output config change,
+so it persists across mode changes and hotplug and is committed before
+the new mode is applied. When unset, niri doesn't touch the property.
+
+Also add `niri msg output <name> scaling-mode <mode>` and report the
+current scaling mode in `niri msg outputs`.
+
+Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+---
+ docs/wiki/Configuration:-Outputs.md | 36 ++++++++++++
+ niri-config/src/lib.rs              |  6 ++
+ niri-config/src/output.rs           | 36 +++++++++++-
+ niri-ipc/src/lib.rs                 | 40 +++++++++++++
+ src/backend/headless.rs             |  1 +
+ src/backend/tty.rs                  | 88 +++++++++++++++++++++++++----
+ src/backend/winit.rs                |  1 +
+ src/ipc/client.rs                   | 13 ++++-
+ src/niri.rs                         |  3 +
+ 9 files changed, 210 insertions(+), 14 deletions(-)
+
+diff --git a/docs/wiki/Configuration:-Outputs.md b/docs/wiki/Configuration:-Outputs.md
+index 29241c04..7042f135 100644
+--- a/docs/wiki/Configuration:-Outputs.md
++++ b/docs/wiki/Configuration:-Outputs.md
+@@ -16,6 +16,7 @@ output "eDP-1" {
+     focus-at-startup
+     backdrop-color "#001100"
+     // max-bpc 8
++    // scaling-mode "full"
+ 
+     hot-corners {
+         // off
+@@ -301,6 +302,41 @@ output "HDMI-A-1" {
+ }
+ ```
+ 
++### `scaling-mode`
++
++<sup>Since: next release</sup>
++
++Set how the display hardware scales a [`mode`](#mode) that doesn't match the native resolution of the monitor.
++This sets the `scaling mode` property of the DRM connector, so the scaling is done by the display engine of the GPU at no rendering cost.
++
++- `"full"`: stretch the image to fill the whole monitor, ignoring the aspect ratio.
++- `"full-aspect"`: scale the image as much as possible while preserving the aspect ratio, with black bars.
++- `"center"`: show the image unscaled in the middle of the monitor, with black borders.
++- `"none"`: no preference, the driver decides; for example, amdgpu uses `"full-aspect"` for non-native modes on built-in laptop panels.
++
++When this option is unset, niri doesn't change the property.
++Not all drivers and connectors support it; `niri msg outputs` shows the current scaling mode when the output supports it, and niri will print a warning if it cannot set the configured one.
++
++Niri itself only sees the mode resolution: everything, including the cursor, is rendered at that resolution and then scaled by the hardware, so pointer input keeps matching the picture.
++Screenshots and screencasts are not stretched.
++
++When scaling, some drivers (e.g. amdgpu on laptop panels) keep driving the monitor with its native timings, so the refresh rate of a non-native mode may be ignored.
++Prefer the native refresh rate for custom modes.
++
++```kdl
++// Stretch 4:3 modes to fill a 16:9 laptop panel.
++output "eDP-1" {
++    mode custom=true "1440x1080@240"
++    scaling-mode "full"
++}
++```
++
++You can also change it at runtime, for example from a key binding:
++
++```sh
++niri msg output eDP-1 scaling-mode full
++```
++
+ ### `hot-corners`
+ 
+ <sup>Since: 25.11</sup>
+diff --git a/niri-config/src/lib.rs b/niri-config/src/lib.rs
+index 22e0d3db..2d4e2fa7 100644
+--- a/niri-config/src/lib.rs
++++ b/niri-config/src/lib.rs
+@@ -763,6 +763,7 @@ mod tests {
+                 position x=10 y=20
+                 mode "1920x1080@144"
+                 max-bpc 10
++                scaling-mode "full"
+                 variable-refresh-rate on-demand=true
+                 background-color "rgba(25, 25, 102, 1.0)"
+                 hot-corners {
+@@ -1192,6 +1193,9 @@ mod tests {
+                                 _10,
+                             ),
+                         ),
++                        scaling_mode: Some(
++                            Full,
++                        ),
+                         mode: Some(
+                             Mode {
+                                 custom: false,
+@@ -1238,6 +1242,7 @@ mod tests {
+                         transform: Normal,
+                         position: None,
+                         max_bpc: None,
++                        scaling_mode: None,
+                         mode: Some(
+                             Mode {
+                                 custom: true,
+@@ -1265,6 +1270,7 @@ mod tests {
+                         transform: Normal,
+                         position: None,
+                         max_bpc: None,
++                        scaling_mode: None,
+                         mode: None,
+                         modeline: Some(
+                             Modeline {
+diff --git a/niri-config/src/output.rs b/niri-config/src/output.rs
+index 48572f6e..00d68e4c 100644
+--- a/niri-config/src/output.rs
++++ b/niri-config/src/output.rs
+@@ -5,7 +5,7 @@ use knuffel::decode::Context;
+ use knuffel::errors::DecodeError;
+ use knuffel::traits::ErrorSpan;
+ use knuffel::Decode;
+-use niri_ipc::{ConfiguredMode, HSyncPolarity, Transform, VSyncPolarity};
++use niri_ipc::{ConfiguredMode, HSyncPolarity, ScalingMode, Transform, VSyncPolarity};
+ 
+ use crate::gestures::HotCorners;
+ use crate::{Color, FloatOrInt, LayoutPart};
+@@ -61,6 +61,8 @@ pub struct Output {
+     pub position: Option<Position>,
+     #[knuffel(child, unwrap(argument))]
+     pub max_bpc: Option<MaxBpc>,
++    #[knuffel(child, unwrap(argument, str))]
++    pub scaling_mode: Option<ScalingMode>,
+     #[knuffel(child)]
+     pub mode: Option<Mode>,
+     #[knuffel(child)]
+@@ -104,6 +106,7 @@ impl Default for Output {
+             transform: Transform::Normal,
+             position: None,
+             max_bpc: None,
++            scaling_mode: None,
+             mode: None,
+             modeline: None,
+             variable_refresh_rate: None,
+@@ -567,6 +570,37 @@ mod tests {
+         assert!("1920x1080@60Hz".parse::<ConfiguredMode>().is_err());
+     }
+ 
++    #[test]
++    fn parse_scaling_mode() {
++        let parse = |node: &str| {
++            crate::Config::parse_mem(&format!("output \"eDP-1\" {{\n{node}\n}}"))
++                .map(|config| config.outputs.0[0].scaling_mode)
++        };
++
++        assert_eq!(parse("").unwrap(), None);
++        assert_eq!(
++            parse(r#"scaling-mode "none""#).unwrap(),
++            Some(ScalingMode::None)
++        );
++        assert_eq!(
++            parse(r#"scaling-mode "full""#).unwrap(),
++            Some(ScalingMode::Full)
++        );
++        assert_eq!(
++            parse(r#"scaling-mode "center""#).unwrap(),
++            Some(ScalingMode::Center)
++        );
++        assert_eq!(
++            parse(r#"scaling-mode "full-aspect""#).unwrap(),
++            Some(ScalingMode::FullAspect)
++        );
++
++        assert!(parse(r#"scaling-mode "stretch""#).is_err());
++        assert!(parse(r#"scaling-mode "Full aspect""#).is_err());
++        assert!(parse("scaling-mode 1").is_err());
++        assert!(parse("scaling-mode").is_err());
++    }
++
+     fn make_output_name(
+         connector: &str,
+         make: Option<&str>,
+diff --git a/niri-ipc/src/lib.rs b/niri-ipc/src/lib.rs
+index dfbe59a0..e4a65061 100644
+--- a/niri-ipc/src/lib.rs
++++ b/niri-ipc/src/lib.rs
+@@ -1103,6 +1103,12 @@ pub enum OutputAction {
+         #[cfg_attr(feature = "clap", arg())]
+         max_bpc: MaxBpc,
+     },
++    /// Set how the display hardware scales modes that don't match the native resolution.
++    ScalingMode {
++        /// Scaling mode to set.
++        #[cfg_attr(feature = "clap", arg())]
++        scaling_mode: ScalingMode,
++    },
+ }
+ 
+ /// Output mode to set.
+@@ -1236,6 +1242,8 @@ pub struct Output {
+     pub logical: Option<LogicalOutput>,
+     /// Maximum bits per channel (bit depth), if known.
+     pub max_bpc: Option<u8>,
++    /// Current scaling mode, if the output supports it.
++    pub scaling_mode: Option<ScalingMode>,
+ }
+ 
+ /// Output mode.
+@@ -1325,6 +1333,24 @@ pub enum MaxBpc {
+     _16 = 16,
+ }
+ 
++/// Output scaling mode.
++///
++/// Controls how the display hardware scales a mode whose resolution doesn't match the native
++/// resolution of the display (the "scaling mode" DRM connector property).
++#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
++#[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
++#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
++pub enum ScalingMode {
++    /// No scaling requested; the driver decides.
++    None,
++    /// Stretch to fill the whole display, ignoring the aspect ratio.
++    Full,
++    /// Keep the original size and center, with black borders.
++    Center,
++    /// Scale as much as possible while preserving the aspect ratio, with black bars.
++    FullAspect,
++}
++
+ /// Toplevel window.
+ #[derive(Serialize, Deserialize, Debug, Clone)]
+ #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
+@@ -1933,6 +1959,20 @@ impl FromStr for MaxBpc {
+     }
+ }
+ 
++impl FromStr for ScalingMode {
++    type Err = &'static str;
++
++    fn from_str(s: &str) -> Result<Self, Self::Err> {
++        match s {
++            "none" => Ok(Self::None),
++            "full" => Ok(Self::Full),
++            "center" => Ok(Self::Center),
++            "full-aspect" => Ok(Self::FullAspect),
++            _ => Err(r#"invalid scaling mode, can be "none", "full", "center" or "full-aspect""#),
++        }
++    }
++}
++
+ impl FromStr for Layer {
+     type Err = &'static str;
+ 
+diff --git a/src/backend/headless.rs b/src/backend/headless.rs
+index 53bfe2ee..7f304bbd 100644
+--- a/src/backend/headless.rs
++++ b/src/backend/headless.rs
+@@ -111,6 +111,7 @@ impl Headless {
+                 vrr_enabled: false,
+                 logical: Some(logical_output(&output)),
+                 max_bpc: None,
++                scaling_mode: None,
+             },
+         );
+ 
+diff --git a/src/backend/tty.rs b/src/backend/tty.rs
+index bbd72e77..ff900f73 100644
+--- a/src/backend/tty.rs
++++ b/src/backend/tty.rs
+@@ -16,7 +16,7 @@ use drm_ffi::drm_mode_modeinfo;
+ use libc::dev_t;
+ use niri_config::output::{MaxBpc, Modeline};
+ use niri_config::{Config, OutputName};
+-use niri_ipc::{HSyncPolarity, VSyncPolarity};
++use niri_ipc::{HSyncPolarity, ScalingMode, VSyncPolarity};
+ use smithay::backend::allocator::dmabuf::Dmabuf;
+ use smithay::backend::allocator::format::FormatSet;
+ use smithay::backend::allocator::gbm::{GbmAllocator, GbmBufferFlags, GbmDevice};
+@@ -682,13 +682,9 @@ impl Tty {
+                         if let Ok(mut props) =
+                             ConnectorProperties::try_new(&device.drm, surface.connector)
+                         {
+-                            let max_bpc = self
+-                                .config
+-                                .borrow()
+-                                .outputs
+-                                .find(&surface.name)
+-                                .and_then(|o| o.max_bpc);
+-                            set_connector_properties(&mut props, max_bpc, true);
++                            let config = self.config.borrow();
++                            let config = config.outputs.find(&surface.name);
++                            set_connector_properties(&mut props, config, true);
+                         } else {
+                             warn!("failed to get connector properties");
+                         }
+@@ -1309,7 +1305,7 @@ impl Tty {
+ 
+         let mut orientation = None;
+         if let Ok(mut props) = ConnectorProperties::try_new(&device.drm, connector.handle()) {
+-            set_connector_properties(&mut props, config.max_bpc, true);
++            set_connector_properties(&mut props, Some(&config), true);
+ 
+             match props.get_panel_orientation() {
+                 Ok(x) => orientation = Some(x),
+@@ -2223,6 +2219,7 @@ impl Tty {
+                         .as_unsigned_range()
+                         .map(|v| v as u8)
+                 });
++                let scaling_mode = props.as_ref().and_then(|p| p.scaling_mode().ok());
+ 
+                 let ipc_output = niri_ipc::Output {
+                     name: connector_name,
+@@ -2237,6 +2234,7 @@ impl Tty {
+                     vrr_enabled,
+                     logical,
+                     max_bpc,
++                    scaling_mode,
+                 };
+ 
+                 ipc_outputs.insert(id, ipc_output);
+@@ -2455,7 +2453,7 @@ impl Tty {
+ 
+                 if let Ok(mut props) = ConnectorProperties::try_new(&device.drm, surface.connector)
+                 {
+-                    set_connector_properties(&mut props, config.max_bpc, false);
++                    set_connector_properties(&mut props, Some(&config), false);
+                 } else {
+                     warn!("failed to get connector properties");
+                 }
+@@ -3381,6 +3379,49 @@ impl<'a> ConnectorProperties<'a> {
+         Ok(max_bpc)
+     }
+ 
++    fn scaling_mode(&self) -> anyhow::Result<ScalingMode> {
++        let (info, value) = self.find(c"scaling mode")?;
++        let value_type = info.value_type();
++        let property::Value::Enum(Some(value)) = value_type.convert_value(*value) else {
++            bail!("wrong property type or value")
++        };
++
++        let name = value.name();
++        let modes = [
++            ScalingMode::None,
++            ScalingMode::Full,
++            ScalingMode::Center,
++            ScalingMode::FullAspect,
++        ];
++        modes
++            .into_iter()
++            .find(|mode| drm_scaling_mode_name(*mode) == name)
++            .with_context(|| format!("unknown scaling mode: {name:?}"))
++    }
++
++    fn set_scaling_mode(&mut self, scaling_mode: ScalingMode) -> anyhow::Result<()> {
++        let (info, value) = self.find(c"scaling mode")?;
++        let property::ValueType::Enum(enum_values) = info.value_type() else {
++            bail!("wrong property type")
++        };
++
++        let name = drm_scaling_mode_name(scaling_mode);
++        let (_, values) = enum_values.values();
++        let Some(target) = values.iter().find(|v| v.name() == name) else {
++            let supported: Vec<_> = values.iter().map(|v| v.name()).collect();
++            bail!("{name:?} is not supported by the connector, supported: {supported:?}");
++        };
++
++        let target = target.value();
++        if *value != target {
++            self.requests
++                .add_raw_property(self.connector.into(), info.handle(), target);
++            self.has_change = true;
++        }
++
++        Ok(())
++    }
++
+     fn commit(&mut self) -> anyhow::Result<()> {
+         if self.has_change {
+             self.device.atomic_commit(
+@@ -3395,15 +3436,25 @@ impl<'a> ConnectorProperties<'a> {
+ 
+ fn set_connector_properties(
+     props: &mut ConnectorProperties,
+-    max_bpc: Option<MaxBpc>,
++    config: Option<&niri_config::Output>,
+     reset_hdr: bool,
+ ) {
+-    if let Some(max_bpc) = max_bpc {
++    if let Some(max_bpc) = config.and_then(|c| c.max_bpc) {
+         if let Err(err) = props.set_max_bpc(max_bpc) {
+             debug!("failed to set `max bpc` property: {err}");
+         }
+     }
+ 
++    // Callers commit this before the DrmCompositor applies a new mode, which matters because
++    // drivers may pick the scanout timings based on the scaling mode during a modeset (e.g.
++    // amdgpu keeps sending the native timings to the panel and scales in the display engine).
++    let scaling_mode = config.and_then(|c| Some((&c.name, c.scaling_mode?)));
++    if let Some((name, scaling_mode)) = scaling_mode {
++        if let Err(err) = props.set_scaling_mode(scaling_mode) {
++            warn!("output {name:?}: failed to set `scaling mode` property: {err}");
++        }
++    }
++
+     if reset_hdr {
+         if let Err(err) = props.reset_hdr() {
+             debug!("failed to set HDR properties: {err}");
+@@ -3420,6 +3471,19 @@ fn is_vrr_capable(device: &DrmDevice, connector: connector::Handle) -> Option<bo
+     info.value_type().convert_value(value).as_boolean()
+ }
+ 
++/// Returns the name of the value of the "scaling mode" connector property.
++///
++/// These names are the kernel UAPI (drm_scaling_mode_enum_list), but drivers may expose only a
++/// subset of them.
++fn drm_scaling_mode_name(scaling_mode: ScalingMode) -> &'static std::ffi::CStr {
++    match scaling_mode {
++        ScalingMode::None => c"None",
++        ScalingMode::Full => c"Full",
++        ScalingMode::Center => c"Center",
++        ScalingMode::FullAspect => c"Full aspect",
++    }
++}
++
+ pub fn set_gamma_for_crtc(
+     device: &DrmDevice,
+     crtc: crtc::Handle,
+diff --git a/src/backend/winit.rs b/src/backend/winit.rs
+index 624c5870..adddcab3 100644
+--- a/src/backend/winit.rs
++++ b/src/backend/winit.rs
+@@ -106,6 +106,7 @@ impl Winit {
+                 vrr_enabled: false,
+                 logical: Some(logical_output(&output)),
+                 max_bpc: None,
++                scaling_mode: None,
+             },
+         )])));
+ 
+diff --git a/src/ipc/client.rs b/src/ipc/client.rs
+index 78022ed9..18fa39ce 100644
+--- a/src/ipc/client.rs
++++ b/src/ipc/client.rs
+@@ -8,7 +8,7 @@ use niri_config::OutputName;
+ use niri_ipc::socket::Socket;
+ use niri_ipc::{
+     Action, Cast, CastKind, CastTarget, Event, KeyboardLayouts, LogicalOutput, Mode, Output,
+-    OutputConfigChanged, Overview, Request, Response, Transform, Window, WindowLayout,
++    OutputConfigChanged, Overview, Request, Response, ScalingMode, Transform, Window, WindowLayout,
+ };
+ use serde_json::json;
+ 
+@@ -598,6 +598,7 @@ fn print_output(output: Output) -> anyhow::Result<()> {
+         vrr_enabled,
+         logical,
+         max_bpc,
++        scaling_mode,
+     } = output;
+ 
+     let serial = serial.as_deref().unwrap_or("Unknown");
+@@ -685,6 +686,16 @@ fn print_output(output: Output) -> anyhow::Result<()> {
+         println!("  Max bits per channel: {max_bpc}");
+     }
+ 
++    if let Some(scaling_mode) = scaling_mode {
++        let scaling_mode = match scaling_mode {
++            ScalingMode::None => "none",
++            ScalingMode::Full => "full",
++            ScalingMode::Center => "center",
++            ScalingMode::FullAspect => "full-aspect",
++        };
++        println!("  Scaling mode: {scaling_mode}");
++    }
++
+     println!("  Available modes:");
+     for (idx, mode) in modes.into_iter().enumerate() {
+         let Mode {
+diff --git a/src/niri.rs b/src/niri.rs
+index 6d4b957c..6d73eda0 100644
+--- a/src/niri.rs
++++ b/src/niri.rs
+@@ -2054,6 +2054,9 @@ impl State {
+                 }
+             }
+             niri_ipc::OutputAction::MaxBpc { max_bpc } => config.max_bpc = Some(MaxBpc(max_bpc)),
++            niri_ipc::OutputAction::ScalingMode { scaling_mode } => {
++                config.scaling_mode = Some(scaling_mode);
++            }
+         });
+ 
+         self.reload_output_config();
+-- 
+2.55.0
+

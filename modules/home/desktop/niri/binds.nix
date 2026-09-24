@@ -182,6 +182,10 @@
   "Mod+Ctrl+8".action.move-column-to-workspace = 8;
   "Mod+Ctrl+9".action.move-column-to-workspace = 9;
 
+  # Stretched 4:3 (eDP-1 has scaling-mode "full") and back to native.
+  "Mod+Shift+9".action.spawn = [ "niri" "msg" "output" "eDP-1" "custom-mode" "1440x1080@240" ];
+  "Mod+Shift+0".action.spawn = [ "niri" "msg" "output" "eDP-1" "mode" "2560x1440@240" ];
+
   "Mod+BracketLeft".action.consume-or-expel-window-left = [ ];
   "Mod+BracketRight".action.consume-or-expel-window-right = [ ];
 
