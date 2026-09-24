@@ -150,6 +150,9 @@ in
                 vscode = {
                   enable = true;
                 };
+                zed = {
+                  enable = true;
+                };
                 obsidian = {
                   enable = true;
                   # Obsidian's accent is base0E; no vaults exist yet, list

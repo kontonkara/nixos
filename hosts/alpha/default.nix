@@ -30,6 +30,7 @@
       vesktop.enable = true;
       obsidian.enable = true;
       vscode.enable = true;
+      zed.enable = true;
       niri.enable = true;
       noctalia.enable = true;
       xdg.enable = true;
