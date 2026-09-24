@@ -230,6 +230,11 @@ in
                 zed = {
                   enable = true;
                 };
+                # Theme and color.ini; modules.home.spotify remaps the roles to
+                # the accent and adds the font.
+                spicetify = {
+                  enable = true;
+                };
                 obsidian = {
                   enable = true;
                   # Obsidian's accent is base0E; no vaults exist yet, list

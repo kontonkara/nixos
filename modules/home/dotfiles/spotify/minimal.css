@@ -1,0 +1,227 @@
+/*
+ * Minimal layer over the stylix color.ini: floating rounded panels on a
+ * darker window, calm surfaces, the accent kept to playback and the active
+ * nav item. Colors come from spicetify's --spice-* roles (colors.css), so a
+ * scheme or accent change carries over. Plain CSS without blur or large
+ * shadows: the iGPU renders it at 240 Hz. Selectors are Spotify's css-map
+ * names, ids, data-encore-id/data-testid and asset paths; no hashed classes.
+ */
+
+:root {
+  /* Boxy like the noctalia bar and niri windows, not Encore's pills. */
+  --mv-radius: 4px;
+  /* A crust-like window behind the mantle panels. */
+  --mv-window: color-mix(in srgb, var(--spice-sidebar) 70%, black);
+}
+
+/* Encore's own tokens keep a few Spotify greens and grays. These rules are
+   unlayered, so they win over @layer encore. */
+.encore-dark-theme,
+.encore-dark-theme .encore-base-set {
+  --background-elevated-press: var(--spice-highlight);
+  --essential-subdued: color-mix(in srgb, var(--spice-text) 42%, var(--spice-main));
+  --decorative-subdued: var(--spice-main-elevated);
+}
+
+/* Accent buttons hovered and pressed green. */
+.encore-dark-theme .encore-bright-accent-set {
+  --background-highlight: color-mix(in oklab, var(--spice-button-active) 85%, white);
+  --background-press: color-mix(in oklab, var(--spice-button-active) 85%, black);
+  --background-elevated-base: color-mix(in oklab, var(--spice-button-active) 85%, white);
+  --background-elevated-highlight: color-mix(in oklab, var(--spice-button-active) 85%, white);
+  --background-elevated-press: color-mix(in oklab, var(--spice-button-active) 85%, black);
+  --decorative-subdued: color-mix(in oklab, var(--spice-button-active) 85%, black);
+}
+
+.encore-dark-theme .encore-inverted-light-set {
+  --background-highlight: color-mix(in oklab, var(--spice-text) 85%, white);
+  --background-press: color-mix(in oklab, var(--spice-text) 80%, var(--spice-main));
+  --background-elevated-base: color-mix(in oklab, var(--spice-text) 85%, white);
+  --background-elevated-highlight: color-mix(in oklab, var(--spice-text) 85%, white);
+  --background-elevated-press: color-mix(in oklab, var(--spice-text) 80%, var(--spice-main));
+}
+
+/* ---- Layout: panels float on the window ---- */
+
+/* The ::before fills the gap beside the right sidebar while it spans the
+   full height in cinema (ambient) mode. */
+.Root__top-container,
+.Root__globalNav,
+.Root__now-playing-bar,
+.Root__top-container .Root__right-sidebar::before {
+  background-color: var(--mv-window);
+}
+
+/* Library and right panel on mantle; their contents read --background-base. */
+.Root__nav-bar,
+.Root__right-sidebar {
+  --background-base: var(--spice-sidebar);
+}
+
+.Root__nav-bar,
+.Root__main-view,
+.main-yourLibraryX-entryPoints,
+#Desktop_PanelContainer_Id,
+.Root__right-sidebar-peek,
+.Root__right-sidebar-overlayWrapper,
+.Root__right-sidebar-peekContent,
+.Root__right-sidebar-overlay {
+  border-radius: var(--mv-radius);
+}
+
+/* ---- Top bar ---- */
+
+/* The home button is the active nav item. */
+.Root__globalNav .main-globalNav-navLinkActive {
+  color: var(--spice-button);
+}
+
+/* Explore Premium (and the web's install button), Install App, and the
+   What's New and Friend Activity buttons, which share one class. */
+.main-topBar-topbarContentRight > [data-encore-id="buttonPrimary"],
+.main-topBar-topbarContentRight a[href="/download"],
+.main-topBar-buddyFeed {
+  display: none;
+}
+
+/* ---- Main view: flat headers ---- */
+
+/* The sticky page title bar takes the cover color and a dark overlay once
+   scrolled; removeGradient only hides the header itself. */
+.main-topBar-background {
+  background-color: var(--spice-main) !important;
+}
+
+.main-topBar-overlay {
+  display: none;
+}
+
+/* Titles fit themselves up to the headline size (6rem): cap it lower,
+   lighter and tighter. */
+.main-entityHeader-title {
+  --encore-text-size-larger-5: 5rem;
+  letter-spacing: -0.02em;
+}
+
+.main-entityHeader-title .encore-text-headline-large {
+  font-weight: 700;
+}
+
+/* Selected tracks: the scheme's selected-row instead of text at 30%. */
+.main-trackList-trackList [aria-selected="true"] .main-trackList-trackListRow {
+  background-color: var(--spice-selected-row);
+}
+
+/* Spotify's green playing equalizer, redrawn in the accent. */
+img[src$="equaliser-animated-green.gif"],
+img[src$="equaliser-green.svg"] {
+  object-position: 100vw 0;
+  background-color: var(--spice-button-active);
+  mask: url("/images/equaliser-animated-white.gif") center / contain no-repeat;
+}
+
+img[src$="equaliser-green.svg"] {
+  mask-image: url("/images/equaliser-white.svg");
+}
+
+/* Home: marketing "promotion" shelves (a poster or native promo card). */
+.main-home-content section[data-shelf-collapsable]:has(
+    [class*="PromotionDefaultPoster-module_"],
+    [class*="PromotionDefaultNative-module_"]
+  ) {
+  display: none;
+}
+
+/* ---- Library ---- */
+
+.main-yourLibraryX-header {
+  padding: 12px 12px 4px;
+}
+
+/* ---- Now playing bar: its own card ---- */
+
+.Root__now-playing-bar .main-nowPlayingBar-container {
+  background-color: var(--spice-player);
+  border-radius: var(--mv-radius);
+}
+
+/* coverAmbience paints its gradient on the card, on its direct child div
+   and on both ::before layers, and rounds them to 8px (.LibraryX rules). */
+.Root__now-playing-bar .main-nowPlayingBar-container::before,
+.Root__now-playing-bar .main-nowPlayingBar-container > .main-nowPlayingBar-nowPlayingBar,
+.Root__now-playing-bar .main-nowPlayingBar-container > .main-nowPlayingBar-nowPlayingBar::before {
+  border-radius: var(--mv-radius);
+}
+
+.main-nowPlayingBar-right {
+  padding-inline-end: 8px;
+}
+
+.Root__now-playing-bar .main-nowPlayingWidget-coverArtContainer {
+  border-radius: var(--mv-radius);
+}
+
+/* Listening on another device: keep the bar inside the card's corners. */
+.Root__now-playing-bar .main-connectBar-connectBar {
+  margin: 0 8px 8px;
+}
+
+/* The visible circle is the button's inner span, an inverted-light set that
+   redefines these variables on itself, so they're set there. */
+.encore-dark-theme [data-testid="control-button-playpause"] > .encore-inverted-light-set {
+  --background-base: var(--spice-button);
+  --background-highlight: color-mix(in oklab, var(--spice-button) 85%, white);
+  --background-press: color-mix(in oklab, var(--spice-button) 85%, black);
+  --text-base: var(--spice-sidebar);
+}
+
+/* Thin accent bars that thicken on hover. Only the track and its clip area
+   transition: the fills already animate transform, and smoothProgressBar
+   owns the transition on .progress-bar. */
+.Root__now-playing-bar .progress-bar {
+  --fg-color: var(--spice-button);
+  --bg-color: rgba(var(--spice-rgb-text), 0.16);
+  --progress-bar-height: 3px;
+}
+
+.Root__now-playing-bar .progress-bar:hover,
+.Root__now-playing-bar .progress-bar:has(:focus-visible) {
+  --progress-bar-height: 5px;
+}
+
+.Root__now-playing-bar .x-progressBar-progressBarBg,
+.Root__now-playing-bar .x-progressBar-sliderArea {
+  transition: height 0.12s ease-out;
+}
+
+/* Secondary controls stay dim until the bar is hovered or focused. */
+.main-nowPlayingBar-extraControls,
+.main-nowPlayingWidget-actionButtonWrapper {
+  opacity: 0.6;
+  transition: opacity 0.15s ease-out;
+}
+
+.main-nowPlayingBar-nowPlayingBar:hover .main-nowPlayingBar-extraControls,
+.main-nowPlayingBar-nowPlayingBar:hover .main-nowPlayingWidget-actionButtonWrapper,
+.main-nowPlayingBar-nowPlayingBar:focus-within .main-nowPlayingBar-extraControls,
+.main-nowPlayingBar-nowPlayingBar:focus-within .main-nowPlayingWidget-actionButtonWrapper {
+  opacity: 1;
+}
+
+/* Encore's corner tokens (cards, list rows, sections, buttons, chips) all
+   go through these; pills come from --encore-border-radius-rounded. Circles
+   Spotify means as circles (artist images) use their own infinite radius. */
+.encore-layout-themes,
+.encore-dark-theme {
+  --encore-corner-radius-larger: var(--mv-radius);
+  --encore-corner-radius-larger-2: var(--mv-radius);
+  --encore-corner-radius-larger-3: var(--mv-radius);
+  --encore-button-corner-radius: var(--mv-radius);
+  --encore-border-radius-rounded: var(--mv-radius);
+}
+
+/* The top bar's round app buttons and the search field hardcode 50%/500px. */
+.Root__globalNav button,
+.Root__globalNav [data-encore-id="formInput"] {
+  border-radius: var(--mv-radius) !important;
+}

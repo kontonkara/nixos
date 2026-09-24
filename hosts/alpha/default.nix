@@ -32,6 +32,7 @@
       keepassxc.enable = true;
       telegram-desktop.enable = true;
       vesktop.enable = true;
+      spotify.enable = true;
       obsidian.enable = true;
       zed.enable = true;
       anki.enable = true;

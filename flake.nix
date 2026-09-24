@@ -41,6 +41,14 @@
       url = "github:nix-community/stylix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    spicetify-nix = {
+      url = "github:Gerg-L/spicetify-nix";
+      # Its nixpkgs only builds the extension sources and crudini/zenity for
+      # the patch step; Spotify and spicetify-cli come from our pkgs.
+      inputs.nixpkgs.follows = "nixpkgs";
+      # Same nix-systems/default pin; its own node would renumber stylix's.
+      inputs.systems.follows = "llm-agents/systems";
+    };
   };
 
   outputs =
