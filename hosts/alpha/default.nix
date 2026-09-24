@@ -60,7 +60,10 @@
       services.udisks2.enable = true;
       services.upower.enable = true;
       locale.enable = true;
-      network.enable = true;
+      network = {
+        enable = true;
+        iwlwifi.enable = true;
+      };
       packages.enable = true;
       secrets.enable = true;
     };
