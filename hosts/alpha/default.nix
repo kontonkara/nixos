@@ -31,7 +31,6 @@
       keepassxc.enable = true;
       vesktop.enable = true;
       obsidian.enable = true;
-      vscode.enable = true;
       zed.enable = true;
       anki.enable = true;
       niri.enable = true;

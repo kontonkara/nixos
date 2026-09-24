@@ -62,11 +62,6 @@ in
                 opener = {
                   edit = [
                     {
-                      run = "code %s";
-                      orphan = true;
-                      desc = "Edit with VS Code";
-                    }
-                    {
                       run = "zeditor %s";
                       orphan = true;
                       desc = "Edit with Zed";
@@ -74,9 +69,9 @@ in
                     # Bulk rename/create edit a temp file with the first
                     # blocking opener and read it back once that exits.
                     {
-                      run = "code --wait %s";
+                      run = "zeditor --wait %s";
                       block = true;
-                      desc = "Edit with VS Code (wait)";
+                      desc = "Edit with Zed (wait)";
                     }
                   ];
                   # %s1 runs xdg-open once per file; it takes one argument.

@@ -42,7 +42,7 @@ in
                 };
                 ".." = "cd ..";
                 "..." = "cd ../..";
-                c = "code";
+                c = "zeditor";
 
                 g = "git";
                 ga = "git add";

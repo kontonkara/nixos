@@ -26,7 +26,7 @@ in
               enableGitIntegration = true;
               options = {
                 # bat's theme on the terminal's 16 colours, which stylix sets
-                # in kitty, VS Code and Zed; delta has no stylix target.
+                # in kitty and Zed; delta has no stylix target.
                 syntax-theme = "base16";
                 line-numbers = true;
                 navigate = true;

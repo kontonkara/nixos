@@ -147,9 +147,6 @@ in
                     enable = false;
                   };
                 };
-                vscode = {
-                  enable = true;
-                };
                 zed = {
                   enable = true;
                 };

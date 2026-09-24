@@ -1,7 +1,9 @@
-{ config, lib, pkgs, username, ... }:
+{ config, lib, pkgs, username, host, ... }:
 
 let
   cfg = config.modules.home.zed;
+
+  flake = ''(builtins.getFlake "/home/${username}/nixos")'';
 
   zedPatched =
     (pkgs.zed-editor.override {
@@ -100,6 +102,9 @@ in
               ];
 
               userSettings = {
+                # Nix pins the version; the nixpkgs build also stubs the updater.
+                auto_update = false;
+                autoscroll_on_clicks = true;
                 autosave = "on_focus_change";
                 base_keymap = "VSCode";
                 buffer_font_features = {
@@ -114,7 +119,15 @@ in
                 diagnostics = {
                   inline = {
                     enabled = true;
+                    # Like errorLens in VSCode: no hints.
+                    max_severity = "info";
                   };
+                };
+                # Agent panel, inline assist, edit predictions, MCP servers and
+                # AI commit messages; a project cannot turn it back on.
+                disable_ai = true;
+                edit_predictions = {
+                  provider = "none";
                 };
                 ensure_final_newline_on_save = true;
                 format_on_save = "on";
@@ -122,6 +135,10 @@ in
                 indent_guides = {
                   enabled = true;
                   coloring = "indent_aware";
+                };
+                # nixd shows package versions after `pkgs.foo`.
+                inlay_hints = {
+                  enabled = true;
                 };
                 load_direnv = "direct";
                 file_scan_exclusions = [
@@ -135,6 +152,8 @@ in
                 };
                 remove_trailing_whitespace_on_save = true;
                 restore_on_startup = "empty_tab";
+                # Rewrap target, the first wrap guide.
+                preferred_line_length = 100;
                 wrap_guides = [
                   100
                   120
@@ -149,17 +168,36 @@ in
                   enabled = true;
                 };
                 tab_size = 2;
+                tabs = {
+                  file_icons = true;
+                  git_status = true;
+                  show_diagnostics = "all";
+                };
                 title_bar = {
+                  show_onboarding_banner = false;
                   show_sign_in = false;
+                  show_user_menu = false;
+                  show_user_picture = false;
+                };
+                toolbar = {
+                  code_actions = true;
                 };
                 project_panel = {
                   dock = "left";
+                  auto_fold_dirs = false;
                 };
                 outline_panel = {
                   dock = "left";
                 };
+                # Same sidebar as VSCode's source control view.
+                git_panel = {
+                  dock = "left";
+                };
                 agent = {
                   dock = "left";
+                };
+                collaboration_panel = {
+                  button = false;
                 };
                 telemetry = {
                   diagnostics = false;
@@ -199,8 +237,27 @@ in
                       "terraform-ls"
                     ];
                   };
+                  # Prettier would rewrite Markdown on save; VSCode had no
+                  # Markdown formatter.
+                  Markdown = {
+                    format_on_save = "off";
+                  };
                 };
                 lsp = {
+                  # Option completion and docs for this flake's modules, as in
+                  # VSCode.
+                  nixd = {
+                    settings = {
+                      options = {
+                        nixos = {
+                          expr = "${flake}.nixosConfigurations.${host}.options";
+                        };
+                        home-manager = {
+                          expr = "${flake}.nixosConfigurations.${host}.options.home-manager.users.type.getSubOptions [ ]";
+                        };
+                      };
+                    };
+                  };
                   helm_ls = {
                     settings = {
                       helm-ls = {
@@ -240,7 +297,13 @@ in
                     };
                   };
                 };
+                # Globs are matched against the whole path, worktree root name
+                # included, so directory patterns need a leading `**/`.
                 file_types = {
+                  # The extension ships no associations of its own.
+                  "GitHub Actions" = [
+                    "**/.github/workflows/*.{yml,yaml}"
+                  ];
                   Helm = [
                     "**/templates/**/*.tpl"
                     "**/templates/**/*.yaml"
@@ -249,11 +312,39 @@ in
                     "**/helmfile.d/**/*.yml"
                   ];
                   Ansible = [
-                    "roles/*/{tasks,handlers,defaults,vars}/*.{yml,yaml}"
-                    "{group_vars,host_vars}/**/*.{yml,yaml}"
+                    "**/roles/*/{tasks,handlers,defaults,vars}/*.{yml,yaml}"
+                    "**/{group_vars,host_vars}/**/*.{yml,yaml}"
                     "*playbook*.{yml,yaml}"
                   ];
                 };
+              };
+
+              userKeymaps = [
+                {
+                  context = "Workspace";
+                  bindings = {
+                    # ctrl-shift-` arrives as ctrl-~ on Linux; toggle the panel
+                    # like the VSCode binding instead of opening a new terminal.
+                    "ctrl-~" = "terminal_panel::Toggle";
+                  };
+                }
+              ];
+            };
+          };
+
+          # The editor for git, sudoedit and the rest; --wait returns once the
+          # file's tab is closed.
+          home = {
+            sessionVariables = {
+              EDITOR = "zeditor --wait";
+              VISUAL = "zeditor --wait";
+            };
+          };
+
+          xdg = {
+            mimeApps = {
+              defaultApplications = {
+                "text/plain" = [ "dev.zed.Zed.desktop" ];
               };
             };
           };

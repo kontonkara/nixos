@@ -34,7 +34,7 @@ in
         # sessionVariables are merged into.
         QT_QPA_PLATFORMTHEME = lib.mkIf (!qtFromStylix) "gtk3";
 
-        # nixpkgs Electron wrappers (vscode, obsidian, …) read this to add
+        # nixpkgs Electron wrappers (obsidian, vesktop, …) read this to add
         # Wayland IME/text-input-v3 and window-decoration flags.
         NIXOS_OZONE_WL = "1";
 
