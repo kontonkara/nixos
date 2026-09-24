@@ -1,0 +1,47 @@
+diff --git a/src/operate.cpp b/src/operate.cpp
+index f5bb9c6..4b15fee 100644
+--- a/src/operate.cpp
++++ b/src/operate.cpp
+@@ -463,7 +463,9 @@ void Operate::setFanMode(int value) const {
+ }
+ 
+ void Operate::setFanModeAdvanced(bool enabled) const {
+-    if (enabled)
++    if (msiEcHelper.hasFanMode()) {
++        msiEcHelper.setFanMode(enabled ? fan_mode::advanced_fan_mode : fan_mode::auto_fan_mode);
++    } else if (enabled)
+         helper.putValue(fanModeAddress, fanModeAdvanced);
+     else
+         helper.putValue(fanModeAddress, fanModeAuto);
+diff --git a/src/mainwindow.cpp b/src/mainwindow.cpp
+index 104139e..21ff0e0 100644
+--- a/src/mainwindow.cpp
++++ b/src/mainwindow.cpp
+@@ -449,7 +449,8 @@ void MainWindow::updateUserMode() {
+ 
+ void MainWindow::updateFanMode() {
+     QString fanMode;
+-    switch (operate.getFanMode()) {
++    const auto currentMode = operate.getFanMode();
++    switch (currentMode) {
+         case fan_mode::auto_fan_mode:
+             fanMode = tr("Auto");
+             break;
+@@ -467,6 +468,17 @@ void MainWindow::updateFanMode() {
+             break;
+     }
+     ui->fanModeValueLabel->setText(fanMode);
++
++    const QSignalBlocker blocker(ui->advancedFanControlCheckBox);
++    const bool advanced = currentMode == fan_mode::advanced_fan_mode;
++    ui->advancedFanControlCheckBox->setChecked(advanced);
++    ui->fanControlTabWidget->setEnabled(advanced);
++    if (advanced) {
++        checkFanSettingsChanged();
++    } else {
++        ui->fanSpeedResetButton->setEnabled(false);
++        ui->fanSpeedApplyButton->setEnabled(false);
++    }
+ }
+ 
+ void MainWindow::updateFanSpeedSettings() {

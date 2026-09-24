@@ -1,0 +1,111 @@
+diff --git a/src/mainwindow.cpp b/src/mainwindow.cpp
+index 0950db2..6479902 100644
+--- a/src/mainwindow.cpp
++++ b/src/mainwindow.cpp
+@@ -19,6 +19,7 @@
+ #include "./ui_mainwindow.h"
+ #include "operate.h"
+ #include "settings.h"
++#include <QSignalBlocker>
+ #include <QTimer>
+ #include <QMessageBox>
+ 
+@@ -228,6 +229,7 @@ void MainWindow::updateData() {
+         updateCpuTemp();
+         updateGpuTemp();
+         updateFanMode();
++        updateUserMode();
+         updateFan1Speed();
+         updateFan2Speed();
+         updateKeyboardBrightness();
+@@ -410,35 +412,38 @@ void MainWindow::updateCoolerBoostState() const {
+ }
+ 
+ void MainWindow::updateUserMode() {
+-    if (operate.updateEcData()) {
+-        switch (operate.getUserMode()) {
+-            case user_mode::balanced_mode:
+-                ui->balancedModeRadioButton->click();
+-                break;
+-            case user_mode::performance_mode:
+-                ui->highPerformanceModeRadioButton->click();
+-                break;
+-            case user_mode::silent_mode:
+-                ui->silentModeRadioButton->click();
+-                break;
+-            case user_mode::super_battery_mode:
+-                ui->superBatteryModeRadioButton->click();
+-                break;
+-            case user_mode::unknown_mode:
+-                //fall to default, happens on some models after booting
+-            default:
+-                if (!operate.isMsiEcLoaded()){
+-                    ui->modeFormWidget->setDisabled(true);
+-                    if (modeTrayMenu)
+-                        modeTrayMenu->setDisabled(true);
+-                } else {
+-                    ui->superBatteryModeRadioButton->setChecked(false);
+-                    ui->silentModeRadioButton->setChecked(false);
+-                    ui->balancedModeRadioButton->setChecked(false);
+-                    ui->highPerformanceModeRadioButton->setChecked(false);
+-                }
+-                break;
+-        }
++    const QSignalBlocker highPerformanceBlocker(ui->highPerformanceModeRadioButton);
++    const QSignalBlocker balancedBlocker(ui->balancedModeRadioButton);
++    const QSignalBlocker silentBlocker(ui->silentModeRadioButton);
++    const QSignalBlocker superBatteryBlocker(ui->superBatteryModeRadioButton);
++
++    switch (operate.getUserMode()) {
++        case user_mode::balanced_mode:
++            ui->balancedModeRadioButton->setChecked(true);
++            break;
++        case user_mode::performance_mode:
++            ui->highPerformanceModeRadioButton->setChecked(true);
++            break;
++        case user_mode::silent_mode:
++            ui->silentModeRadioButton->setChecked(true);
++            break;
++        case user_mode::super_battery_mode:
++            ui->superBatteryModeRadioButton->setChecked(true);
++            break;
++        case user_mode::unknown_mode:
++            // Fall back to no selection when the current EC mode is unknown.
++        default:
++            if (!operate.isMsiEcLoaded()) {
++                ui->modeFormWidget->setDisabled(true);
++                if (modeTrayMenu)
++                    modeTrayMenu->setDisabled(true);
++            } else {
++                ui->superBatteryModeRadioButton->setChecked(false);
++                ui->silentModeRadioButton->setChecked(false);
++                ui->balancedModeRadioButton->setChecked(false);
++                ui->highPerformanceModeRadioButton->setChecked(false);
++            }
++            break;
+     }
+ }
+ 
+diff --git a/src/operate.cpp b/src/operate.cpp
+index e366c18..924979c 100644
+--- a/src/operate.cpp
++++ b/src/operate.cpp
+@@ -514,18 +514,6 @@ bool Operate::isUsbPowerShareSupport() const {
+ void Operate::loadSettings() const {
+     Settings s;
+ 
+-    if (getUserMode() != user_mode::unknown_mode && s.isValueExist(settingsGroup + "UserMode")) {
+-        QString value = s.getValue(settingsGroup + "UserMode").toString();
+-        if (value == "balanced_mode")
+-            setUserMode(user_mode::balanced_mode);
+-        else if (value == "performance_mode")
+-            setUserMode(user_mode::performance_mode);
+-        else if (value == "silent_mode")
+-            setUserMode(user_mode::silent_mode);
+-        else if (value == "super_battery_mode")
+-            setUserMode(user_mode::super_battery_mode);
+-    }
+-
+     if (s.isValueExist(settingsGroup + "FnSuperSwap"))
+         setFnSuperSwapState(s.getValue(settingsGroup + "FnSuperSwap").toBool());
+     if (isUsbPowerShareSupport() && s.isValueExist(settingsGroup + "UsbPowerShare"))
