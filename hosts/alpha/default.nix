@@ -36,6 +36,7 @@
       obsidian.enable = true;
       zed.enable = true;
       anki.enable = true;
+      prismlauncher.enable = true;
       niri.enable = true;
       noctalia.enable = true;
       xdg.enable = true;
