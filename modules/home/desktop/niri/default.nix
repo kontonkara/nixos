@@ -5,8 +5,15 @@ let
 
   # Layout colors come from stylix's palette like the rest of the desktop;
   # niri-flake's stylix target only covers the border and the cursor.
-  colors = config.home-manager.users.${username}.lib.stylix.colors.withHashtag;
+  palette = config.home-manager.users.${username}.lib.stylix.colors;
+  colors = palette.withHashtag;
   accent = colors.${config.modules.home.stylix.accent};
+
+  decoration = import ./decoration.nix {
+    accentRgb = lib.concatMapStringsSep ", " (
+      channel: palette."${config.modules.home.stylix.accent}-dec-${channel}"
+    ) [ "r" "g" "b" ];
+  };
 in
 {
   options = {
@@ -88,25 +95,46 @@ in
         ${username} = { options, ... }: {
           programs = {
             niri = {
-              # niri-flake's settings schema has no `scaling-mode` and niri doesn't merge
-              # duplicate `output` sections, so append it to the rendered eDP-1 node.
+              # niri-flake's settings schema has no `scaling-mode`, `recent-windows` or
+              # `recent-windows-close`, and niri doesn't merge duplicate sections, so
+              # append them to the rendered nodes.
               config =
                 let
+                  inherit (inputs.niri.lib) kdl;
+
                   extraOutputNodes = {
-                    "eDP-1" = [ (inputs.niri.lib.kdl.leaf "scaling-mode" "full") ];
+                    "eDP-1" = [ (kdl.leaf "scaling-mode" "full") ];
                   };
+                  # The Alt-Tab switcher closes on the overview's spring.
+                  extraAnimationNodes = [
+                    (kdl.plain "recent-windows-close" [
+                      (kdl.leaf "spring" decoration.animations.overview-open-close.kind.spring)
+                    ])
+                  ];
                   addExtra =
                     node:
-                    let
-                      extra = extraOutputNodes.${lib.head node.arguments} or [ ];
-                    in
-                    if node.name == "output" then node // { children = node.children ++ extra; } else node;
+                    if node.name == "output" then
+                      node // { children = node.children ++ extraOutputNodes.${lib.head node.arguments} or [ ]; }
+                    else if node.name == "animations" then
+                      node // { children = node.children ++ extraAnimationNodes; }
+                    else
+                      node;
+
+                  # Its highlight defaults to a flat gray. Urgent windows stay
+                  # base03, as on the borders; the corners match the bar.
+                  recentWindows = kdl.plain "recent-windows" [
+                    (kdl.plain "highlight" [
+                      (kdl.leaf "active-color" accent)
+                      (kdl.leaf "urgent-color" colors.base03)
+                      (kdl.leaf "corner-radius" 4.0)
+                    ])
+                  ];
                 in
-                map addExtra (lib.remove null (lib.flatten options.programs.niri.config.default));
+                map addExtra (lib.remove null (lib.flatten options.programs.niri.config.default))
+                ++ [ recentWindows ];
 
               settings =
                 let
-                  decoration = import ./decoration.nix;
                   rules = import ./rules.nix;
                 in
                 {

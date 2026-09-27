@@ -1,6 +1,11 @@
+# accentRgb: modules.home.stylix.accent as GLSL vec3 components ("r, g, b").
+{ accentRgb }:
+
 {
   prefer-no-csd = true;
 
+  # The shaders cost no extra pass: niri renders an opening or closing window
+  # offscreen either way, and they add one texture read per pixel.
   animations =
     let
       # Critically-ish damped, a bit softer than the stock stiffness=800/1000.
@@ -15,9 +20,8 @@
       };
 
       # easeOutBack, CSS cubic-bezier(0.34, 1.2, 0.64, 1): a new window grows
-      # a hair past its size and settles back, a small pop. niri's own
-      # open animation takes the unclamped progress for the scale (opacity
-      # stays clamped), so this costs nothing over the plain curve.
+      # a hair past its size and settles back, a small pop. window-open.glsl
+      # takes the unclamped progress for the scale (opacity stays clamped).
       open-out = {
         easing = {
           duration-ms = 280;
@@ -31,17 +35,12 @@
         };
       };
 
-      # Fast fade-in / settle, CSS cubic-bezier(0.4, 0, 1, 1).
-      close-in = {
+      # Linear: the burn front sweeps the noise at an even pace, and the
+      # noise itself is densest mid-range, so it starts and ends softly.
+      burn = {
         easing = {
-          duration-ms = 180;
-          curve = "cubic-bezier";
-          curve-args = [
-            0.4
-            0.0
-            1.0
-            1.0
-          ];
+          duration-ms = 300;
+          curve = "linear";
         };
       };
     in
@@ -56,10 +55,14 @@
 
       window-open = {
         kind = open-out;
+        custom-shader = builtins.readFile ./shaders/window-open.glsl;
       };
 
       window-close = {
-        kind = close-in;
+        kind = burn;
+        custom-shader = builtins.replaceStrings [ "@accent@" ] [ accentRgb ] (
+          builtins.readFile ./shaders/window-close.glsl
+        );
       };
 
       horizontal-view-movement = {
