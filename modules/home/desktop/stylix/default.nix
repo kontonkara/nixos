@@ -266,8 +266,9 @@ in
                 };
                 obsidian = {
                   enable = true;
-                  # Obsidian's accent is base0E; no vaults exist yet, list
-                  # them in vaultNames to theme them.
+                  # Obsidian's accent is base0E. No vaultNames: vaults are
+                  # made in the app, and modules.home.obsidian copies the
+                  # snippet and fonts into every one of them.
                   colors = {
                     override = accentFor [ "base0E" ];
                   };
