@@ -206,6 +206,15 @@ in
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [ cfg.package ];
 
+    # requireFile debs can't be fetched again, and nothing else keeps them
+    # alive: nh-clean deleted both on 2026-09-28. The sandbox reads
+    # managed_policies.json from the customisation while evaluating, so
+    # without them the whole system stopped evaluating.
+    system.extraDependencies = [
+      cfg.package.unwrapped.src
+      cfg.package.customisation.src
+    ];
+
     xdg.mime.defaultApplications = lib.mkIf cfg.makeDefaultBrowser {
       "text/html" = "${appId}.desktop";
       "application/xhtml+xml" = "${appId}.desktop";
