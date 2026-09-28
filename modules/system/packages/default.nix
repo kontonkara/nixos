@@ -2,23 +2,6 @@
 
 let
   cfg = config.modules.system.packages;
-
-  # 0.8.3 stops focusing override-redirect popups (#494): on 0.8.2 Steam's
-  # dropdowns and context menus closed a few ms after they opened. Drop this
-  # once nixpkgs has 0.8.3.
-  xwayland-satellite = pkgs.xwayland-satellite.overrideAttrs (finalAttrs: _: {
-    version = "0.8.3";
-    src = pkgs.fetchFromGitHub {
-      owner = "Supreeeme";
-      repo = "xwayland-satellite";
-      tag = "v${finalAttrs.version}";
-      hash = "sha256-eFEjCCniMCKeWU0PcZNv+tDYe08SLFPjRplyPY8OFt4=";
-    };
-    cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
-      inherit (finalAttrs) src;
-      hash = "sha256-gMGFvnbxM3hD5fmkSimaFd87GEf6BXFe/MGjoS6VNVU=";
-    };
-  });
 in
 {
   options = {

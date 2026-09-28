@@ -33,14 +33,9 @@ in
             # goes through wtype/virtual-keyboard-v1 instead of the
             # Ctrl+Shift+U sequence almost nothing understands.
             ./unicode-via-wtype.patch
-            # wlgrab sized its encoder from the last advertised mode, not the
-            # current one. niri keeps the 1440x1080 custom mode after the
-            # stretched-mode bind, so every stream crashed in ffmpeg's VAAPI
-            # encoder on 2560x1440 frames.
-            ./current-output-mode.patch
           ];
           postPatch = (oldAttrs.postPatch or "") + ''
-            substituteInPlace src/platform/linux/input/inputtino_keyboard.cpp \
+            substituteInPlace src/platform/virtualhid_input.cpp \
               --replace-fail '@wtype@' '${lib.getExe wtype}'
           '';
         });

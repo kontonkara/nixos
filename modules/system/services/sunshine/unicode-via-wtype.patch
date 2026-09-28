@@ -1,31 +1,31 @@
-diff --git a/src/platform/linux/input/inputtino_keyboard.cpp b/src/platform/linux/input/inputtino_keyboard.cpp
-index 72c4569..825caab 100644
---- a/src/platform/linux/input/inputtino_keyboard.cpp
-+++ b/src/platform/linux/input/inputtino_keyboard.cpp
-@@ -2,6 +2,12 @@
-  * @file src/platform/linux/input/inputtino_keyboard.cpp
-  * @brief Definitions for inputtino keyboard input handling.
-  */
-+// standard includes
-+#include <cstdlib>
-+#include <string>
-+#include <sys/wait.h>
-+#include <unistd.h>
+--- a/src/platform/virtualhid_input.cpp
++++ b/src/platform/virtualhid_input.cpp
+@@ -18,6 +18,13 @@
+ #include <string_view>
+ #include <utility>
+ 
++#ifdef __linux__
++  #include <cstdlib>
++  #include <string>
++  #include <sys/wait.h>
++  #include <unistd.h>
++#endif
 +
- // lib includes
- #include <boost/locale.hpp>
- #include <inputtino/input.hpp>
-@@ -170,7 +176,48 @@ namespace platf::keyboard {
+ // local includes
+ #include "src/config.h"
+ #include "src/logging.h"
+@@ -842,7 +849,52 @@
      }
    }
  
++#ifdef __linux__
 +  /**
 +   * Types text through the Wayland virtual-keyboard protocol.
 +   *
 +   * wtype uploads a keymap holding exactly the keysyms it needs, so the
 +   * compositor delivers ordinary key events for any codepoint. Unlike the
-+   * ISO 14755 fallback below this reaches every client, not just the ones
-+   * carrying an input method that implements the sequence.
++   * ISO 14755 sequence libvirtualhid types, this reaches every client, not
++   * just the ones carrying an input method that implements it.
 +   */
 +  bool unicode_via_wtype(const std::string &text) {
 +    if (!std::getenv("WAYLAND_DISPLAY")) {
@@ -55,12 +55,15 @@ index 72c4569..825caab 100644
 +    BOOST_LOG(warning) << "Unicode, wtype failed, falling back to ISO 14755"sv;
 +    return false;
 +  }
++#endif
 +
-   void unicode(input_raw_t *raw, char *utf8, int size) {
-+    if (unicode_via_wtype(std::string(utf8, size))) {
+   void unicode(input_context_t &context, const char *utf8, int size) {
++#ifdef __linux__
++    if (utf8 && size > 0 && unicode_via_wtype(std::string {utf8, static_cast<std::size_t>(size)})) {
 +      return;
 +    }
++#endif
 +
-     if (raw->keyboard) {
-       /* Reading input text as UTF-8 */
-       auto utf8_str = boost::locale::conv::to_utf<wchar_t>(utf8, utf8 + size, "UTF-8");
+     if (context.keyboard && utf8 && size > 0) {
+       log_failure("submit libvirtualhid text input"sv, context.keyboard->type_text({.text = std::string {utf8, static_cast<std::size_t>(size)}}));
+     }
