@@ -39,13 +39,26 @@ in
               --replace-fail '@wtype@' '${lib.getExe wtype}'
           '';
         });
-        # Moonlight talks to a range of ports around 47989.
-        openFirewall = true;
+        # No openFirewall: it also opens the web UI (base + 1) to every
+        # network; the ports Moonlight needs are opened below.
         # No capSysAdmin: on niri Sunshine picks wlr-screencopy (wlgrab) and
         # drops the capability anyway; it's only needed for capture=kms.
         # settings left empty on purpose so the web UI at
-        # https://localhost:47989 can manage config and applications.
+        # https://localhost:47990 can manage config and applications.
       };
+    };
+
+    # openFirewall's offsets from the base port (47989) minus +1, the web UI:
+    # HTTPS, HTTP and RTSP over TCP; video, control, audio and mic over UDP.
+    networking = {
+      firewall =
+        let
+          ports = map (offset: config.services.sunshine.settings.port + offset);
+        in
+        {
+          allowedTCPPorts = ports [ (-5) 0 21 ];
+          allowedUDPPorts = ports [ 9 10 11 13 21 ];
+        };
     };
 
     # With no capture method set, Sunshine probes the XDG portal at every
