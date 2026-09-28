@@ -1,4 +1,4 @@
-# Complete Noctalia 5.1.0 settings (programs.noctalia.settings, rendered to
+# Complete Noctalia 5.2.0 settings (programs.noctalia.settings, rendered to
 # ~/.config/noctalia/config.toml).
 #
 # Every key of `noctalia config export full` is spelled out here with its
@@ -23,8 +23,9 @@
 #   a "#RRGGBB" hex value.
 #
 # Changes made in the Settings window are saved to
-# ~/.local/state/noctalia/settings.toml, which overrides this file.
-{ pkgs, homeDirectory }:
+# ~/.local/state/noctalia/settings.toml, which overrides this file; default.nix
+# resets it on every switch, so only what is set here lasts.
+{ pkgs, homeDirectory, lockscreenWidgets }:
 
 {
   # ── [accessibility] ──────────────────────────────────────────────────────
@@ -36,10 +37,11 @@
   # ── [audio] ──────────────────────────────────────────────────────────────
   audio = {
     enable_overdrive = false; # allow volume above 100% (up to 150%)
-    enable_sounds = true; # CHANGED (default: false) master switch for UI sound effects
-    notification_sound = ""; # sound file for notifications; "" = bundled notification.wav
+    enable_sounds = true; # master switch for UI sound effects
+    # Installed system-wide (/run/current-system/sw/share/sounds/freedesktop);
+    # other themes fall back to it for events they lack.
+    sound_theme = "freedesktop"; # XDG sound theme name
     sound_volume = 0.25; # CHANGED (default: 0.5) UI sound volume; 0.0–1.0
-    volume_change_sound = ""; # sound file for volume feedback; "" = bundled volume-change.wav
   };
 
   # ── [backdrop] ───────────────────────────────────────────────────────────
@@ -147,6 +149,14 @@
     event_date_format = "%A %e %B"; # strftime format above the event list
     event_time_format = "%H:%M"; # strftime format of event times
     refresh_minutes = 15; # sync interval in minutes; 5–240
+
+    # Alarms from iCalendar/CalDAV and Google events; only while calendar is enabled.
+    reminders = {
+      all_day_digest_time = "09:00"; # "HH:MM" of the daily digest of all-day events
+      default_lead_minutes = 10; # lead time for events without an alarm of their own
+      enabled = true; # notify before events
+      use_event_reminders = true; # honor the alarms stored in the events
+    };
   };
 
   # ── [control_center] ─────────────────────────────────────────────────────
@@ -354,21 +364,28 @@
   # ── [lockscreen] ─────────────────────────────────────────────────────────
   lockscreen = {
     allow_empty_password = false; # let Enter submit an empty password (security-key PAM stacks)
-    blur_intensity = 0.0; # CHANGED (default: 0.5) background blur; 0.0–1.0
+    blur_intensity = 0.5; # background blur; 0.0–1.0
     blurred_desktop = false; # use a desktop snapshot as the background
+    edge_smoothness = 0.3; # transition edge feathering (0.0 = sharp, 1.0 = soft)
     enabled = true; # session lock, logind integration and lock actions
     fingerprint = false; # CHANGED (default: true) fprintd unlock alongside the password
     # Locks on logind PrepareForSleep, so lid-close suspend resumes locked.
     lock_before_suspend = true; # lock before sleep (lid close, systemctl suspend, hibernate)
     monitors = [ ]; # connectors that show the lock screen (others stay black); empty = all
-    tint_intensity = 0.0; # CHANGED (default: 0.3) surface-color tint; 0.0–1.0
+    tint_intensity = 0.3; # surface-color tint; 0.0–1.0
+    # One reveal instead of a random pick of all six, and short enough not to
+    # hold up the desktop after unlocking.
+    transition = [ "disc" ]; # CHANGED (default: [ "fade" "wipe" "disc" "stripes" "zoom" "honeycomb" ]) lock/unlock animation, picked at random; [ ] = none
+    transition_duration = 800; # CHANGED (default: 1500) lock/unlock animation length in ms
     wallpaper = ""; # background image; "" = the desktop wallpaper
   };
 
   # ── [lockscreen_widgets] ─────────────────────────────────────────────────
   lockscreen_widgets = {
-    enabled = false; # widgets on the lock screen (placed with the layout editor)
+    enabled = lockscreenWidgets != { }; # CHANGED (default: false) widgets on the lock screen (placed with the layout editor)
     schema_version = 2; # layout format version, a migration marker; leave as is
+    # CHANGED (default: none) clock, date and login box per monitor, see lockscreen.nix
+    widget = lockscreenWidgets;
 
     grid = {
       cell_size = 16; # snap grid cell in px; 8–256
@@ -503,6 +520,7 @@
     popup_borders = true; # outlines around popups and dropdowns
     popup_shadows = true; # drop shadows behind popups and dropdowns
     screen_time_enabled = false; # track per-app usage for the Control Center
+    settings_expand_all_groups = false; # open every group in Settings expanded
     settings_show_advanced = true; # show advanced options in Settings by default
     settings_window_translucent = false; # translucent Settings window background
     # The first-run wizard writes a settings.toml that overrides this file.
@@ -511,6 +529,7 @@
     show_location = false; # CHANGED (default: true) location name in weather UI
     telemetry_enabled = false; # anonymous startup ping (version, OS, compositor, …)
     time_format = "{:%H:%M}"; # default time format ({:<strftime>}) for UI without its own setting
+    umbriel_overview_type_to_launch_enabled = false; # typing in the Umbriel overview starts a launcher search
 
     animation = {
       enabled = true; # UI animations
@@ -543,6 +562,11 @@
       # dmenu-style providers: entry.<id> = { command, exec, prefix, label, glyph,
       # global, freeform }; command's stdout lines become results.
       dmenu = { };
+
+      # The panels provider opens built-in and plugin panels and Control Center tabs.
+      panels = {
+        ignored = [ "polkit" "setup-wizard" "test" "launcher" ]; # panel ids it leaves out
+      };
     };
 
     mpris = {
@@ -595,6 +619,7 @@
     screenshot = {
       annotate = false; # open the annotation editor before the output actions
       close_on_copy = true; # close the editor after a successful copy
+      close_on_save = true; # close the editor after a successful save
       confirm_region = false; # wait for Enter/Space after selecting a region
       copy_to_clipboard = true; # copy the PNG to the clipboard
       directory = ""; # save folder; "" = XDG Pictures
@@ -605,6 +630,7 @@
       remember_last_region = false; # preselect the previous region
       save_to_file = true; # save the PNG to directory
       show_cursor = false; # include the pointer initially
+      skip_annotate_on_copy_save = false; # Copy/Save go straight out even with annotate on
     };
 
     session = {
@@ -695,8 +721,15 @@
       direction = "down"; # center | up | down | left | right | up_left | up_right | down_left | down_right
     };
 
+    # Noctalia's own switcher; Alt+Tab is niri's (recent-windows).
     window_switcher = {
+      current_workspace_only = false; # only windows of the current workspace
       mru = false; # order by most recently used instead of workspace/screen layout
+      show_all_outputs = true; # windows of every output, not just the current one
+      show_app_icon = true; # app icon on each preview
+      show_caption = true; # window title under the previews
+      show_count = true; # window count
+      style = "carousel"; # carousel (animated previews) | compact
     };
   };
 
@@ -797,14 +830,14 @@
     transition_on_startup = true; # CHANGED (default: false) animate the first wallpaper at startup; fades in over niri's base00 background instead of popping in
 
     default = {
-      path = "${homeDirectory}/pictures/wallpapers/shadow-shape-holo.jpeg"; # CHANGED (default: "" = none) the wallpaper; per-monitor picks from the picker go to monitors.<connector>.path
+      path = "${homeDirectory}/pictures/wallpapers/clouds-3.jpg"; # CHANGED (default: "" = none) the wallpaper; per-monitor picks from the picker go to monitors.<connector>.path
     };
 
     automation = {
       enabled = false; # cycle wallpapers on a timer
       interval_seconds = 1800; # seconds between changes; 1–86400
       order = "random"; # random | alphabetical
-      recursive = true; # include subfolders
+      recursive = true; # CHANGED (default: false since 5.2) include subfolders
     };
   };
 

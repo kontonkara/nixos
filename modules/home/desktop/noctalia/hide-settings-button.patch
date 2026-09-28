@@ -1,0 +1,14 @@
+--- a/src/shell/control_center/tabs/home_tab.cpp
++++ b/src/shell/control_center/tabs/home_tab.cpp
+@@ -1209,6 +1209,11 @@
+ }
+ 
+ void HomeTab::syncHeaderActions() {
++  // Settings live in Nix (config.toml, settings.toml reset on every switch),
++  // so the Settings window has nothing to keep; hide its entry here.
++  if (m_settingsButton != nullptr) {
++    m_settingsButton->setVisible(false);
++  }
+   if (m_sessionButton != nullptr) {
+     m_sessionButton->setVisible(m_config == nullptr || m_config->config().controlCenter.showSessionButton);
+   }
