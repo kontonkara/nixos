@@ -2,6 +2,17 @@
 
 let
   cfg = config.modules.home.mangohud;
+
+  # PRIME's "PCI:bus:device:function" (decimal) as the sysfs address MangoHud
+  # matches, e.g. "PCI:1:0:0" -> "0000:01:00.0".
+  nvidiaBusId = config.hardware.nvidia.prime.nvidiaBusId;
+  pciAddress =
+    busId:
+    let
+      parts = map lib.toInt (lib.tail (lib.splitString ":" busId));
+      hex = width: n: lib.fixedWidthString width "0" (lib.toLower (lib.toHexString n));
+    in
+    "0000:${hex 2 (lib.elemAt parts 0)}:${hex 2 (lib.elemAt parts 1)}.${hex 1 (lib.elemAt parts 2)}";
 in
 {
   options = {
@@ -32,7 +43,7 @@ in
                 table_columns = 14;
 
                 # Only the RTX; games run there via nvidia-offload.
-                pci_dev = "0000:01:00.0";
+                pci_dev = lib.mkIf (nvidiaBusId != "") (pciAddress nvidiaBusId);
 
                 cpu_stats = true;
                 cpu_load_change = true;

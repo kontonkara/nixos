@@ -19,7 +19,9 @@ in
       mutableUsers = false;
       users = {
         ${username} = {
-          shell = pkgs.fish;
+          # Bash while modules.programs.fish is off: NixOS refuses a login
+          # shell whose programs.<shell>.enable is false.
+          shell = lib.mkIf config.programs.fish.enable pkgs.fish;
           isNormalUser = true;
           extraGroups = [
             "networkmanager"

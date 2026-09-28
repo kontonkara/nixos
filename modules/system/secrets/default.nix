@@ -29,12 +29,6 @@ in
           owner = "kontonkara";
           mode = "0400";
         };
-        # LUKS keyfile for /data; consumed by unlock-data.service.
-        "data-luks-key" = {
-          format = "binary";
-          sopsFile = ./../../../secrets/data-luks-key;
-          mode = "0400";
-        };
       };
     };
   };

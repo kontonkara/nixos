@@ -14,6 +14,21 @@ in
             dynamicBoost = {
               enable = lib.mkEnableOption "nvidia dynamic boost power balancing";
             };
+
+            # No defaults: bus IDs differ per machine (lspci, in decimal).
+            prime = {
+              amdgpuBusId = lib.mkOption {
+                type = lib.types.str;
+                example = "PCI:6:0:0";
+                description = "PCI bus ID of the AMD iGPU that drives the panel.";
+              };
+
+              nvidiaBusId = lib.mkOption {
+                type = lib.types.str;
+                example = "PCI:1:0:0";
+                description = "PCI bus ID of the NVIDIA dGPU used for offload.";
+              };
+            };
           };
         };
       };
@@ -91,9 +106,7 @@ in
             enable = true;
             enableOffloadCmd = true;
           };
-          # Radeon 610M iGPU / RTX 4070 Laptop on this MSI chassis
-          amdgpuBusId = "PCI:6:0:0";
-          nvidiaBusId = "PCI:1:0:0";
+          inherit (cfg.prime) amdgpuBusId nvidiaBusId;
         };
       };
     };

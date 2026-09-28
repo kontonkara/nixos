@@ -107,6 +107,12 @@ in
           inputs.niri.homeModules.stylix
           {
             stylix = {
+              # Stylix's own pinned scheme repo: a flake input, so no IFD. Set
+              # even while disabled: lib.stylix.colors stays defined, so
+              # modules that paint with the palette themselves (niri, kitty,
+              # …) keep evaluating when only stylix's targets are off.
+              base16Scheme = "${inputs.stylix.inputs.tinted-schemes}/base16/catppuccin-mocha.yaml";
+
               # Home Manager can't set overlays under useGlobalPkgs, and the
               # gtksourceview and nixos-icons ones would rebuild those
               # packages and everything that depends on them.
@@ -142,8 +148,6 @@ in
             stylix = {
               enable = true;
               polarity = "dark";
-              # Stylix's own pinned scheme repo: a flake input, so no IFD.
-              base16Scheme = "${inputs.stylix.inputs.tinted-schemes}/base16/catppuccin-mocha.yaml";
               # The palette stays true: base0D is ANSI blue in terminals and
               # functions in syntax themes. The UI targets below paint their
               # own accent slot with the accent instead.

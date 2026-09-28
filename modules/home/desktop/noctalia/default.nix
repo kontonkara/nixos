@@ -39,7 +39,10 @@ in
 
               # Every key spelled out; stylix's noctalia target adds the palette,
               # theme mode, font and dock/notification/OSD opacity on top.
-              settings = import ./settings.nix { inherit pkgs; };
+              settings = import ./settings.nix {
+                inherit pkgs;
+                inherit (config.home-manager.users.${username}.home) homeDirectory;
+              };
             };
           };
         };

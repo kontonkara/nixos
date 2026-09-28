@@ -86,6 +86,11 @@
         nvidia = {
           enable = true;
           dynamicBoost.enable = true;
+          # Radeon 610M iGPU / RTX 4070 Laptop on this MSI chassis.
+          prime = {
+            amdgpuBusId = "PCI:6:0:0";
+            nvidiaBusId = "PCI:1:0:0";
+          };
         };
       };
       services.gvfs.enable = true;

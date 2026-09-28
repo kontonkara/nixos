@@ -24,7 +24,7 @@
 #
 # Changes made in the Settings window are saved to
 # ~/.local/state/noctalia/settings.toml, which overrides this file.
-{ pkgs }:
+{ pkgs, homeDirectory }:
 
 {
   # ── [accessibility] ──────────────────────────────────────────────────────
@@ -472,7 +472,7 @@
   # app_icon_colorize).
   shell = {
     app_icon_colorize = false; # recolor app icons to the palette
-    avatar_path = "/home/kontonkara/pictures/.face.webp"; # CHANGED (default: "") avatar image path (cropped/resized automatically)
+    avatar_path = "${homeDirectory}/pictures/.face.webp"; # CHANGED (default: "") avatar image path (cropped/resized automatically)
     button_borders = false; # CHANGED (default: true) outlines around buttons
     card_borders = false; # CHANGED (default: true) outlines around section cards in panels and Settings
     clipboard_auto_paste = "off"; # CHANGED (default: "auto") paste after picking an entry: off | auto | ctrl_v | ctrl_shift_v | shift_insert
@@ -797,7 +797,7 @@
     transition_on_startup = true; # CHANGED (default: false) animate the first wallpaper at startup; fades in over niri's base00 background instead of popping in
 
     default = {
-      path = "/home/kontonkara/pictures/wallpapers/shadow-shape-holo.jpeg"; # CHANGED (default: "" = none) the wallpaper; per-monitor picks from the picker go to monitors.<connector>.path
+      path = "${homeDirectory}/pictures/wallpapers/shadow-shape-holo.jpeg"; # CHANGED (default: "" = none) the wallpaper; per-monitor picks from the picker go to monitors.<connector>.path
     };
 
     automation = {
