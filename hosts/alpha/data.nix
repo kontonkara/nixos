@@ -28,11 +28,13 @@ in
     description = "Unlock LUKS data volume";
     wantedBy = [ "data.mount" ];
     requiredBy = [ "data.mount" ];
-    # Must run before local-fs and must not be ordered after basic.target,
-    # otherwise data.mount → unlock-data → basic.target forms a cycle.
+    # Beside the boot rather than before local-fs: /data is nofail, so
+    # nothing at boot waits for it (btrbk checks the mount itself), and the
+    # login screen no longer waits the ~1.6 s its keyslot takes to open.
+    # DefaultDependencies = false keeps it off basic.target, which would
+    # close a data.mount → unlock-data → basic.target cycle.
     before = [
       "data.mount"
-      "local-fs-pre.target"
       "umount.target"
     ];
     after = [

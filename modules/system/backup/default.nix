@@ -61,7 +61,6 @@ in
       tmpfiles = {
         rules = [
           "d ${pool}/@snapshots 0755 root root -"
-          "d ${cfg.target} 0700 root root -"
         ];
       };
 
@@ -74,6 +73,11 @@ in
               pool
               cfg.target
             ];
+          };
+          # Not in tmpfiles: that can run before the target's volume is
+          # mounted. As root ("+"), since the run itself is user btrbk.
+          serviceConfig = {
+            ExecStartPre = [ "+${pkgs.coreutils}/bin/mkdir -p -m 0700 ${cfg.target}" ];
           };
         };
       };
