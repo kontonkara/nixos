@@ -46,10 +46,17 @@ in
             spicetify = lib.mkMerge [
               {
                 enable = true;
-                # GPU rendering stays on: with --disable-gpu the CEF renderer
-                # drew spicetify's animated extensions on the CPU and froze.
-                # Unlike VSCode and Yandex Browser, Spotify never triggered the
-                # radeonsi page fault (journal since 2026-09-23).
+                # GL through zink (Vulkan, RADV) instead of radeonsi: on 2026-09-29
+                # Spotify hit the same radeonsi page fault (0x3f800000, SQC) as
+                # VSCode, which took down the niri session there. GPU rendering
+                # stays on: with --disable-gpu the CEF renderer drew spicetify's
+                # animated extensions on the CPU and froze, and --use-angle=vulkan
+                # falls back to exactly that on Wayland.
+                spotifyPackage = pkgs.spotify.overrideAttrs (oldAttrs: {
+                  preFixup = (oldAttrs.preFixup or "") + ''
+                    gappsWrapperArgs+=(--set MESA_LOADER_DRIVER_OVERRIDE zink)
+                  '';
+                });
 
                 # Lyrics go through Lyrics Plus only (enabledCustomApps): no
                 # Beautiful Lyrics, whose page the player's button opened
