@@ -31,7 +31,7 @@ in
           "--operator=${username}"
           # sing-box owns DNS (FakeIP for the proxied domains, see its
           # module); MagicDNS would put 100.100.100.100 in front of it.
-          # Peers are reached by their 100.x addresses.
+          # Instead sing-box asks 100.100.100.100 for *.ts.net only.
           "--accept-dns=false"
         ];
       };

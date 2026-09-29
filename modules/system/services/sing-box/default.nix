@@ -54,6 +54,10 @@ let
   # can't accidentally trust some future VPN that grabs tun0.
   tunInterface = "sing0";
   directDnsServer = "1.1.1.1";
+  # Tailscale's resolver answers the *.ts.net names of every tailnet the
+  # host is in, even with MagicDNS left out of the system (see the tailscale
+  # module).
+  tailscale = config.services.tailscale;
   # Docker and libvirt bridges. Their containers and VMs resolve through
   # sing-box too: docker hands them the host's nameserver, libvirt's dnsmasq
   # forwards to it.
@@ -132,7 +136,15 @@ in
                 tag = "dns-fakeip";
                 inet4_range = fakeIpRange;
               }
-            ];
+            ]
+            ++ lib.optional tailscale.enable {
+              type = "udp";
+              tag = "dns-tailnet";
+              server = "100.100.100.100";
+              # auto_detect_interface binds sing-box's sockets to the default
+              # interface, and 100.100.100.100 is only there on tailscale0.
+              bind_interface = tailscale.interfaceName;
+            };
 
             rules = [
               {
@@ -142,6 +154,12 @@ in
                 action = "predefined";
                 rcode = "NXDOMAIN";
               }
+            ]
+            ++ lib.optional tailscale.enable {
+              domain_suffix = [ "ts.net" ];
+              server = "dns-tailnet";
+            }
+            ++ [
               {
                 # HTTPS/SVCB records can contain real IP hints. Browsers may
                 # use them for QUIC and bypass the FakeIP route entirely.
