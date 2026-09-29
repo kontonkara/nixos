@@ -122,8 +122,10 @@ in
               "org.freedesktop.impl.portal.Access" = [ "gnome" ];
             };
           };
+          # The GNOME portal comes from niri-flake's module (it goes with the
+          # xdp-gnome-screencast feature); listing it again doubled its D-Bus
+          # service files.
           extraPortals = with pkgs; [
-            xdg-desktop-portal-gnome
             xdg-desktop-portal-gtk
           ];
         };
