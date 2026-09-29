@@ -79,7 +79,18 @@
     };
 
     system = {
-      audio.enable = true;
+      audio = {
+        enable = true;
+        speakers = {
+          enable = true;
+          card = "alsa_card.pci-0000_06_00.6";
+          sink = "alsa_output.pci-0000_06_00.6.analog-stereo";
+          # MSI's own tuning of these speakers: the FIR Nahimic runs on them
+          # on Windows (Devices/146213ED_InternalSpeakers.nsx in its
+          # NH3ProductSettings0.cab), 2048 taps per channel at 48 kHz.
+          impulseResponse = ./speakers-fir.wav;
+        };
+      };
       # /home to the second NVMe (data.nix).
       backup = {
         enable = true;
