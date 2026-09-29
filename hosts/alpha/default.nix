@@ -5,6 +5,20 @@
     hostName = "alpha";
   };
 
+  # The release alpha was installed with; never bump it.
+  system = {
+    stateVersion = "26.05";
+  };
+
+  # One build at a time on 24 of the 32 threads: long all-core loads have
+  # ended in a machine-check reset on this CPU (BIOS Curve Optimizer).
+  nix = {
+    settings = {
+      max-jobs = 1;
+      cores = 24;
+    };
+  };
+
   modules = {
     home = {
       apps.enable = true;
@@ -81,7 +95,11 @@
         ];
       };
       bluetooth.enable = true;
-      boot.enable = true;
+      boot = {
+        enable = true;
+        # For msi-gpu-switcher below: the MUX bits are in the EC.
+        ecWrite.enable = true;
+      };
       ccache.enable = true;
       core.enable = true;
       environment = {
@@ -143,6 +161,7 @@
       packages = {
         enable = true;
         lab.enable = true;
+        msiGpuSwitcher.enable = true;
       };
       scx.enable = true;
       secrets.enable = true;

@@ -13,12 +13,23 @@ in
           lab = {
             enable = lib.mkEnableOption "homelab clis (talos, kubernetes, flux)";
           };
+
+          msiGpuSwitcher = {
+            enable = lib.mkEnableOption "the MSI GPU MUX switcher (efivar + EC; effective after a reboot)";
+          };
         };
       };
     };
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.msiGpuSwitcher.enable -> config.modules.system.boot.ecWrite.enable;
+        message = "modules.system.packages.msiGpuSwitcher needs modules.system.boot.ecWrite (it writes the MUX bits through ec_sys)";
+      }
+    ];
+
     environment = {
       systemPackages = with pkgs; [
         vim
@@ -30,9 +41,8 @@ in
         xwayland-satellite
         sops
         age
-        # MSI GPU MUX switcher (efivar + EC; effective after a reboot).
-        (callPackage ../../../pkgs/msi-gpu-switcher { })
       ]
+      ++ lib.optional cfg.msiGpuSwitcher.enable (callPackage ../../../pkgs/msi-gpu-switcher { })
       ++ lib.optionals cfg.lab.enable [
         talosctl
         talhelper

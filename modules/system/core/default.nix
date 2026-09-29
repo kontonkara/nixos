@@ -14,11 +14,9 @@ in
     };
   };
 
+  # system.stateVersion and the build limits (nix.settings.cores, max-jobs)
+  # belong to each host: the release it was installed with and its CPU.
   config = lib.mkIf cfg.enable {
-    system = {
-      stateVersion = "26.05";
-    };
-
     nixpkgs = {
       config = {
         allowUnfree = true;
@@ -49,8 +47,6 @@ in
           "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
         ];
         auto-optimise-store = true;
-        max-jobs = 1;
-        cores = 24;
         trusted-users = [
           "root"
           "@wheel"
