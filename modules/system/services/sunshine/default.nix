@@ -1,4 +1,4 @@
-{ config, lib, pkgs, inputs, username, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   cfg = config.modules.system.services.sunshine;
@@ -43,8 +43,40 @@ in
         # network; the ports Moonlight needs are opened below.
         # No capSysAdmin: on niri Sunshine picks wlr-screencopy (wlgrab) and
         # drops the capability anyway; it's only needed for capture=kms.
-        # settings left empty on purpose so the web UI at
-        # https://localhost:47990 can manage config and applications.
+
+        # With these set the module passes its own sunshine.conf, so the web
+        # UI (https://localhost:47990) can no longer save settings or apps.
+        # Pairing and certificates stay in ~/.config/sunshine.
+        settings = {
+          # Without it Sunshine probes the XDG portal at every start, even
+          # after wlr-screencopy works, and pops up the screen share picker.
+          capture = "wlr";
+          # Sound keeps playing on the laptop, not on the phone.
+          stream_audio = "disabled";
+        };
+
+        applications = {
+          env = {
+            PATH = "$(PATH):$(HOME)/.local/bin";
+          };
+          apps = [
+            {
+              name = "Desktop";
+              image-path = "desktop.png";
+            }
+            {
+              name = "Steam Big Picture";
+              image-path = "steam.png";
+              detached = [ "setsid steam steam://open/bigpicture" ];
+              prep-cmd = [
+                {
+                  do = "";
+                  undo = "setsid steam steam://close/bigpicture";
+                }
+              ];
+            }
+          ];
+        };
       };
     };
 
@@ -59,24 +91,6 @@ in
           allowedTCPPorts = ports [ (-5) 0 21 ];
           allowedUDPPorts = ports [ 9 10 11 13 21 ];
         };
-    };
-
-    # With no capture method set, Sunshine probes the XDG portal at every
-    # start even after wlr-screencopy works, which pops up the screen share
-    # picker. Only this key is set, so the web UI keeps the rest.
-    home-manager = {
-      users = {
-        ${username} = { config, ... }: {
-          home = {
-            activation = {
-              sunshineCapture = inputs.home-manager.lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-                run mkdir -p "${config.xdg.configHome}/sunshine"
-                run ${lib.getExe pkgs.crudini} --set "${config.xdg.configHome}/sunshine/sunshine.conf" "" capture wlr
-              '';
-            };
-          };
-        };
-      };
     };
   };
 }
