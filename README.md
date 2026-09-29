@@ -16,8 +16,9 @@ hosts/alpha/      the machine
   data.nix          the second NVMe: LUKS keyfile unlock of /data
   display.nix       the panel, as niri outputs and its stretched mode
 modules/
-  system/           NixOS: boot, kernel, storage, backup, graphics, network,
-                    secrets, services, virtualisation, …
+  system/           NixOS: boot, kernel, storage, disko (the one-disk
+                    layout), backup, graphics, network, secrets, services,
+                    virtualisation, …
   programs/         programs with a system side: steam, gamescope, gamemode,
                     mcontrolcenter, yandex-browser-corporate, …
   home/             Home Manager, set from NixOS modules through

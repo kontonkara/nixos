@@ -12,7 +12,7 @@ in
     modules = {
       system = {
         backup = {
-          enable = lib.mkEnableOption "hourly btrfs snapshots sent to a second disk (btrbk)";
+          enable = lib.mkEnableOption "btrfs snapshots every 4 hours, sent to a second disk if there is one (btrbk)";
 
           device = lib.mkOption {
             type = lib.types.str;
@@ -27,9 +27,10 @@ in
           };
 
           target = lib.mkOption {
-            type = lib.types.str;
+            type = lib.types.nullOr lib.types.str;
+            default = null;
             example = "/data/backups/alpha";
-            description = "directory on another btrfs filesystem that receives the snapshots.";
+            description = "directory on another btrfs filesystem that receives the snapshots; null keeps them on the same disk only (a machine with one disk).";
           };
 
           homeSubvolumes = lib.mkOption {
@@ -69,14 +70,11 @@ in
         # instead of writing into the empty mount point.
         btrbk-btrbk = {
           unitConfig = {
-            RequiresMountsFor = [
-              pool
-              cfg.target
-            ];
+            RequiresMountsFor = [ pool ] ++ lib.optional (cfg.target != null) cfg.target;
           };
           # Not in tmpfiles: that can run before the target's volume is
           # mounted. As root ("+"), since the run itself is user btrbk.
-          serviceConfig = {
+          serviceConfig = lib.mkIf (cfg.target != null) {
             ExecStartPre = [ "+${pkgs.coreutils}/bin/mkdir -p -m 0700 ${cfg.target}" ];
           };
         };
@@ -134,20 +132,23 @@ in
               snapshot_preserve_min = "2d";
               snapshot_preserve = "14d";
 
+              volume = {
+                ${pool} = {
+                  snapshot_dir = "@snapshots";
+                  subvolume = lib.genAttrs cfg.subvolumes (_subvolume: { });
+                }
+                // lib.optionalAttrs (cfg.target != null) {
+                  inherit (cfg) target;
+                };
+              };
+            }
+            // lib.optionalAttrs (cfg.target != null) {
               # On the second disk (against losing the first): one a day for
               # 2 weeks, one a week for 2 months, one a month for half a year.
               # btrbk only sends what the target keeps, so "latest" is what
               # makes every run send its snapshot, not just the day's first.
               target_preserve_min = "latest";
               target_preserve = "14d 8w 6m";
-
-              volume = {
-                ${pool} = {
-                  snapshot_dir = "@snapshots";
-                  subvolume = lib.genAttrs cfg.subvolumes (_subvolume: { });
-                  inherit (cfg) target;
-                };
-              };
             };
           };
         };

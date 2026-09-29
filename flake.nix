@@ -13,6 +13,10 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -52,7 +56,7 @@
   };
 
   outputs =
-    { nixpkgs, chaotic, sops-nix, home-manager, niri, ... }@inputs:
+    { nixpkgs, chaotic, sops-nix, disko, home-manager, niri, ... }@inputs:
     let
       inherit (nixpkgs) lib;
 
@@ -91,6 +95,7 @@
               chaotic.nixosModules.nyx-overlay
               niri.nixosModules.niri
               sops-nix.nixosModules.sops
+              disko.nixosModules.disko
               home-manager.nixosModules.home-manager
             ];
         };
