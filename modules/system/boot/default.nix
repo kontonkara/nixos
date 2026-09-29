@@ -35,6 +35,8 @@ in
         efi = {
           canTouchEfiVariables = true;
         };
+        # Enough to pick an older generation, 2 s less than the default.
+        timeout = 3;
       };
       # Stock fallback; modules.system.kernel swaps in CachyOS.
       kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;

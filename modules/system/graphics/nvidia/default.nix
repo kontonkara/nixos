@@ -88,6 +88,9 @@ in
         moduleParams = {
           nvidia = {
             NVreg_EnableResizableBar = 1;
+            # Write-combined system memory mappings through PAT instead of
+            # MTRRs; a CachyOS default.
+            NVreg_UsePageAttributeTable = 1;
             # PreserveVideoMemoryAllocations (set by powerManagement) dumps used
             # VRAM here on suspend; the default /tmp is a RAM-backed tmpfs now,
             # which NVIDIA's README warns against.

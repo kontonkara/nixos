@@ -30,6 +30,12 @@ in
           # (>100 is meant for in-memory swap), and skip swap readahead.
           "vm.swappiness" = 180;
           "vm.page-cluster" = 0;
+
+          # The default ratios let 20% of RAM (12 GiB here) pile up unwritten,
+          # then stall writers while it flushes; fixed sizes keep writeback
+          # small and steady, as CachyOS does.
+          "vm.dirty_bytes" = 268435456;
+          "vm.dirty_background_bytes" = 67108864;
         };
       };
 
