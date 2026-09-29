@@ -148,6 +148,39 @@ in
                     installation_mode = "force_installed";
                   };
                 };
+
+                # uBlock Origin's managed storage. toOverwrite is applied on
+                # every launch, so lists picked in its dashboard don't last.
+                "3rdparty" = {
+                  Extensions = {
+                    "uBlock0@raymondhill.net" = {
+                      toOverwrite = {
+                        filterLists = [
+                          "user-filters"
+                          # uBlock's defaults.
+                          "ublock-filters"
+                          "ublock-badware"
+                          "ublock-privacy"
+                          "ublock-quick-fixes"
+                          "ublock-unbreak"
+                          "easylist"
+                          "easyprivacy"
+                          "urlhaus-1"
+                          "plowe-0"
+                          # RU AdList, and its trackers and counters list.
+                          "RUS-0"
+                          "RUS-1"
+                          # Strips tracking parameters (utm_*, fbclid, …) from URLs.
+                          "adguard-spyware-url"
+                          # Cookie consent banners: EasyList's and uBlock's
+                          # companion list for it.
+                          "fanboy-cookiemonster"
+                          "ublock-cookies-easylist"
+                        ];
+                      };
+                    };
+                  };
+                };
               };
             };
           };
