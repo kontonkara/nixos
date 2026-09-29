@@ -66,6 +66,20 @@
 
     system = {
       audio.enable = true;
+      # /home to the second NVMe (data.nix).
+      backup = {
+        enable = true;
+        device = "/dev/mapper/system";
+        subvolumes = [ "@home" ];
+        target = "/data/backups/alpha";
+        # Caches and games that come back by themselves; Steam's compatdata
+        # (Proton saves) stays in the snapshots.
+        homeSubvolumes = [
+          ".cache"
+          ".local/share/Steam/steamapps/common"
+          ".local/share/Steam/steamapps/shadercache"
+        ];
+      };
       bluetooth.enable = true;
       boot.enable = true;
       ccache.enable = true;
@@ -97,6 +111,7 @@
       services.localsearch.enable = true;
       services.ly.enable = true;
       services.power-profiles-daemon.enable = true;
+      services.smartd.enable = true;
       services.sing-box.enable = true;
       services.sunshine.enable = true;
       services.syncthing.enable = true;

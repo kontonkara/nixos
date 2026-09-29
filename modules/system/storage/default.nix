@@ -14,7 +14,7 @@ in
             mountPoints = lib.mkOption {
               type = lib.types.listOf lib.types.str;
               default = [ ];
-              description = "btrfs mount points that get noatime (a per-mount vfs flag, so list every one).";
+              description = "btrfs mount points that get noatime and zstd compression (noatime is a per-mount vfs flag, so list every one).";
             };
 
             scrub = {
@@ -39,8 +39,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # zstd:1 costs little CPU and roughly halves the Nix store. It applies
+    # to new writes only; existing files stay as they are until rewritten.
     fileSystems = lib.genAttrs cfg.btrfs.mountPoints (_mountPoint: {
-      options = [ "noatime" ];
+      options = [
+        "noatime"
+        "compress=zstd:1"
+      ];
     });
 
     boot = {
@@ -67,10 +72,11 @@ in
       };
 
       # CachyOS's elevator patch gives multi-queue NVMe mq-deadline instead
-      # of upstream's none (its distro ships a udev rule NixOS lacks).
+      # of upstream's none (its distro ships a udev rule NixOS lacks). Whole
+      # disks only: partitions have no queue/ and logged an error each boot.
       udev = {
         extraRules = ''
-          ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ATTR{queue/scheduler}="none"
+          ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
         '';
       };
     };
