@@ -144,6 +144,7 @@
       services.sing-box.enable = true;
       services.sunshine.enable = true;
       services.syncthing.enable = true;
+      services.tailscale.enable = true;
       services.tinysparql.enable = true;
       services.udev.enable = true;
       services.udisks2.enable = true;
