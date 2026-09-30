@@ -37,6 +37,12 @@ in
                 # Instances start on the RTX (PRIME offload env); the
                 # launcher itself stays on the iGPU.
                 UseDiscreteGpu = true;
+
+                # lwjgl3ify (GTNH) forces SDL onto EGL on Linux, and NVIDIA
+                # EGL can't create an XWayland window under PRIME offload.
+                # The env var outranks its SDL_SetHint, so SDL falls back to
+                # GLX. Prism keeps Env as a JSON object in QSettings quoting.
+                Env = ''"{\"SDL_VIDEO_FORCE_EGL\":\"0\"}"'';
               };
             };
           };
