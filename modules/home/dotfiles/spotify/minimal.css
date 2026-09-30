@@ -194,6 +194,17 @@ img[src$="equaliser-green.svg"] {
   transition: height 0.12s ease-out;
 }
 
+/* smoothProgressBar glides every bar to a new value over a second (150 ms
+   while dragging), so volume changes and seeks trail the pointer. Volume
+   never glides; playback glides only while nothing points at it, so the
+   position still creeps smoothly between Spotify's once-a-second updates. */
+.volume-bar .progress-bar,
+.playback-bar:hover .progress-bar,
+.playback-bar:focus-within .progress-bar,
+.playback-bar .progress-bar.progress-bar--isDragging {
+  transition: none !important;
+}
+
 /* Secondary controls stay dim until the bar is hovered or focused. */
 .main-nowPlayingBar-extraControls,
 .main-nowPlayingWidget-actionButtonWrapper {
