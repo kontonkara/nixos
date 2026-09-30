@@ -106,17 +106,21 @@
         ];
       };
       bluetooth.enable = true;
+
       boot = {
         enable = true;
         # For msi-gpu-switcher below: the MUX bits are in the EC.
         ecWrite.enable = true;
       };
+
       ccache.enable = true;
       core.enable = true;
+
       environment = {
         enable = true;
         gaming.enable = true;
       };
+
       graphics = {
         amd = {
           enable = true;
@@ -136,19 +140,23 @@
           };
         };
       };
-      services.gvfs.enable = true;
-      services.localsearch.enable = true;
-      services.ly.enable = true;
-      services.power-profiles-daemon.enable = true;
-      services.smartd.enable = true;
-      services.sing-box.enable = true;
-      services.sunshine.enable = true;
-      services.syncthing.enable = true;
-      services.tailscale.enable = true;
-      services.tinysparql.enable = true;
-      services.udev.enable = true;
-      services.udisks2.enable = true;
-      services.upower.enable = true;
+
+      services = {
+        gvfs.enable = true;
+        localsearch.enable = true;
+        ly.enable = true;
+        power-profiles-daemon.enable = true;
+        smartd.enable = true;
+        sing-box.enable = true;
+        sunshine.enable = true;
+        syncthing.enable = true;
+        tailscale.enable = true;
+        tinysparql.enable = true;
+        udev.enable = true;
+        udisks2.enable = true;
+        upower.enable = true;
+      };
+
       kernel = {
         enable = true;
         # Either one means a local clang thinlto kernel build instead of
@@ -156,8 +164,10 @@
         lean.enable = true;
         amdgpu.builtIn.enable = true;
       };
+
       locale.enable = true;
       memory.enable = true;
+
       msi-ec = {
         enable = true;
         chargeThreshold = 80;
@@ -166,17 +176,21 @@
           # rearmTurbo.enable = true;
         };
       };
+
       network = {
         enable = true;
         iwlwifi.enable = true;
       };
+
       packages = {
         enable = true;
         lab.enable = true;
         msiGpuSwitcher.enable = true;
       };
+
       scx.enable = true;
       secrets.enable = true;
+
       storage = {
         enable = true;
         btrfs = {
@@ -194,6 +208,7 @@
         };
         luks.discardDevices = [ "system" ];
       };
+
       virtualisation = {
         docker.enable = true;
         libvirtd.enable = true;
