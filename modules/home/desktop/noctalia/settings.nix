@@ -117,7 +117,7 @@
         "media"
       ]; # CHANGED (default: launcher wallpaper workspaces) start (left/top) lane
       thickness = 34; # bar height (width when vertical) in px; 10–300, UI 10–120
-      widget_spacing = 6; # gap between widgets in px; UI 0–32
+      widget_spacing = 16; # CHANGED (default: 6) gap between widgets in px; UI 0–32
 
       # Gesture -> action map for bar areas no widget covers, e.g.
       # actions = { left = "panel-toggle launcher"; scroll_up = "volume-up"; };
