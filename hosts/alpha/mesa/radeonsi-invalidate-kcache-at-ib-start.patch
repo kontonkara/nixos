@@ -1,0 +1,30 @@
+--- a/src/gallium/drivers/radeonsi/si_gfx_cs.c
++++ b/src/gallium/drivers/radeonsi/si_gfx_cs.c
+@@ -367,8 +367,13 @@
+     * users (e.g. BO evictions and SDMA/UVD/VCE IBs) can modify our
+     * buffers.
+     *
+-    * Gfx10+ automatically invalidates I$, SMEM$, VMEM$, and GL1$ at the beginning of IBs,
+-    * so we only need to flush the GL2 cache.
++    * Gfx10+ is supposed to invalidate I$, SMEM$, VMEM$, and GL1$ at the beginning of IBs
++    * automatically, but SMEM$ (K$) can keep lines across IBs, so invalidate it here too,
++    * along with flushing the GL2 cache. Without it, a shader on a gfx10.3 APU can load a
++    * descriptor from a recycled const_uploader buffer through a stale K$ line that still
++    * holds the buffer's previous contents (other descriptors, uniforms) and fault in
++    * SQC (data) at the "address" in it, e.g. 0x0 or 0x3f800000 (1.0f). Invalidating I$ or
++    * VMEM$ + GL1$ instead doesn't help.
+     *
+     * Note that the cache flush done by the kernel at the end of GFX IBs
+     * isn't useful here, because that flush can finish after the following
+@@ -376,9 +381,9 @@
+     *
+     * TODO: Do we also need to invalidate CB & DB caches?
+     */
+-   new_barrier_flags = SI_BARRIER_INV_L2;
++   new_barrier_flags = SI_BARRIER_INV_L2 | SI_BARRIER_INV_SMEM;
+    if (ctx->gfx_level < GFX10)
+-      new_barrier_flags |= SI_BARRIER_INV_ICACHE | SI_BARRIER_INV_SMEM | SI_BARRIER_INV_VMEM;
++      new_barrier_flags |= SI_BARRIER_INV_ICACHE | SI_BARRIER_INV_VMEM;
+ 
+    /* Disable pipeline stats if there are no active queries. */
+    if (ctx->num_hw_pipestat_streamout_queries)

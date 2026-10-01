@@ -502,14 +502,6 @@ mkNixPak {
           # the browser cannot wake it up.
           LIBVA_DRIVERS_PATH = "/run/opengl-driver/lib/dri";
           __EGL_VENDOR_LIBRARY_DIRS = "/run/opengl-driver/share/glvnd/egl_vendor.d";
-          # GL through zink (Vulkan, RADV) instead of radeonsi, whose page
-          # faults (2026-09-29: a TCP fault, then artifacts in every new
-          # instance until a reboot) keep hitting Chromium on this iGPU. Until
-          # that bug is fixed this costs VA-API: Mesa's VA driver picks its
-          # pipe driver through the same override, so vaInitialize fails and
-          # video decodes on the CPU; the features above stay on for when
-          # this line goes.
-          MESA_LOADER_DRIVER_OVERRIDE = "zink";
           YANDEX_LICENSE_RESEED = sloth.envOr "YANDEX_LICENSE_RESEED" "0";
         }
         // lib.optionalAttrs (timeZone != null) {

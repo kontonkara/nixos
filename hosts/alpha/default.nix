@@ -128,6 +128,12 @@
             cpuArch = "znver4";
             optimizationLevel = 3;
             disableAssertions = true;
+            # The radeonsi page faults in Chromium apps (SQC at 0x0 or
+            # 0x3f800000): the scalar cache keeps stale descriptors across
+            # IBs on this iGPU (~/documents/radeonsi-bug.md).
+            patches = [
+              ./mesa/radeonsi-invalidate-kcache-at-ib-start.patch
+            ];
           };
         };
         nvidia = {

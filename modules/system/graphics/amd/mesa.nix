@@ -2,6 +2,7 @@
 
 let
   cfg = config.modules.system.graphics.amd;
+  ccache = config.modules.system.ccache;
 in
 {
   config = lib.mkIf cfg.enable {
@@ -9,7 +10,7 @@ in
       graphics =
         let
           overrideMesa =
-            mesa:
+            mesa: patches:
             (mesa.override {
               galliumDrivers = [
                 "radeonsi"
@@ -27,6 +28,8 @@ in
               withValgrind = false;
             }).overrideAttrs
               (oldAttrs: {
+                patches = oldAttrs.patches ++ patches;
+
                 mesonFlags =
                   oldAttrs.mesonFlags
                   ++ lib.optionals (cfg.mesa.cpuArch != null) [
@@ -42,8 +45,12 @@ in
               });
         in
         {
-          package = overrideMesa pkgs.mesa;
-          package32 = overrideMesa pkgs.pkgsi686Linux.mesa;
+          # ccache only for the 64-bit build, the one that gets patched and
+          # rebuilt locally.
+          package = overrideMesa (pkgs.mesa.override (
+            lib.optionalAttrs ccache.enable { stdenv = ccache.wrapStdenv pkgs.mesa.stdenv; }
+          )) cfg.mesa.patches;
+          package32 = overrideMesa pkgs.pkgsi686Linux.mesa [ ];
         };
     };
   };

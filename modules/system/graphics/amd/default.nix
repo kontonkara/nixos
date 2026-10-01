@@ -33,6 +33,12 @@ in
                 default = false;
                 description = "disable mesa assertions for a smaller, faster release build.";
               };
+
+              patches = lib.mkOption {
+                type = lib.types.listOf lib.types.path;
+                default = [ ];
+                description = "patches for the 64-bit mesa only, so that trying one doesn't rebuild the 32-bit one.";
+              };
             };
           };
         };
