@@ -60,6 +60,11 @@ in
         # CachyOS turns EFI pstore off; keep oops/panic logs across a reset
         # (systemd-pstore archives them to /var/lib/systemd/pstore).
         "efi_pstore.pstore_disable=0"
+        # The clocksource watchdog once marked the (invariant) Zen 4 TSC
+        # unstable right after an s2idle resume, over a 0.2 ms HPET interval,
+        # which left the whole system on slow HPET reads until a reboot. The
+        # boot-time TSC sync check stays.
+        "tsc=nowatchdog"
       ];
 
       kernel = {
