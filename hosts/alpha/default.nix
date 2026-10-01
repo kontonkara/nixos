@@ -213,6 +213,8 @@
         docker.enable = true;
         libvirtd.enable = true;
       };
+
+      watchdog.enable = true;
     };
 
     users = {
