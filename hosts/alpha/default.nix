@@ -48,6 +48,7 @@
       vesktop.enable = true;
       spotify.enable = true;
       obsidian.enable = true;
+      vscode.enable = true;
       zed.enable = true;
       anki.enable = true;
       prismlauncher.enable = true;

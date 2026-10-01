@@ -258,6 +258,9 @@ in
                     override = accentFor [ "base0D" ];
                   };
                 };
+                vscode = {
+                  enable = true;
+                };
                 # Its base0D is also syntax (functions), so modules.home.zed
                 # overrides only the UI colors.
                 zed = {
