@@ -29,8 +29,10 @@ in
     wantedBy = [ "data.mount" ];
     requiredBy = [ "data.mount" ];
     # Beside the boot rather than before local-fs: /data is nofail, so
-    # nothing at boot waits for it (btrbk checks the mount itself), and the
-    # login screen no longer waits the ~1.6 s its keyslot takes to open.
+    # nothing at boot waits for it (btrbk checks the mount itself). Its only
+    # keyslot is the random keyfile, so it uses pbkdf2 with 1000 iterations
+    # rather than argon2id, which only slowed the unlock to 2-4 s: opening
+    # takes about 0.3 s, mostly cryptsetup and dm-crypt setup.
     # DefaultDependencies = false keeps it off basic.target, which would
     # close a data.mount → unlock-data → basic.target cycle.
     before = [
