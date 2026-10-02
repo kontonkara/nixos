@@ -664,10 +664,11 @@
         }
         {
           # A plain "suspend" started from the shell skips lock_before_suspend.
+          # Off while alpha's RAM overclock makes s2idle reset the machine.
           action = "lock_and_suspend";
           command = "";
           countdown_seconds = 10.0;
-          enabled = true;
+          enabled = false;
           glyph = "";
           label = "";
           shortcut = "2";
