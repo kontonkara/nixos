@@ -16,15 +16,15 @@
      *
      * Note that the cache flush done by the kernel at the end of GFX IBs
      * isn't useful here, because that flush can finish after the following
-@@ -376,9 +381,9 @@
-     *
+@@ -381,9 +386,9 @@
      * TODO: Do we also need to invalidate CB & DB caches?
+     * TODO: figure out why gfx12 needs this
      */
 -   new_barrier_flags = SI_BARRIER_INV_L2;
 +   new_barrier_flags = SI_BARRIER_INV_L2 | SI_BARRIER_INV_SMEM;
-    if (ctx->gfx_level < GFX10)
+    if (ctx->gfx_level < GFX10 || ctx->gfx_level == GFX12)
 -      new_barrier_flags |= SI_BARRIER_INV_ICACHE | SI_BARRIER_INV_SMEM | SI_BARRIER_INV_VMEM;
 +      new_barrier_flags |= SI_BARRIER_INV_ICACHE | SI_BARRIER_INV_VMEM;
- 
+
     /* Disable pipeline stats if there are no active queries. */
     if (ctx->num_hw_pipestat_streamout_queries)

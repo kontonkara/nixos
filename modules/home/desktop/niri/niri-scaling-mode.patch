@@ -431,7 +431,7 @@ index bbd72e77..ff900f73 100644
 +    }
 +}
 +
- pub fn set_gamma_for_crtc(
+ fn set_gamma_for_crtc(
      device: &DrmDevice,
      crtc: crtc::Handle,
 diff --git a/src/backend/winit.rs b/src/backend/winit.rs
