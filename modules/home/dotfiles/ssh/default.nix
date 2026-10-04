@@ -33,6 +33,16 @@ in
                   IdentitiesOnly = true;
                 };
 
+                # Mesa and the rest of freedesktop's GitLab, with the same key.
+                # Git goes over its own host: gitlab.freedesktop.org is the web
+                # behind Fastly and never answers on port 22.
+                "ssh.gitlab.freedesktop.org" = {
+                  HostName = "ssh.gitlab.freedesktop.org";
+                  User = "git";
+                  IdentityFile = "~/.ssh/github";
+                  IdentitiesOnly = true;
+                };
+
                 # Rendered last, so the host blocks above win. No
                 # AddKeysToAgent: gcr-ssh-agent already offers every ~/.ssh key
                 # with a .pub beside it and runs ssh-add, with its
