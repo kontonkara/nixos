@@ -82,15 +82,24 @@ in
 
     # openFirewall's offsets from the base port (47989) minus +1, the web UI:
     # HTTPS, HTTP and RTSP over TCP; video, control, audio and mic over UDP.
+    # With Tailscale on, only on the tailnet: Sunshine's pre-pairing API stays
+    # off café and hotel Wi-Fi, and on the home LAN Tailscale connects directly.
     networking = {
       firewall =
         let
           ports = map (offset: config.services.sunshine.settings.port + offset);
+          open = {
+            allowedTCPPorts = ports [ (-5) 0 21 ];
+            allowedUDPPorts = ports [ 9 10 11 13 21 ];
+          };
+          tailscale = config.services.tailscale;
         in
-        {
-          allowedTCPPorts = ports [ (-5) 0 21 ];
-          allowedUDPPorts = ports [ 9 10 11 13 21 ];
-        };
+        lib.mkMerge [
+          (lib.mkIf tailscale.enable {
+            interfaces.${tailscale.interfaceName} = open;
+          })
+          (lib.mkIf (!tailscale.enable) open)
+        ];
     };
   };
 }
