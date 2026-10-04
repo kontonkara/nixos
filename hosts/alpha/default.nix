@@ -10,12 +10,14 @@
     stateVersion = "26.05";
   };
 
-  # One build at a time on 24 of the 32 threads: long all-core loads have
-  # ended in a machine-check reset on this CPU (BIOS Curve Optimizer).
+  # Up to 4 builds at once with 16 threads each: a lone big one (kernel,
+  # Zed) still gets half of the 32 threads, several fill the CPU. The
+  # daemon runs at idle priority, so the desktop stays responsive. RAM (60
+  # GiB) is what caps max-jobs: Rust and LTO links take several GiB each.
   nix = {
     settings = {
-      max-jobs = 1;
-      cores = 24;
+      max-jobs = 4;
+      cores = 16;
     };
   };
 
