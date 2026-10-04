@@ -2,6 +2,17 @@
 
 let
   cfg = config.modules.home.firefox;
+
+  radiusTokens = ''
+    :root {
+      --border-radius-xsmall: 2px !important;
+      --border-radius-small: 4px !important;
+      --border-radius-medium: 4px !important;
+      --border-radius-large: 4px !important;
+      --border-radius-xlarge: 4px !important;
+      --input-search-border-radius: 4px !important;
+    }
+  '';
 in
 {
   options = {
@@ -76,6 +87,21 @@ in
                   "signon.generation.enabled" = false;
                   "signon.rememberSignons" = false;
                 };
+
+                # Nova (the browser.nova.enabled design) rounds everything
+                # from these tokens, 4 to 24 px: tabs, buttons and the urlbar
+                # take xlarge, menus large. Corners here match the desktop
+                # instead: 4 px like Noctalia's bar and capsules, 2 px for the
+                # smallest bits like niri's windows. The circle token stays,
+                # so avatars and toggles keep their shape. User sheets only
+                # win over Firefox's own with !important.
+                userChrome = radiusTokens;
+                # The same for about: pages (new tab, settings, add-ons).
+                userContent = ''
+                  @-moz-document url-prefix("about:") {
+                  ${radiusTokens}
+                  }
+                '';
               };
 
               languagePacks = [
