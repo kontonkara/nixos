@@ -40,6 +40,11 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-optimized = {
+      # No nixpkgs follows: its Nix is trained and built on its own nixpkgs
+      # pin, and elxreno.cachix.org only holds builds from that pin.
+      url = "github:ElXreno/nix-optimized";
+    };
     stylix = {
       # master tracks nixos-unstable (release-XX.YY branches follow stable).
       url = "github:nix-community/stylix";

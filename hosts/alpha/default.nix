@@ -219,6 +219,8 @@
         iwlwifi.enable = true;
       };
 
+      nix-optimized.enable = true;
+
       packages = {
         enable = true;
         lab.enable = true;
