@@ -27,6 +27,7 @@ in
               file
               unzip
               wl-clipboard
+              zoom-us
               # AMD backend only: the NVIDIA one calls nvmlInit at start-up and
               # keeps the RTX out of D3cold while nvtop is open.
               nvtopPackages.amd
