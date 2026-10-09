@@ -51,4 +51,4 @@ host's directory are imported for that host.
 | sunshine | `modules/system/services/sunshine/unicode-via-wtype.patch` | text from Moonlight typed through wtype instead of Ctrl+Shift+U |
 | wtype | `modules/system/services/sunshine/wtype-printable-keycodes.patch` | only printable-key keycodes, so Chromium doesn't read the first as Escape |
 | iwlwifi | `pkgs/iwlwifi-lar/lar_disable.patch` | brings back the `lar_disable` module parameter |
-| mesa | `hosts/alpha/mesa/radeonsi-invalidate-kcache-at-ib-start.patch` | radeonsi invalidates the scalar cache at every IB start on gfx10+, so Chromium apps on the 610M stop faulting in SQC |
+| mesa | `hosts/alpha/mesa/radeonsi-invalidate-caches-at-ib-start.patch` | radeonsi invalidates I$, SMEM$ and VMEM$ at every IB start on all gfx levels (mesa!44933), so Chromium apps on the 610M stop faulting in SQC |
