@@ -183,7 +183,7 @@
       services = {
         gvfs.enable = true;
         localsearch.enable = true;
-        ly.enable = true;
+        noctalia-greeter.enable = true;
         power-profiles-daemon.enable = true;
         smartd.enable = true;
         sing-box.enable = true;

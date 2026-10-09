@@ -4,7 +4,7 @@
       layout = "us,ru";
       options = "grp:alt_shift_toggle";
     };
-    # ly turns numlock on only for the greeter; niri needs its own flag.
+    # The greeter turns numlock on only for itself; niri needs its own flag.
     numlock = true;
   };
 
