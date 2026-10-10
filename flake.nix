@@ -58,6 +58,10 @@
       # Same nix-systems/default pin; its own node would renumber stylix's.
       inputs.systems.follows = "llm-agents/systems";
     };
+    yokoso = {
+      url = "github:kontonkara/yokoso";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =

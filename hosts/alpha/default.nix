@@ -183,7 +183,6 @@
       services = {
         gvfs.enable = true;
         localsearch.enable = true;
-        noctalia-greeter.enable = true;
         power-profiles-daemon.enable = true;
         smartd.enable = true;
         sing-box.enable = true;
@@ -194,6 +193,7 @@
         udev.enable = true;
         udisks2.enable = true;
         upower.enable = true;
+        yokoso.enable = true;
       };
 
       kernel = {
