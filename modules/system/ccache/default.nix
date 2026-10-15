@@ -77,6 +77,17 @@ in
       };
     };
 
+    security = {
+      wrappers = {
+        # programs.ccache's setgid helper for the stats is a Perl script,
+        # which nixpkgs' wrapper check refuses since 2026-10; `sudo ccache
+        # -d /var/cache/ccache -s` shows them as well.
+        nix-ccache = {
+          enable = lib.mkForce false;
+        };
+      };
+    };
+
     systemd = {
       tmpfiles = {
         rules = [
