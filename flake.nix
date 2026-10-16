@@ -62,6 +62,10 @@
       url = "github:kontonkara/yokoso";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    ryukaze = {
+      url = "github:kontonkara/ryukaze";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =

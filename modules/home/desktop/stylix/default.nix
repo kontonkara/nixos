@@ -206,8 +206,8 @@ in
                     @define-color accent_bg_color ${colors.withHashtag.${accent}};
                   '';
                 };
-                # qt5ct/qt6ct + Kvantum for KeePassXC, Telegram and
-                # MControlCenter, exported through the session's environment.d.
+                # qt5ct/qt6ct + Kvantum for KeePassXC and Telegram, exported
+                # through the session's environment.d.
                 qt = {
                   enable = true;
                   # File dialogs via xdg-desktop-portal-gtk, as with the old

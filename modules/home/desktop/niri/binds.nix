@@ -70,6 +70,18 @@
     action.spawn-sh = "noctalia msg brightness-down 10";
   };
 
+  # Fn+F7, MSI Center's scenario key.
+  "XF86Tools" = {
+    hotkey-overlay.title = "Next Scenario: ryukaze";
+    action.spawn = [ "ryukaze" "--next-scenario" ];
+  };
+
+  # Fn+F9, MSI's lighting key, through the hwdb entry in the ryukaze module.
+  "XF86KbdLightOnOff" = {
+    hotkey-overlay.title = "Next Keyboard Light: ryukaze";
+    action.spawn = [ "ryukaze" "--next-keyboard-profile" ];
+  };
+
   "Mod+O" = {
     repeat = false;
     action.toggle-overview = [ ];

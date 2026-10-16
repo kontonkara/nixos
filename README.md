@@ -22,7 +22,7 @@ modules/
                     layout), backup, graphics, network, secrets, services,
                     virtualisation, …
   programs/         programs with a system side: steam, gamescope, gamemode,
-                    mcontrolcenter, yandex-browser-corporate, …
+                    yandex-browser-corporate, …
   home/             Home Manager, set from NixOS modules through
                     home-manager.users.<name>
     desktop/          niri, noctalia, stylix, gtk, xdg, dconf
@@ -30,7 +30,7 @@ modules/
     apps/             plain packages without settings
 users/            accounts
 pkgs/             local packages: yandex-browser-corporate, msi-ec,
-                  msi-gpu-switcher, iwlwifi-lar
+                  iwlwifi-lar
 secrets/          sops-encrypted secrets
 ```
 

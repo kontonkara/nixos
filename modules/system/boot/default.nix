@@ -13,10 +13,6 @@ in
       system = {
         boot = {
           enable = lib.mkEnableOption "bootloader and luks initrd";
-
-          ecWrite = {
-            enable = lib.mkEnableOption "a writable embedded controller over debugfs (ec_sys), which msi-gpu-switcher flips the MUX through";
-          };
         };
       };
     };
@@ -40,12 +36,6 @@ in
       };
       # Stock fallback; modules.system.kernel swaps in CachyOS.
       kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
-
-      # Writable EC over debugfs: msi-gpu-switcher flips the MUX bits there.
-      kernelModules = lib.mkIf cfg.ecWrite.enable [ "ec_sys" ];
-      extraModprobeConfig = lib.mkIf cfg.ecWrite.enable ''
-        options ec_sys write_support=1
-      '';
 
       kernelParams = [
         # Zen 4 pays mostly for SRSO (safe-RET / IBPB on kernel entry);

@@ -102,7 +102,6 @@
       fish.enable = true;
       gamemode.enable = true;
       gamescope.enable = true;
-      mcontrolcenter.enable = true;
       nh.enable = true;
       nix-ld.enable = true;
       steam.enable = true;
@@ -139,11 +138,7 @@
       };
       bluetooth.enable = true;
 
-      boot = {
-        enable = true;
-        # For msi-gpu-switcher below: the MUX bits are in the EC.
-        ecWrite.enable = true;
-      };
+      boot.enable = true;
 
       ccache.enable = true;
       core.enable = true;
@@ -194,6 +189,11 @@
         udisks2.enable = true;
         upower.enable = true;
         yokoso.enable = true;
+
+        ryukaze = {
+          enable = true;
+          chargeLimit = 80;
+        };
       };
 
       kernel = {
@@ -207,14 +207,7 @@
       locale.enable = true;
       memory.enable = true;
 
-      msi-ec = {
-        enable = true;
-        chargeThreshold = 80;
-        modes = {
-          enable = true;
-          # rearmTurbo.enable = true;
-        };
-      };
+      msi-ec.enable = true;
 
       network = {
         enable = true;
@@ -226,7 +219,6 @@
       packages = {
         enable = true;
         lab.enable = true;
-        msiGpuSwitcher.enable = true;
       };
 
       scx.enable = true;

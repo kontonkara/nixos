@@ -557,10 +557,31 @@
         "nix-optimized": "nix-optimized",
         "nixpak": "nixpak",
         "nixpkgs": "nixpkgs_3",
+        "ryukaze": "ryukaze",
         "sops-nix": "sops-nix",
         "spicetify-nix": "spicetify-nix",
         "stylix": "stylix",
         "yokoso": "yokoso"
+      }
+    },
+    "ryukaze": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792346090,
+        "narHash": "sha256-NFTKqk5RujXPhNQGDiJX3vuiLnW4T8dN++2eVC/PUJc=",
+        "owner": "kontonkara",
+        "repo": "ryukaze",
+        "rev": "2fe63a21566b7b3c12320ee22eae7b751f1357d3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kontonkara",
+        "repo": "ryukaze",
+        "type": "github"
       }
     },
     "sops-nix": {
