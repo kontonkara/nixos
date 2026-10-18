@@ -53,6 +53,7 @@
     home = {
       apps.enable = true;
       git.enable = true;
+      gh.enable = true;
       ssh.enable = true;
       fish.enable = true;
       firefox.enable = true;
