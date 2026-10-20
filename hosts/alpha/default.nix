@@ -108,6 +108,7 @@
       steam.enable = true;
       virt-manager.enable = true;
       yandex-browser-corporate.enable = true;
+      yandex-vpn.enable = true;
     };
 
     system = {

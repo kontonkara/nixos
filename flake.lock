@@ -571,11 +571,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792374229,
-        "narHash": "sha256-Xfc7Lky6AwVQyYMzpGvfg+10vOf2wi3/gg/l6z0po20=",
+        "lastModified": 1792385462,
+        "narHash": "sha256-fw0qAQwYP1NXQRzI/SzCB7v9ut32C8IPan2gPjEMQ1Y=",
         "owner": "kontonkara",
         "repo": "ryukaze",
-        "rev": "cab8f4ee1a1399ff0881dfb87cbc52ec827c7c68",
+        "rev": "9b40bae252cdf39cfd5ff759e19e5388e7c5008a",
         "type": "github"
       },
       "original": {
