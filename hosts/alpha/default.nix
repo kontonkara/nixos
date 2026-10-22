@@ -96,6 +96,8 @@
       shellcheck.enable = true;
       mangohud.enable = true;
       obs-studio.enable = true;
+      davinci-resolve.enable = true;
+      kdenlive.enable = true;
       stylix.enable = true;
     };
 
