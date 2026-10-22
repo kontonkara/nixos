@@ -98,6 +98,7 @@
       obs-studio.enable = true;
       davinci-resolve.enable = true;
       kdenlive.enable = true;
+      artcraft.enable = true;
       stylix.enable = true;
     };
 
