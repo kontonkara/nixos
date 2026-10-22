@@ -4,7 +4,6 @@
   fetchFromGitHub,
   kernel,
   kernelModuleMakeFlags,
-  xz,
 }:
 
 # Upstream msi-ec: the in-tree driver and nixpkgs' linuxPackages.msi-ec both
@@ -21,9 +20,7 @@ stdenv.mkDerivation {
     hash = "sha256-+XNrhKeltD5eaasqDOdQ/9/dcPf1H6z2N8hGB344POQ=";
   };
 
-  nativeBuildInputs = kernel.moduleBuildDependencies ++ [
-    xz
-  ];
+  nativeBuildInputs = kernel.moduleBuildDependencies;
 
   enableParallelBuilding = true;
 
@@ -36,18 +33,16 @@ stdenv.mkDerivation {
   makeFlags = kernelModuleMakeFlags ++ [
     "-C"
     "${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
-    "modules"
+    "INSTALL_MOD_PATH=${placeholder "out"}"
+    "INSTALL_MOD_DIR=updates"
   ];
 
-  installPhase = ''
-    runHook preInstall
+  buildFlags = [ "modules" ];
 
-    destDir="$out/lib/modules/${kernel.modDirVersion}/updates"
-    install -Dm444 msi-ec.ko -t "$destDir"
-    xz -f "$destDir/msi-ec.ko"
-
-    runHook postInstall
-  '';
+  # kbuild's modules_install signs the module like the kernel's own (the
+  # .ko.cer that aggregateModules merges since nixpkgs 6bd7526) and
+  # compresses it the same way.
+  installTargets = [ "modules_install" ];
 
   meta = {
     description = "Embedded controller driver for MSI laptops (upstream snapshot)";

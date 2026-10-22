@@ -2,7 +2,6 @@
   stdenv,
   kernel,
   kernelModuleMakeFlags,
-  xz,
 }:
 
 # Out-of-tree rebuild of the whole iwlwifi tree (iwlwifi + dvm/mvm/mld) with
@@ -16,9 +15,7 @@ stdenv.mkDerivation {
     ./lar_disable.patch
   ];
 
-  nativeBuildInputs = kernel.moduleBuildDependencies ++ [
-    xz
-  ];
+  nativeBuildInputs = kernel.moduleBuildDependencies;
 
   enableParallelBuilding = true;
 
@@ -30,19 +27,16 @@ stdenv.mkDerivation {
   makeFlags = kernelModuleMakeFlags ++ [
     "-C"
     "${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
-    "modules"
+    "INSTALL_MOD_PATH=${placeholder "out"}"
+    "INSTALL_MOD_DIR=updates/iwlwifi"
   ];
 
-  installPhase = ''
-    runHook preInstall
+  buildFlags = [ "modules" ];
 
-    destDir="$out/lib/modules/${kernel.modDirVersion}/updates/iwlwifi"
-    mkdir -p "$destDir"
-    find . -name '*.ko' -exec cp --parents '{}' "$destDir" \;
-    find "$destDir" -name '*.ko' -exec xz -f '{}' \;
-
-    runHook postInstall
-  '';
+  # kbuild's modules_install signs the modules like the kernel's own (the
+  # .ko.cer that aggregateModules merges since nixpkgs 6bd7526) and
+  # compresses them the same way.
+  installTargets = [ "modules_install" ];
 
   meta = {
     description = "iwlwifi rebuilt with the lar_disable modparam";
