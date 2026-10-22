@@ -63,6 +63,9 @@ in
               # Upstream's release binary, bumped with the other llm-agents
               # tools; its wrapper already turns the auto-updater off.
               package = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.claude-code;
+              # Home Manager's default moves to ~/.config/claude from
+              # stateVersion 26.11 on; settings, history and memory stay put.
+              configDir = "${hmConfig.home.homeDirectory}/.claude";
 
               # settings.json becomes a read-only store link: /model, /effort
               # and /config still change the running session, but saving
