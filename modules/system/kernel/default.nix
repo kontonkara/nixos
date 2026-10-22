@@ -258,6 +258,29 @@ let
     ]) cfg.kconfig
   );
 
+  # Since nixpkgs 42f4cc3 (2026-10-10) the kernel source is unpacked straight
+  # into $dev, whose store path changes with every build, so ccache missed on
+  # the absolute source paths in every compiler call. The compiler sees the
+  # source through a fixed symlink instead: this wraps the kernel's own CC
+  # (ccache's clang) and rewrites its arguments.
+  kernelCC =
+    makeFlags:
+    let
+      cc = lib.removePrefix "CC=" (
+        lib.findFirst (lib.hasPrefix "CC=") (throw "no CC= in the kernel's makeFlags") makeFlags
+      );
+    in
+    pkgs.writeShellScript "kernel-cc" ''
+      if [ -n "''${KSRC_REAL-}" ]; then
+        args=()
+        for arg; do
+          args+=("''${arg//"$KSRC_REAL"/"$KSRC_LINK"}")
+        done
+        set -- "''${args[@]}"
+      fi
+      exec ${cc} "$@"
+    '';
+
   # Patch the prepared .config itself (not the kernel's configurePhase), so
   # the result can be checked by building kernel.configfile alone, and keep
   # the passthru config the NixOS modules query in sync.
@@ -265,15 +288,27 @@ let
     if localBuild then
       compilerPackages.extend (
         _final: prev: {
-          kernel = prev.kernel.override (args: {
-            configfile = args.configfile.overrideAttrs (old: {
-              postBuild = (old.postBuild or "") + ''
-                scripts/config ${lib.escapeShellArgs kconfigArgs}
-                make $makeFlags olddefconfig
-              '';
-            });
-            config = args.config // cfg.kconfig;
-          });
+          kernel =
+            (prev.kernel.override (args: {
+              configfile = args.configfile.overrideAttrs (old: {
+                postBuild = (old.postBuild or "") + ''
+                  scripts/config ${lib.escapeShellArgs kconfigArgs}
+                  make $makeFlags olddefconfig
+                '';
+              });
+              config = args.config // cfg.kconfig;
+            })).overrideAttrs
+              (
+                old:
+                lib.optionalAttrs ccache.enable {
+                  # The kernel build only; out-of-tree modules keep the plain CC.
+                  makeFlags = old.makeFlags ++ [ "CC=${kernelCC old.makeFlags}" ];
+                  preConfigure = (old.preConfigure or "") + ''
+                    export KSRC_REAL=$PWD KSRC_LINK=$NIX_BUILD_TOP/ksrc
+                    ln -s -- "$KSRC_REAL" "$KSRC_LINK"
+                  '';
+                }
+              );
         }
       )
     else
