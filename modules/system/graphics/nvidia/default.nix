@@ -2,6 +2,8 @@
 
 let
   cfg = config.modules.system.graphics.nvidia;
+
+  driver = config.boot.kernelPackages.nvidiaPackages.latest;
 in
 {
   options = {
@@ -81,7 +83,15 @@ in
       nvidia = {
         open = true;
         nvidiaSettings = true;
-        package = config.boot.kernelPackages.nvidiaPackages.latest;
+        # 615 probes the GPU from its own kthread, where Linux 7.3 gives no
+        # real root, so opening the device's sysfs config file fails and
+        # runtime D3 turns "Not supported": the RTX never powers off. The
+        # patch probes in modprobe's context instead.
+        package = driver // {
+          open = driver.open.overrideAttrs (old: {
+            patches = (old.patches or [ ]) ++ [ ./probe-in-caller-context.patch ];
+          });
+        };
         dynamicBoost = {
           enable = cfg.dynamicBoost.enable;
         };
