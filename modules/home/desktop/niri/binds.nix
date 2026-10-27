@@ -21,6 +21,10 @@
     hotkey-overlay.title = "Lock the Screen: Noctalia";
     action.spawn-sh = "noctalia msg session lock";
   };
+  "Mod+Shift+L" = {
+    hotkey-overlay.title = "Lock the Screen: yokoso";
+    action.spawn = [ "yokoso" "lock" ];
+  };
   "Mod+P" = {
     hotkey-overlay.title = "Session Menu: Noctalia";
     action.spawn-sh = "noctalia msg panel-toggle session";
