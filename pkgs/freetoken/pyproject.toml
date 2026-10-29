@@ -1,0 +1,13 @@
+# Lock for the FreeToken fork and its wheels; default.nix builds it with uv2nix.
+# Refresh with `uv lock` in this directory after changing the rev.
+[project]
+name = "freetoken-env"
+version = "0"
+requires-python = "==3.12.*"
+dependencies = ["freetoken[accel]"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+freetoken = { git = "https://github.com/ElXreno/FreeToken", rev = "066ac45a1398ad5d3ef32df7457d0f9421fa3f48" }

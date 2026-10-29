@@ -73,6 +73,8 @@
       tealdeer.enable = true;
       k9s.enable = true;
       claude-code.enable = true;
+      pi.enable = true;
+      qwen-code.enable = true;
       keepassxc.enable = true;
       telegram-desktop.enable = true;
       vesktop.enable = true;
@@ -185,6 +187,14 @@
         udisks2.enable = true;
         upower.enable = true;
         yokoso.enable = true;
+
+        freetoken = {
+          enable = true;
+          models = {
+            ornith = "/data/models/Ornith-1.5-35B-A3B-NVFP4";
+          };
+          default = "ornith";
+        };
 
         ryukaze = {
           enable = true;
