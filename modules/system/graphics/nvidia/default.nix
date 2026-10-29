@@ -86,10 +86,11 @@ in
         # 615 probes the GPU from its own kthread, where Linux 7.3 gives no
         # real root, so opening the device's sysfs config file fails and
         # runtime D3 turns "Not supported": the RTX never powers off. The
-        # patch probes in modprobe's context instead.
+        # patch (CachyOS kernel-patches, 7.3/misc/nvidia) opens it from the
+        # userspace root.
         package = driver // {
           open = driver.open.overrideAttrs (old: {
-            patches = (old.patches or [ ]) ++ [ ./probe-in-caller-context.patch ];
+            patches = (old.patches or [ ]) ++ [ ./open-sysfs-config-from-the-userspace-root.patch ];
           });
         };
         dynamicBoost = {
