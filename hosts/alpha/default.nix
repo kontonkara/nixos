@@ -72,8 +72,6 @@
       procs.enable = true;
       tealdeer.enable = true;
       k9s.enable = true;
-      opencode.enable = true;
-      mimo-code.enable = true;
       claude-code.enable = true;
       keepassxc.enable = true;
       telegram-desktop.enable = true;

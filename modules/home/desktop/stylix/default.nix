@@ -334,10 +334,6 @@ in
                 kubecolor = {
                   enable = true;
                 };
-                # modules.home.opencode paints the accent roles.
-                opencode = {
-                  enable = true;
-                };
                 mangohud = {
                   enable = true;
                   # Colors only: the font block shrinks the HUD from 24px to
