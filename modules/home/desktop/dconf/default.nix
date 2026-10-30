@@ -35,8 +35,7 @@ in
               "org/gtk/settings/file-chooser" = {
                 sort-directories-first = true;
               };
-              # GTK 4 dialogs and Nautilus, which is also the GNOME portal's
-              # file chooser, read this path instead.
+              # GTK 4 dialogs read this path instead.
               "org/gtk/gtk4/settings/file-chooser" = {
                 sort-directories-first = true;
               };

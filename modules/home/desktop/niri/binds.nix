@@ -10,8 +10,8 @@
     action.spawn = [ "kitty" "--class" "yazi" "yazi" ];
   };
   "Mod+Shift+E" = {
-    hotkey-overlay.title = "Open a File Browser (GUI): nautilus";
-    action.spawn = [ "nautilus" ];
+    hotkey-overlay.title = "Open a File Browser (GUI): thunar";
+    action.spawn = [ "thunar" ];
   };
   "Mod+R" = {
     hotkey-overlay.title = "Run an Application: Noctalia";

@@ -1,5 +1,5 @@
 # The second NVMe (/data in hardware.nix): LUKS with a keyfile from sops.
-{ pkgs, ... }:
+{ pkgs, username, ... }:
 
 let
   dataUuid = "616c4598-89ac-4e5e-b522-4fd98a6bf5ae";
@@ -23,6 +23,10 @@ in
   # parallel with unlocking root and races sops with a plymouth prompt.
   # Keep /data from failing the whole boot if unlock is slow/broken.
   fileSystems."/data".options = [ "nofail" ];
+
+  # File managers and GTK choosers list fstab mounts outside /media only
+  # with x-gvfs-show, which also offers an unmount; a bookmark just links.
+  home-manager.users.${username}.gtk.gtk3.bookmarks = [ "file:///data" ];
 
   systemd.services.unlock-data = {
     description = "Unlock LUKS data volume";

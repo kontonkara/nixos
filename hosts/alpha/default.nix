@@ -60,7 +60,7 @@
       kitty.enable = true;
       starship.enable = true;
       yazi.enable = true;
-      nautilus.enable = true;
+      thunar.enable = true;
       zoxide.enable = true;
       eza.enable = true;
       vivid.enable = true;
@@ -175,14 +175,12 @@
 
       services = {
         gvfs.enable = true;
-        localsearch.enable = true;
         power-profiles-daemon.enable = true;
         smartd.enable = true;
         sing-box.enable = true;
         sunshine.enable = true;
         syncthing.enable = true;
         tailscale.enable = true;
-        tinysparql.enable = true;
         udev.enable = true;
         udisks2.enable = true;
         upower.enable = true;
