@@ -73,7 +73,6 @@
       tealdeer.enable = true;
       k9s.enable = true;
       claude-code.enable = true;
-      pi.enable = true;
       qwen-code.enable = true;
       keepassxc.enable = true;
       telegram-desktop.enable = true;
