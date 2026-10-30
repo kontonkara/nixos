@@ -54,6 +54,9 @@ in
               enable = true;
               package = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.pi;
 
+              # Global AGENTS.md, shared with qwen.
+              context = ../agent-context.md;
+
               # settings.json and models.json become read-only store links;
               # pi only writes settings.json on an explicit save (ctrl+s).
               settings = {

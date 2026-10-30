@@ -70,6 +70,13 @@ in
                 });
               };
 
+              # Global context, shared with pi. qwen's /memory writes here
+              # too, like settings.json, until the next switch.
+              ".qwen/QWEN.md" = {
+                force = true;
+                source = ../agent-context.md;
+              };
+
               # qwen reads ~/.qwen/.env on its own, which keeps these OPENAI_*
               # variables out of every other program's environment. With all
               # three set it picks OpenAI-compatible auth without asking.
