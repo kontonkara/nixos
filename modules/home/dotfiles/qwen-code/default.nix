@@ -7,6 +7,50 @@ let
   server = llm.settings;
 
   searxng = config.modules.system.services.searxng;
+
+  # A rule in QWEN.md alone gets lost in a long session, so a hook puts the
+  # reminder into the result of the second failing command in a row.
+  # Commands whose non-zero exit is an answer (grep, test, ...) count as
+  # neither success nor failure.
+  searchNudge = pkgs.writeShellApplication {
+    name = "qwen-search-nudge";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.gnugrep
+      pkgs.jq
+    ];
+    text = ''
+      input=$(cat)
+      command=$(jq -r '.tool_input.command // ""' <<< "$input")
+      session=$(jq -r '.session_id // "none"' <<< "$input")
+      code=$(jq -r '.tool_response | tostring' <<< "$input" \
+        | grep -oE 'Exit Code: [0-9]+' | tail -n 1 | grep -oE '[0-9]+' || true)
+
+      if grep -qE '^[[:space:]]*(grep|rg|test|\[|diff|cmp|which|command|pgrep|find|ls|stat)\b' <<< "$command"; then
+        exit 0
+      fi
+
+      state="''${XDG_RUNTIME_DIR:-/tmp}/qwen-search-nudge"
+      mkdir -p "$state"
+      count_file="$state/$session"
+
+      if [ -z "$code" ] || [ "$code" = 0 ]; then
+        rm -f "$count_file"
+        exit 0
+      fi
+
+      count=$(( $(cat "$count_file" 2>/dev/null || echo 0) + 1 ))
+      echo "$count" > "$count_file"
+
+      if [ "$count" -eq 2 ] || [ $(( count % 4 )) -eq 0 ]; then
+        jq -n --arg n "$count" '{
+          hookSpecificOutput: {
+            additionalContext: ("This is failed command number " + $n + " in a row. Before trying another variation, search the web (searxng_web_search) for the exact error message with the tool and version involved, read the most relevant page (web_url_read), then say what you found and fix it.")
+          }
+        }'
+      fi
+    '';
+  };
 in
 {
   options = {
@@ -66,6 +110,21 @@ in
                         SEARXNG_URL = searxng.url;
                       };
                     };
+                  };
+                  hooks = {
+                    PostToolUse = [
+                      {
+                        matcher = "run_shell_command";
+                        hooks = [
+                          {
+                            type = "command";
+                            command = lib.getExe searchNudge;
+                            name = "search-nudge";
+                            timeout = 5;
+                          }
+                        ];
+                      }
+                    ];
                   };
                 });
               };
