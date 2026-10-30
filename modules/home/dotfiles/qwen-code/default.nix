@@ -5,6 +5,8 @@ let
 
   llm = config.modules.system.services.freetoken;
   server = llm.settings;
+
+  searxng = config.modules.system.services.searxng;
 in
 {
   options = {
@@ -52,6 +54,17 @@ in
                   model = {
                     generationConfig = {
                       contextWindowSize = server.num-tokens;
+                    };
+                  };
+                }
+                // lib.optionalAttrs searxng.enable {
+                  # qwen's own web_search only works with Alibaba's DashScope.
+                  mcpServers = {
+                    searxng = {
+                      command = lib.getExe pkgs.mcp-searxng;
+                      env = {
+                        SEARXNG_URL = searxng.url;
+                      };
                     };
                   };
                 });

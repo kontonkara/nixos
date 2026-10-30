@@ -176,6 +176,7 @@
       services = {
         gvfs.enable = true;
         power-profiles-daemon.enable = true;
+        searxng.enable = true;
         smartd.enable = true;
         sing-box.enable = true;
         sunshine.enable = true;
