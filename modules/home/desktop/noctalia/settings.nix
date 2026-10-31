@@ -19,8 +19,9 @@
 #   offered by the Settings window.
 #   Colors take a palette role (primary, on_primary, secondary, on_secondary,
 #   tertiary, on_tertiary, error, on_error, surface, on_surface,
-#   surface_variant, on_surface_variant, outline, shadow, hover, on_hover) or
-#   a "#RRGGBB" hex value.
+#   surface_container, surface_container_low, surface_container_high,
+#   on_surface_variant, outline_variant, shadow, scrim, hover, on_hover) or a
+#   "#RRGGBB" hex value. Noctalia 5.4 renamed surface_variant and outline.
 #
 # Changes made in the Settings window are saved to
 # ~/.local/state/noctalia/settings.toml, which overrides this file; default.nix
@@ -65,10 +66,10 @@
     main = {
       auto_hide = false; # slide out when the pointer leaves; reveal at the screen edge
       background_opacity = 0.93; # CHANGED (default: 1.0) 0.0–1.0
-      border = "outline"; # outline color; drawn only when border_width > 0
+      border = "outline_variant"; # outline color; drawn only when border_width > 0
       border_width = 0.0; # inside outline width in px, 0 = off; 0–20
       capsule = false; # wrap every widget in a capsule unless the widget sets capsule = false
-      capsule_fill = "surface_variant"; # capsule background color
+      capsule_fill = "surface_container"; # capsule background color
       capsule_group = [ ]; # shared capsules { id, members, fill, padding, opacity, accordion, … }, used as "group:<id>" in a lane
       capsule_opacity = 1.0; # capsule background opacity; 0.0–1.0
       capsule_padding = 6.0; # padding inside capsules in px, before scale; 0–48
@@ -205,13 +206,15 @@
   };
 
   # ── [dock] ───────────────────────────────────────────────────────────────
+  # Optional, unset: monitor.<connector> = { enabled = false; } hides the dock
+  # on that output (Noctalia 5.4 replaced the monitors list).
   dock = {
     active_monitor_only = true; # CHANGED (default: false) only apps/windows of the active monitor
     active_opacity = 1.0; # focused app icon opacity; 0.0–1.0
     active_scale = 1.0; # focused app icon scale; 0.1–1.75
     auto_hide = true; # CHANGED (default: false) slide out when the pointer leaves; reveal at the edge
     # background_opacity: set by stylix (modules/home/desktop/stylix), stylix.opacity.desktop, currently 1.0 (Noctalia default: 0.88); 0.0–1.0
-    border = "outline"; # outline color; drawn only when border_width > 0
+    border = "outline_variant"; # outline color; drawn only when border_width > 0
     border_width = 0.0; # inside outline width in px, 0 = off; 0–20
     concave_edge_corners = true; # carve concave corners on the screen-edge side; needs margin_edge = 0
     cross_axis_padding = 8; # padding between icons and the screen edge in px; 0–100
@@ -230,7 +233,6 @@
     main_axis_padding = 16; # padding before the first and after the last icon in px; 0–100
     margin_edge = 8; # CHANGED (default: 0) gap to the screen edge in px; > 0 floats the dock; 0–100
     margin_ends = 0; # inset from both ends in px; 0–500
-    monitors = [ ]; # connector names that show the dock; empty = all
     pinned = [ ]; # always-shown apps: desktop entry ids, StartupWMClass or names
     position = "bottom"; # top | bottom | left | right
     # radius seeds all four corners, but the explicit radius_* keys below win:
