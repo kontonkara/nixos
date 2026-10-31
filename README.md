@@ -46,8 +46,5 @@ host's directory are imported for that host.
 | niri | `modules/home/desktop/niri/niri-scaling-mode.patch` | `scaling-mode` output option and `niri msg output <name> scaling-mode` |
 | noctalia | `modules/home/desktop/noctalia/hide-settings-button.patch` | no Settings button in the Control Center header |
 | zed-editor | `modules/home/dotfiles/zed/patches/smooth-scroll.patch` | eased editor scrolling behind `smooth_scroll.enabled` (zed#44827) |
-| mcontrolcenter | `modules/programs/mcontrolcenter/mcontrolcenter-sync-external-profile.patch` | follow the mode msi-ec sets by power source |
-| mcontrolcenter | `modules/programs/mcontrolcenter/mcontrolcenter-fan-mode.patch` | advanced fan mode through msi-ec |
 | sunshine | `modules/system/services/sunshine/unicode-via-wtype.patch` | text from Moonlight typed through wtype instead of Ctrl+Shift+U |
 | iwlwifi | `pkgs/iwlwifi-lar/lar_disable.patch` | brings back the `lar_disable` module parameter |
-| mesa | `hosts/alpha/mesa/radeonsi-invalidate-caches-at-ib-start.patch` | radeonsi invalidates I$, SMEM$ and VMEM$ at every IB start on all gfx levels (mesa!44933), so Chromium apps on the 610M stop faulting in SQC |
