@@ -2,13 +2,6 @@
 
 let
   cfg = config.modules.system.services.sunshine;
-
-  # wtype gives its characters codes 1, 2, …, and Chromium treats code 1 as
-  # Escape whatever it types, so the first character of every call (and
-  # Sunshine calls it per character) was lost or switched the page.
-  wtype = pkgs.wtype.overrideAttrs (oldAttrs: {
-    patches = (oldAttrs.patches or [ ]) ++ [ ./wtype-printable-keycodes.patch ];
-  });
 in
 {
   options = {
@@ -34,9 +27,11 @@ in
             # Ctrl+Shift+U sequence almost nothing understands.
             ./unicode-via-wtype.patch
           ];
+          # wtype 0.5 types literal text on printable key codes; before, the
+          # first character landed on code 1, which Chromium reads as Escape.
           postPatch = (oldAttrs.postPatch or "") + ''
             substituteInPlace src/platform/virtualhid_input.cpp \
-              --replace-fail '@wtype@' '${lib.getExe wtype}'
+              --replace-fail '@wtype@' '${lib.getExe pkgs.wtype}'
           '';
         });
         # No openFirewall: it also opens the web UI (base + 1) to every
