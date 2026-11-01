@@ -312,9 +312,10 @@
     # "lock-and-suspend" (action lock_and_suspend, timeout 900), and all three
     # are disabled by default.
     behavior = {
+      # yokoso's lock, through logind's Lock as the lid's and the sleep key's.
       lock = {
-        action = "lock"; # lock | screen_off | suspend | lock_and_suspend | command
-        command = ""; # shell command for action = "command"
+        action = "command"; # CHANGED (default: lock) lock | screen_off | suspend | lock_and_suspend | command
+        command = "loginctl lock-session"; # CHANGED (default: "") shell command for action = "command"
         enabled = true; # CHANGED (default: false) behavior active
         locked_timeout = 0.0; # shorter timeout while locked in s, 0 = use timeout
         resume_command = ""; # shell command run when activity resumes
@@ -369,7 +370,9 @@
     blur_intensity = 0.5; # background blur; 0.0–1.0
     blurred_desktop = false; # use a desktop snapshot as the background
     edge_smoothness = 0.3; # transition edge feathering (0.0 = sharp, 1.0 = soft)
-    enabled = true; # session lock, logind integration and lock actions
+    # Off: yokoso locks the session (niri's Mod+L, the idle lock above and
+    # logind's Lock), and two lockers would race for the screens.
+    enabled = false; # CHANGED (default: true) session lock, logind integration and lock actions
     fingerprint = false; # CHANGED (default: true) fprintd unlock alongside the password
     # Locks on logind PrepareForSleep, so lid-close suspend resumes locked.
     lock_before_suspend = true; # lock before sleep (lid close, systemctl suspend, hibernate)

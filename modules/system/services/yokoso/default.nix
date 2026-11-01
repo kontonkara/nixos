@@ -38,8 +38,12 @@ in
       yokoso = {
         enable = true;
         # `yokoso lock` too, with its PAM service: the greeter's look over
-        # the session (niri binds it next to Noctalia's lock).
-        lock.enable = true;
+        # the session, and its only lock (niri's Mod+L), at logind's Lock as
+        # well (the lid, the sleep key, Noctalia's idle).
+        lock = {
+          enable = true;
+          logind = true;
+        };
         settings = lib.mkMerge [
           # The desktop's scale (niri's output), not the one the panel's DPI
           # gives: the login screen comes up the same size as the desktop.

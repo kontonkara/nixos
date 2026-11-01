@@ -23,7 +23,7 @@
 
   # With the RAM overclocked to 5600 (or 5200) in the BIOS, s2idle resets the
   # machine instead of resuming; at the stock 4800 it sleeps fine. So the lid
-  # and the sleep key only lock (noctalia answers logind's Lock), and systemd
+  # and the sleep key only lock (yokoso answers logind's Lock), and systemd
   # refuses every sleep that starts with suspend, whoever asks for it.
   systemd = {
     sleep = {
