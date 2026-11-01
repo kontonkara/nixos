@@ -281,7 +281,7 @@ in
                   };
                 };
                 # ReColor add-on in programs.anki.addons, which
-                # modules.home.anki installs without programs.anki itself.
+                # modules.home.apps installs without programs.anki itself.
                 # Accent, primary buttons, focus and links are base0D (so is
                 # the new-card count).
                 anki = {
