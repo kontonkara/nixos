@@ -889,11 +889,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793315875,
-        "narHash": "sha256-bv6ojC0lYExvbvrtgFZ4u2BizkSt1c0Lb8zzKde5ItE=",
+        "lastModified": 1793471046,
+        "narHash": "sha256-cu9jDoSNJuDhc8YR5ViFxL6Hx69B7KhnD6Z4ufykfCs=",
         "owner": "kontonkara",
         "repo": "yokoso",
-        "rev": "af2748192e1494765a83756314d8b615c753fe74",
+        "rev": "1dfc4ccec21983275aa4b30f1311e68c69853d1b",
         "type": "github"
       },
       "original": {
