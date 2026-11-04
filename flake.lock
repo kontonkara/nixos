@@ -125,6 +125,21 @@
         "type": "github"
       }
     },
+    "crane": {
+      "locked": {
+        "lastModified": 1793669695,
+        "narHash": "sha256-9EtV4I6Ohw0tjidL31TMOKHhW/QGVG8NuGiemzIaNCs=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "788369ed71ed9d84ef72cb056e4d920050d5b32c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -615,16 +630,17 @@
     },
     "ryukaze": {
       "inputs": {
+        "crane": "crane",
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1792385462,
-        "narHash": "sha256-fw0qAQwYP1NXQRzI/SzCB7v9ut32C8IPan2gPjEMQ1Y=",
+        "lastModified": 1793833722,
+        "narHash": "sha256-0+VoTrhlhxZwxfUNQ5rl2JsxiWPRVvKa51LAUCAbasw=",
         "owner": "kontonkara",
         "repo": "ryukaze",
-        "rev": "9b40bae252cdf39cfd5ff759e19e5388e7c5008a",
+        "rev": "c2993324e4a31ad24024a6c380257e400e209667",
         "type": "github"
       },
       "original": {
