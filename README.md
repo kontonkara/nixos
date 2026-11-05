@@ -16,7 +16,6 @@ hosts/alpha/      the machine
   data.nix          the second NVMe: LUKS keyfile unlock of /data
   display.nix       the panel, as niri outputs and its stretched mode
   speakers-fir.wav  MSI's tuning of the speakers, from its Nahimic driver
-  mesa/             patches for the 64-bit Mesa (mesa.patches)
 modules/
   system/           NixOS: boot, kernel, storage, disko (the one-disk
                     layout), backup, graphics, network, secrets, services,

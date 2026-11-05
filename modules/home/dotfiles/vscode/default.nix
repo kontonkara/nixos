@@ -30,7 +30,7 @@ in
             vscode = {
               enable = true;
               # GPU rendering on Wayland; the radeonsi page fault it hit here
-              # (0x3f800000, SQC) is fixed in Mesa (mesa.patches in alpha).
+              # (0x3f800000, SQC) is fixed in Mesa 26.2.5.
               # Zed stays the default editor.
               package = pkgs.vscode.override {
                 commandLineArgs = [

@@ -16,8 +16,8 @@ in
 
   config = lib.mkIf cfg.enable {
     console = {
-      # 16x32 with Cyrillic: Lat2-Terminus16 is tiny on the 1440p panel
-      # (ly draws on the VT too) and has no Cyrillic glyphs.
+      # 16x32 with Cyrillic: Lat2-Terminus16 is tiny on the 1440p panel and
+      # has no Cyrillic glyphs.
       packages = [ pkgs.terminus_font ];
       font = "ter-v32n";
       earlySetup = true;

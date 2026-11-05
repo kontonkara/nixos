@@ -129,7 +129,7 @@ in
       # What stylix's font-packages and fontconfig NixOS targets did, from
       # the Home Manager config: the fonts in /etc/fonts, which sandboxed apps
       # (Yandex Browser) mirror instead of the user's fontconfig. No console
-      # palette: the TTY, boot log and ly keep their stock colors.
+      # palette: the TTY and boot log keep their stock colors.
       fonts = {
         inherit (fonts) packages;
         fontconfig = {
