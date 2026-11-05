@@ -26,6 +26,18 @@ in
       };
     };
 
+    # Nothing on a laptop should wait for a connection, least of all sing-box,
+    # the system's DNS: its package's unit is ordered after
+    # network-online.target, and a drop-in can't remove that. With this wait
+    # it started ~10 s into the boot, up to 60 s without Wi-Fi.
+    systemd = {
+      services = {
+        NetworkManager-wait-online = {
+          enable = false;
+        };
+      };
+    };
+
     boot = {
       # Everything leaves through sing-box, whose outbound TCP to the remote
       # server is the kernel's; BBR holds throughput on long, lossy paths

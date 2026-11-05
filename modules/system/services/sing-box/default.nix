@@ -267,20 +267,5 @@ in
         };
       };
     };
-
-    systemd = {
-      services = {
-        sing-box = {
-          after = lib.mkForce [
-            "network.target"
-            "nss-lookup.target"
-          ];
-          requires = lib.mkForce [ ];
-          unitConfig = {
-            Requires = lib.mkForce [ ];
-          };
-        };
-      };
-    };
   };
 }
