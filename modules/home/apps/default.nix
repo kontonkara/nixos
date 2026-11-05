@@ -32,6 +32,7 @@ in
               file
               unzip
               wl-clipboard
+              android-tools
               zoom-us
               ankiWithAddons
               kdePackages.kdenlive
