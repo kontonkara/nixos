@@ -190,7 +190,10 @@ in
 
               auto_route = true;
               auto_redirect = true;
-              strict_route = true;
+              # No strict_route: on an IPv4-only tun it rejects every IPv6
+              # packet in nftables, ::1 included, and drops the ICMPv6 error
+              # too, so IPv6 connects hang (adb's localhost server). Only the
+              # FakeIP range is routed here anyway, so it guards nothing.
               stack = "system";
 
               route_address = [
