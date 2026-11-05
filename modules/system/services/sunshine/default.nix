@@ -48,6 +48,11 @@ in
           capture = "wlr";
           # Sound keeps playing on the laptop, not on the phone.
           stream_audio = "disabled";
+          # What it settles on by itself, minus the way there: it first tries
+          # NVENC (this build has no CUDA) and Vulkan, and what those tries
+          # leave open keeps the RTX out of D3 until the next probe.
+          encoder = "vaapi";
+          adapter_name = "/dev/dri/renderD128";
         };
 
         applications = {
