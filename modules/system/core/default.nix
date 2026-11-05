@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, lib, ... }:
 
 let
   cfg = config.modules.system.core;
@@ -61,10 +61,6 @@ in
       # The IO class is left alone: NVMe here uses the `none` scheduler,
       # which ignores ioprio.
       daemonCPUSchedPolicy = "idle";
-    };
-
-    hardware = {
-      firmware = [ pkgs.linux-firmware ];
     };
   };
 }

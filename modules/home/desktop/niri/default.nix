@@ -132,18 +132,6 @@ in
         };
       };
 
-      systemd = {
-        user = {
-          services = {
-            xdg-desktop-portal-gnome = {
-              serviceConfig = {
-                UnsetEnvironment = [ "GDK_BACKEND" ];
-              };
-            };
-          };
-        };
-      };
-
       home-manager = {
         users = {
           ${username} = { options, ... }: {
@@ -197,7 +185,6 @@ in
                     layout = import ./layout.nix { inherit colors accent; };
                     inherit (decoration) prefer-no-csd animations;
                     inherit (rules) window-rules layer-rules;
-                    spawn-at-startup = import ./startup.nix;
                     binds =
                       import ./binds.nix
                       // lib.optionalAttrs (cfg.stretch != null) {

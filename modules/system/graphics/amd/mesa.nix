@@ -10,7 +10,7 @@ in
       graphics =
         let
           overrideMesa =
-            mesa: patches:
+            mesa:
             (mesa.override {
               galliumDrivers = [
                 "radeonsi"
@@ -28,8 +28,6 @@ in
               withValgrind = false;
             }).overrideAttrs
               (oldAttrs: {
-                patches = oldAttrs.patches ++ patches;
-
                 mesonFlags =
                   oldAttrs.mesonFlags
                   ++ lib.optionals (cfg.mesa.cpuArch != null) [
@@ -45,12 +43,11 @@ in
               });
         in
         {
-          # ccache only for the 64-bit build, the one that gets patched and
-          # rebuilt locally.
+          # ccache only for the 64-bit build.
           package = overrideMesa (pkgs.mesa.override (
             lib.optionalAttrs ccache.enable { stdenv = ccache.wrapStdenv pkgs.mesa.stdenv; }
-          )) cfg.mesa.patches;
-          package32 = overrideMesa pkgs.pkgsi686Linux.mesa [ ];
+          ));
+          package32 = overrideMesa pkgs.pkgsi686Linux.mesa;
         };
     };
   };
