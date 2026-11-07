@@ -12,8 +12,8 @@ let
   # keeps readable on base00.
   faded = alpha: "#${alpha}${colors.base05}";
 
-  # Noctalia's avatar, if it has one, and where yokoso looks for it.
-  avatar = hm.programs.noctalia.settings.shell.avatar_path or "";
+  # The avatar, and where yokoso looks for it.
+  avatar = "${hm.home.homeDirectory}/pictures/.face.webp";
   icon = "/var/lib/AccountsService/icons/${username}";
 in
 {
@@ -39,7 +39,7 @@ in
         enable = true;
         # `yokoso lock` too, with its PAM service: the greeter's look over
         # the session, and its only lock (niri's Mod+L), at logind's Lock as
-        # well (the lid, the sleep key, Noctalia's idle).
+        # well (the lid, the sleep key, okaeri's idle).
         lock = {
           enable = true;
           logind = true;
@@ -81,7 +81,7 @@ in
       };
     };
 
-    # Noctalia's avatar on the login screen too. It lives in the home
+    # The avatar on the login screen. It lives in the home
     # directory, which the greeter can't read (and this repository is public),
     # so a PNG copy goes where yokoso looks: AccountsService's icons, before
     # the greeter starts and whenever the picture changes.

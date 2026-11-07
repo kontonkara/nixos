@@ -171,9 +171,18 @@ in
                         (kdl.leaf "corner-radius" 4.0)
                       ])
                     ];
+
+                    # What okaeri needs of niri: the shell keeps this file itself.
+                    okaeriRules = kdl.leaf "include" [
+                      { optional = true; }
+                      "~/.local/state/okaeri/niri.kdl"
+                    ];
                   in
                   map addExtra (lib.remove null (lib.flatten options.programs.niri.config.default))
-                  ++ [ recentWindows ];
+                  ++ [
+                    recentWindows
+                    okaeriRules
+                  ];
 
                 settings =
                   let

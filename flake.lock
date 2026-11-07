@@ -561,6 +561,26 @@
         "type": "github"
       }
     },
+    "okaeri": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794040020,
+        "narHash": "sha256-T1L0XR4OKPW3jhL9VNCe2bgkLBTSwp3XsRckq5A/MnY=",
+        "owner": "kontonkara",
+        "repo": "okaeri",
+        "rev": "77e1cad930b3f6e875e506c093460e1e90c4ce59",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kontonkara",
+        "repo": "okaeri",
+        "type": "github"
+      }
+    },
     "pyproject-build-systems": {
       "inputs": {
         "nixpkgs": [
@@ -618,6 +638,7 @@
         "nix-optimized": "nix-optimized",
         "nixpak": "nixpak",
         "nixpkgs": "nixpkgs_3",
+        "okaeri": "okaeri",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
         "ryukaze": "ryukaze",

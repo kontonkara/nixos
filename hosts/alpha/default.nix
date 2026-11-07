@@ -84,7 +84,7 @@
       zed.enable = true;
       prismlauncher.enable = true;
       niri.enable = true;
-      noctalia.enable = true;
+      okaeri.enable = true;
       xdg.enable = true;
       gtk.enable = true;
       dconf.enable = true;

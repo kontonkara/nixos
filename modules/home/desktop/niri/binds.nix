@@ -14,60 +14,60 @@
     action.spawn = [ "thunar" ];
   };
   "Mod+R" = {
-    hotkey-overlay.title = "Run an Application: Noctalia";
-    action.spawn-sh = "noctalia msg panel-toggle launcher";
+    hotkey-overlay.title = "Run an Application: okaeri";
+    action.spawn = [ "okaeri" "launcher" "toggle" ];
   };
   "Mod+L" = {
     hotkey-overlay.title = "Lock the Screen: yokoso";
     action.spawn = [ "yokoso" "lock" ];
   };
   "Mod+P" = {
-    hotkey-overlay.title = "Session Menu: Noctalia";
-    action.spawn-sh = "noctalia msg panel-toggle session";
+    hotkey-overlay.title = "Session Menu: okaeri";
+    action.spawn = [ "okaeri" "session" "toggle" ];
   };
 
-  # Volume, brightness and media go through Noctalia so its OSD shows.
+  # Volume, brightness and media go through okaeri so its OSD shows.
   "XF86AudioRaiseVolume" = {
     allow-when-locked = true;
-    action.spawn-sh = "noctalia msg volume-up 10";
+    action.spawn = [ "okaeri" "volume" "up" "10" ];
   };
   "XF86AudioLowerVolume" = {
     allow-when-locked = true;
-    action.spawn-sh = "noctalia msg volume-down 10";
+    action.spawn = [ "okaeri" "volume" "down" "10" ];
   };
   "XF86AudioMute" = {
     allow-when-locked = true;
-    action.spawn-sh = "noctalia msg volume-mute";
+    action.spawn = [ "okaeri" "volume" "mute" ];
   };
   "XF86AudioMicMute" = {
     allow-when-locked = true;
-    action.spawn-sh = "noctalia msg mic-mute";
+    action.spawn = [ "okaeri" "mic" "mute" ];
   };
 
   "XF86AudioPlay" = {
     allow-when-locked = true;
-    action.spawn-sh = "noctalia msg media toggle";
+    action.spawn = [ "okaeri" "media" "toggle" ];
   };
   "XF86AudioStop" = {
     allow-when-locked = true;
-    action.spawn-sh = "noctalia msg media stop";
+    action.spawn = [ "okaeri" "media" "stop" ];
   };
   "XF86AudioPrev" = {
     allow-when-locked = true;
-    action.spawn-sh = "noctalia msg media previous";
+    action.spawn = [ "okaeri" "media" "previous" ];
   };
   "XF86AudioNext" = {
     allow-when-locked = true;
-    action.spawn-sh = "noctalia msg media next";
+    action.spawn = [ "okaeri" "media" "next" ];
   };
 
   "XF86MonBrightnessUp" = {
     allow-when-locked = true;
-    action.spawn-sh = "noctalia msg brightness-up 10";
+    action.spawn = [ "okaeri" "brightness" "up" "10" ];
   };
   "XF86MonBrightnessDown" = {
     allow-when-locked = true;
-    action.spawn-sh = "noctalia msg brightness-down 10";
+    action.spawn = [ "okaeri" "brightness" "down" "10" ];
   };
 
   # Fn+F7, MSI Center's scenario key.

@@ -80,6 +80,10 @@
       url = "github:kontonkara/yokoso";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    okaeri = {
+      url = "github:kontonkara/okaeri";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     ryukaze = {
       url = "github:kontonkara/ryukaze";
       inputs.nixpkgs.follows = "nixpkgs";
