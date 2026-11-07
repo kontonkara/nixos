@@ -61,6 +61,7 @@
       starship.enable = true;
       yazi.enable = true;
       thunar.enable = true;
+      imv.enable = true;
       zoxide.enable = true;
       eza.enable = true;
       vivid.enable = true;
