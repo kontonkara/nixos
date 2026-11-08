@@ -61,7 +61,7 @@ in
           inherit (hmStylix.cursor) package name size;
         };
 
-        # The desktop's palette, accent and font. No wallpaper: Noctalia's
+        # The desktop's palette, accent and font. No wallpaper: okaeri's
         # live in the home directory the greeter can't read.
         themes = lib.mkIf hmStylix.enable {
           stylix = {

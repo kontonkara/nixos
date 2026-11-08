@@ -3,7 +3,7 @@
 ❄️ my nixos configuration
 
 A flake for `alpha`, an MSI Alpha 17 C7VG (Ryzen 9 7940HX, Radeon 610M with an
-RTX 4070 over PRIME): niri with the Noctalia shell, Home Manager, stylix
+RTX 4070 over PRIME): niri with the okaeri shell, Home Manager, stylix
 (Catppuccin Mocha with a peach accent) and sops-nix.
 
 ## Layout
@@ -24,7 +24,7 @@ modules/
                     yandex-browser-corporate, …
   home/             Home Manager, set from NixOS modules through
                     home-manager.users.<name>
-    desktop/          niri, noctalia, stylix, gtk, xdg, dconf
+    desktop/          niri, okaeri, stylix, gtk, xdg, dconf
     dotfiles/         one module per configured tool
     apps/             plain packages without settings
 users/            accounts
@@ -43,7 +43,6 @@ host's directory are imported for that host.
 | Package | Patch | What it does |
 | --- | --- | --- |
 | niri | `modules/home/desktop/niri/niri-scaling-mode.patch` | `scaling-mode` output option and `niri msg output <name> scaling-mode` |
-| noctalia | `modules/home/desktop/noctalia/hide-settings-button.patch` | no Settings button in the Control Center header |
 | zed-editor | `modules/home/dotfiles/zed/patches/smooth-scroll.patch` | eased editor scrolling behind `smooth_scroll.enabled` (zed#44827) |
 | sunshine | `modules/system/services/sunshine/unicode-via-wtype.patch` | text from Moonlight typed through wtype instead of Ctrl+Shift+U |
 | iwlwifi | `pkgs/iwlwifi-lar/lar_disable.patch` | brings back the `lar_disable` module parameter |

@@ -32,8 +32,8 @@ in
       extraLocales = [
         "ru_RU.UTF-8/UTF-8"
       ];
-      # English UI, but 24h clock / Monday-first weeks (noctalia's calendar
-      # reads LC_TIME), A4 and metric units. Named locales get generated too.
+      # English UI, but 24h clock / Monday-first weeks (calendars read
+      # LC_TIME), A4 and metric units. Named locales get generated too.
       extraLocaleSettings = {
         LC_TIME = "en_GB.UTF-8";
         LC_PAPER = "en_GB.UTF-8";

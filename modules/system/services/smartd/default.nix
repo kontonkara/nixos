@@ -22,8 +22,9 @@ in
         enable = true;
         # Every disk it finds (autodetect), with all SMART/NVMe health checks.
         notifications = {
-          # To the desktop (Noctalia) through systembus-notify, which runs as
-          # the user; its spam risk is other local users, and there are none.
+          # To the desktop's notifications through systembus-notify, which
+          # runs as the user; its spam risk is other local users, and there
+          # are none.
           systembus-notify = {
             enable = true;
           };

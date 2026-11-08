@@ -193,7 +193,7 @@ in
                     inherit (cfg) outputs;
                     layout = import ./layout.nix { inherit colors accent; };
                     inherit (decoration) prefer-no-csd animations;
-                    inherit (rules) window-rules layer-rules;
+                    inherit (rules) window-rules;
                     binds =
                       import ./binds.nix
                       // lib.optionalAttrs (cfg.stretch != null) {
@@ -210,9 +210,9 @@ in
                     screenshot-path = "~/pictures/screenshots/%Y-%m-%dT%H:%M:%S.png";
 
                     debug = {
-                      # Noctalia niri guide: lets notification actions and tray
-                      # clicks focus apps (Telegram, Electron) that send
-                      # activation tokens with invalid serials.
+                      # Lets notification actions and tray clicks focus apps
+                      # (Telegram, Electron) that send activation tokens with
+                      # invalid serials.
                       honor-xdg-activation-with-invalid-serial = [ ];
                     };
                   };

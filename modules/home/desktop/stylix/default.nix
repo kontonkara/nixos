@@ -151,7 +151,7 @@ in
               # The palette stays true: base0D is ANSI blue in terminals and
               # functions in syntax themes. The UI targets below paint their
               # own accent slot with the accent instead.
-              # No stylix.image: the scheme is explicit and Noctalia owns the
+              # No stylix.image: the scheme is explicit and okaeri owns the
               # wallpaper (~/pictures/wallpapers).
 
               # Only the targets below: with autoEnable every other target
@@ -226,16 +226,6 @@ in
                 # colors.override; modules.home.niri sets the active border.
                 niri = {
                   enable = true;
-                };
-                # Custom "stylix" palette (bar, launcher, lock screen), dark
-                # mode, font and opacity. mPrimary is base0D; so is the
-                # palette's terminal blue, which only Noctalia's templates
-                # read, and those are off.
-                noctalia = {
-                  enable = true;
-                  colors = {
-                    override = accentFor [ "base0D" ];
-                  };
                 };
                 kitty = {
                   enable = true;

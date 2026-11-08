@@ -91,10 +91,10 @@ in
                 # Nova (the browser.nova.enabled design) rounds everything
                 # from these tokens, 4 to 24 px: tabs, buttons and the urlbar
                 # take xlarge, menus large. Corners here match the desktop
-                # instead: 4 px like Noctalia's bar and capsules, 2 px for the
-                # smallest bits like niri's windows. The circle token stays,
-                # so avatars and toggles keep their shape. User sheets only
-                # win over Firefox's own with !important.
+                # instead: 4 px for most, 2 px for the smallest bits like
+                # niri's windows. The circle token stays, so avatars and
+                # toggles keep their shape. User sheets only win over
+                # Firefox's own with !important.
                 userChrome = radiusTokens;
                 # The same for about: pages (new tab, settings, add-ons).
                 userContent = ''

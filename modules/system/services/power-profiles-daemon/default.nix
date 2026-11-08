@@ -20,7 +20,7 @@ in
     # With amd-pstate in active mode PPD drives EPP, boost and the governor.
     # ryukazed sets its profile from the EC shift mode (turbo on AC is
     # performance, eco on battery power-saver) and follows a profile picked in
-    # Noctalia. "balanced" itself follows UPower's on-battery state
+    # okaeri. "balanced" itself follows UPower's on-battery state
     # (balance_performance on AC, balance_power on battery). Keep
     # amd_dynamic_epp off: it fights PPD over EPP.
     services = {

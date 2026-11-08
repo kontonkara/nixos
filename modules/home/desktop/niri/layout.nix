@@ -4,8 +4,8 @@
 {
   gaps = 16;
 
-  # Shown for the ~0.5 s between niri's first frame and Noctalia's wallpaper
-  # (Noctalia fades it in from here); niri's default is a flat gray.
+  # Shown between niri's first frame and the shell's wallpaper; niri's
+  # default is a flat gray.
   background-color = colors.base00;
 
   center-focused-column = "never";
