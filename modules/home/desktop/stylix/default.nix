@@ -256,8 +256,7 @@ in
                 zed = {
                   enable = true;
                 };
-                # Theme and color.ini; modules.home.spotify remaps the roles to
-                # the accent and adds the font.
+                # Theme and color.ini for spicetify (modules.home.spotify).
                 spicetify = {
                   enable = true;
                 };
