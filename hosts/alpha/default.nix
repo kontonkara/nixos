@@ -184,12 +184,17 @@
         upower.enable = true;
         yokoso.enable = true;
 
-        freetoken = {
+        strata = {
           enable = true;
           models = {
-            ornith = "/data/models/Ornith-1.5-35B-A3B-NVFP4";
+            swift = {
+              gguf = "/data/models/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS/Swift-Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf";
+              pack = "/data/models/strata/data/packs/swift-iq3_xxs";
+              mtp = "/data/models/strata/data/mtp/rt";
+              servedName = "swift-1.5-iq3_xxs";
+            };
           };
-          default = "ornith";
+          default = "swift";
         };
 
         ryukaze = {

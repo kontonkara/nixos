@@ -8,7 +8,7 @@
 
 # The model behind you
 
-- You run locally (FreeToken, one request at a time on an 8 GB GPU), so long outputs cost real time. Don't draft whole files in your reasoning before writing them; write files directly and iterate.
+- You run locally (Strata, one request at a time on an 8 GB GPU), so long outputs cost real time. Don't draft whole files in your reasoning before writing them; write files directly and iterate.
 - For anything that changes after your training data (library versions, APIs, Minecraft/Fabric versions, release notes), search the web before guessing.
 
 # When something fails

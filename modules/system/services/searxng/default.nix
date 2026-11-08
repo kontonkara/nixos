@@ -3,8 +3,8 @@
 let
   cfg = config.modules.system.services.searxng;
 
-  freetoken = config.modules.system.services.freetoken;
-  freetokenUnits = map (name: "freetoken-${name}.service") (lib.attrNames freetoken.models);
+  strata = config.modules.system.services.strata;
+  strataUnits = map (name: "strata-${name}.service") (lib.attrNames strata.models);
 
   host = "127.0.0.1";
   port = 8888;
@@ -83,10 +83,10 @@ in
         };
 
         # Runs only beside the model server: started and stopped with any
-        # freetoken-<name> unit instead of at boot.
+        # strata-<name> unit instead of at boot.
         searx = {
-          wantedBy = lib.mkForce freetokenUnits;
-          partOf = freetokenUnits;
+          wantedBy = lib.mkForce strataUnits;
+          partOf = strataUnits;
         };
       };
     };

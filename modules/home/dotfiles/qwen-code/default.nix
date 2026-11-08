@@ -3,7 +3,7 @@
 let
   cfg = config.modules.home.qwen-code;
 
-  llm = config.modules.system.services.freetoken;
+  llm = config.modules.system.services.strata;
   server = llm.settings;
 
   searxng = config.modules.system.services.searxng;
@@ -97,7 +97,7 @@ in
                   # compress the history too late for the server's window.
                   model = {
                     generationConfig = {
-                      contextWindowSize = server.num-tokens;
+                      contextWindowSize = server.context;
                     };
                   };
                 }
@@ -143,7 +143,7 @@ in
                 text = ''
                   OPENAI_API_KEY=local
                   OPENAI_BASE_URL=http://${server.host}:${toString server.port}/v1
-                  OPENAI_MODEL=${llm.default}
+                  OPENAI_MODEL=${llm.models.${llm.default}.servedName}
                 '';
               };
             };

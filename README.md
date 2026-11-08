@@ -29,7 +29,7 @@ modules/
     apps/             plain packages without settings
 users/            accounts
 pkgs/             local packages: yandex-browser-corporate, msi-ec,
-                  iwlwifi-lar
+                  iwlwifi-lar, strata
 secrets/          sops-encrypted secrets
 ```
 
