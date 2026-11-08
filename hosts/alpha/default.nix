@@ -103,7 +103,6 @@
     programs = {
       fish.enable = true;
       gamemode.enable = true;
-      gamescope.enable = true;
       nh.enable = true;
       nix-ld.enable = true;
       steam.enable = true;

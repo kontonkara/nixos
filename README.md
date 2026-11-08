@@ -20,7 +20,7 @@ modules/
   system/           NixOS: boot, kernel, storage, disko (the one-disk
                     layout), backup, graphics, network, secrets, services,
                     virtualisation, …
-  programs/         programs with a system side: steam, gamescope, gamemode,
+  programs/         programs with a system side: steam, gamemode,
                     yandex-browser-corporate, …
   home/             Home Manager, set from NixOS modules through
                     home-manager.users.<name>
