@@ -25,7 +25,9 @@ in
               # for 1.17-1.20.4, 21 from 1.20.5, 25 for the newest.
               package = pkgs.prismlauncher.override {
                 jdks = with pkgs; [
-                  zulu8
+                  # Without GTK: below 17 it links gtk2, which nixpkgs marks
+                  # broken. Minecraft draws through LWJGL, not AWT's GTK.
+                  (zulu8.override { gtkSupport = false; })
                   zulu17
                   zulu21
                   zulu25
