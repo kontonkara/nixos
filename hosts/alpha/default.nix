@@ -172,6 +172,7 @@
 
       services = {
         gvfs.enable = true;
+        lact.enable = true;
         power-profiles-daemon.enable = true;
         searxng.enable = true;
         smartd.enable = true;
