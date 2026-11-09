@@ -35,6 +35,10 @@ in
               android-tools
               zoom-us
               ankiWithAddons
+              protonplus
+              # Without the dialog about running an unofficial build at every
+              # start.
+              (bottles.override { removeWarningPopup = true; })
               kdePackages.kdenlive
               # AMD backend only: the NVIDIA one calls nvmlInit at start-up and
               # keeps the RTX out of D3cold while nvtop is open.

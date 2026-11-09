@@ -75,7 +75,7 @@ in
                 model = "opus[1m]";
                 modelSettings = {
                   claude-opus-5-5 = {
-                    effortLevel = "xhigh";
+                    effortLevel = "high";
                   };
                 };
                 theme = "auto";
