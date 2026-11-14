@@ -1,14 +1,13 @@
 Smooth (eased) editor scrolling behind `smooth_scroll.enabled`, off by default.
 
-Based on zed-industries/zed#44827 (closed unmerged), rebased onto Zed 1.20.2.
+Based on zed-industries/zed#44827 (closed unmerged), rebased onto Zed 1.27.0.
 With the setting off every scroll path is upstream's; with it on, mouse wheel
 and scroll actions animate over 125 ms with a cubic ease-out.
 
 diff --git a/assets/settings/default.json b/assets/settings/default.json
-index 3f1eca5..e26c6d6 100644
 --- a/assets/settings/default.json
 +++ b/assets/settings/default.json
-@@ -784,6 +784,10 @@
+@@ -806,6 +806,10 @@
    // to both the horizontal and vertical delta values while scrolling. Fast scrolling
    // happens when a user holds the alt or option key while scrolling.
    "fast_scroll_sensitivity": 4.0,
@@ -20,10 +19,9 @@ index 3f1eca5..e26c6d6 100644
      // Whether to stick scopes to the top of the editor.
      "enabled": false,
 diff --git a/crates/editor/src/editor.rs b/crates/editor/src/editor.rs
-index 9602d85..25e8b9e 100644
 --- a/crates/editor/src/editor.rs
 +++ b/crates/editor/src/editor.rs
-@@ -10208,6 +10208,7 @@ impl Editor {
+@@ -10389,6 +10389,7 @@
          {
              let editor_settings = EditorSettings::get_global(cx);
              self.scroll_manager.vertical_scroll_margin = editor_settings.vertical_scroll_margin;
@@ -32,10 +30,9 @@ index 9602d85..25e8b9e 100644
                  != editor_settings.toolbar.breadcrumbs
              {
 diff --git a/crates/editor/src/editor_settings.rs b/crates/editor/src/editor_settings.rs
-index a06564c..6365c06 100644
 --- a/crates/editor/src/editor_settings.rs
 +++ b/crates/editor/src/editor_settings.rs
-@@ -39,6 +39,7 @@ pub struct EditorSettings {
+@@ -39,6 +39,7 @@
      pub scroll_sensitivity: f32,
      pub mouse_wheel_zoom: bool,
      pub fast_scroll_sensitivity: f32,
@@ -43,7 +40,7 @@ index a06564c..6365c06 100644
      pub sticky_scroll: StickyScroll,
      pub relative_line_numbers: RelativeLineNumbers,
      pub seed_search_query_from_cursor: SeedQuerySetting,
-@@ -99,6 +100,11 @@ pub struct StickyScroll {
+@@ -99,6 +100,11 @@
      pub enabled: bool,
  }
  
@@ -55,7 +52,7 @@ index a06564c..6365c06 100644
  #[derive(Clone, Debug, PartialEq, Eq)]
  pub struct Toolbar {
      pub breadcrumbs: bool,
-@@ -225,6 +231,7 @@ impl Settings for EditorSettings {
+@@ -225,6 +231,7 @@
          let drag_and_drop_selection = editor.drag_and_drop_selection.unwrap();
          let sticky_scroll = editor.sticky_scroll.unwrap();
          let file_diff = content.git.as_ref().unwrap().file_diff.unwrap();
@@ -63,7 +60,7 @@ index a06564c..6365c06 100644
          Self {
              cursor_blink: editor.cursor_blink.unwrap(),
              cursor_shape: editor.cursor_shape.map(Into::into),
-@@ -290,6 +297,9 @@ impl Settings for EditorSettings {
+@@ -290,6 +297,9 @@
              scroll_sensitivity: editor.scroll_sensitivity.unwrap(),
              mouse_wheel_zoom: editor.mouse_wheel_zoom.unwrap(),
              fast_scroll_sensitivity: editor.fast_scroll_sensitivity.unwrap(),
@@ -73,40 +70,10 @@ index a06564c..6365c06 100644
              sticky_scroll: StickyScroll {
                  enabled: sticky_scroll.enabled.unwrap(),
              },
-diff --git a/crates/editor/src/element.rs b/crates/editor/src/element.rs
-index 2f7cbb1..71230b4 100644
---- a/crates/editor/src/element.rs
-+++ b/crates/editor/src/element.rs
-@@ -8164,6 +8164,11 @@ impl Element for EditorElement {
-                         );
-                         editor.set_visible_column_count(f64::from(editor_width / em_advance));
- 
-+                        let scroll_animation_step = editor.step_scroll_animation(window, cx);
-+                        if scroll_animation_step == Some(true) {
-+                            window.request_animation_frame();
-+                        }
-+
-                         if matches!(
-                             editor.mode,
-                             EditorMode::AutoHeight { .. } | EditorMode::Minimap { .. }
-@@ -8176,7 +8181,11 @@ impl Element for EditorElement {
-                                 em_layout_width,
-                             );
- 
--                            if editor.set_wrap_width(wrap_width, cx) {
-+                            // Re-snapshot after a scroll animation step so this
-+                            // frame already shows it.
-+                            if editor.set_wrap_width(wrap_width, cx)
-+                                || scroll_animation_step.is_some()
-+                            {
-                                 editor.snapshot(window, cx)
-                             } else {
-                                 snapshot
 diff --git a/crates/editor/src/element/mouse.rs b/crates/editor/src/element/mouse.rs
-index 7db3f77..0552d10 100644
 --- a/crates/editor/src/element/mouse.rs
 +++ b/crates/editor/src/element/mouse.rs
-@@ -485,7 +485,6 @@ impl EditorElement {
+@@ -490,7 +490,6 @@
              let position_map = layout.position_map.clone();
              let editor = self.editor.clone();
              let hitbox = layout.hitbox.clone();
@@ -114,16 +81,16 @@ index 7db3f77..0552d10 100644
  
              // Set a minimum scroll_sensitivity of 0.01 to make sure the user doesn't
              // accidentally turn off their scrolling.
-@@ -499,8 +498,6 @@ impl EditorElement {
+@@ -504,8 +503,6 @@
  
-             move |event: &ScrollWheelEvent, phase, window, cx| {
+             move |event: &ScrollEvent, phase, window, cx| {
                  if phase == DispatchPhase::Bubble && hitbox.should_handle_scroll(window) {
 -                    delta = delta.coalesce(event.delta);
 -
-                     if event.modifiers.secondary()
+                     if event.modifiers.secondary(cx)
                          && editor.read(cx).enable_mouse_wheel_zoom
                          && EditorSettings::get_global(cx).mouse_wheel_zoom
-@@ -529,7 +526,7 @@ impl EditorElement {
+@@ -534,7 +531,7 @@
                          editor.update(cx, |editor, cx| {
                              let line_height = position_map.line_height;
                              let glyph_width = position_map.em_layout_width;
@@ -132,7 +99,7 @@ index 7db3f77..0552d10 100644
                                  gpui::ScrollDelta::Pixels(mut pixels) => {
                                      //Trackpad
                                      editor
-@@ -544,7 +541,15 @@ impl EditorElement {
+@@ -549,7 +546,15 @@
                                  }
                              };
  
@@ -149,11 +116,57 @@ index 7db3f77..0552d10 100644
                              let x = (current_scroll_position.x
                                  * ScrollPixelOffset::from(glyph_width)
                                  - ScrollPixelOffset::from(delta.x * scroll_sensitivity))
+diff --git a/crates/editor/src/element.rs b/crates/editor/src/element.rs
+--- a/crates/editor/src/element.rs
++++ b/crates/editor/src/element.rs
+@@ -8653,6 +8653,11 @@
+                         );
+                         editor.set_visible_column_count(f64::from(editor_width / em_advance));
+ 
++                        let scroll_animation_step = editor.step_scroll_animation(window, cx);
++                        if scroll_animation_step == Some(true) {
++                            window.request_animation_frame();
++                        }
++
+                         if matches!(
+                             editor.mode,
+                             EditorMode::AutoHeight { .. } | EditorMode::Minimap { .. }
+@@ -8665,7 +8670,11 @@
+                                 em_layout_width,
+                             );
+ 
+-                            if editor.set_wrap_width(wrap_width, cx) {
++                            // Re-snapshot after a scroll animation step so this
++                            // frame already shows it.
++                            if editor.set_wrap_width(wrap_width, cx)
++                                || scroll_animation_step.is_some()
++                            {
+                                 editor.snapshot(window, cx)
+                             } else {
+                                 snapshot
+diff --git a/crates/editor/src/scroll/actions.rs b/crates/editor/src/scroll/actions.rs
+--- a/crates/editor/src/scroll/actions.rs
++++ b/crates/editor/src/scroll/actions.rs
+@@ -28,7 +28,14 @@
+         window: &mut Window,
+         cx: &mut Context<Self>,
+     ) {
+-        self.set_scroll_position(scroll_position, window, cx);
++        if self.scroll_manager.smooth_scroll {
++            let current_position = self.scroll_position(cx);
++            self.scroll_manager
++                .animate_scroll_to(current_position, scroll_position);
++            cx.notify();
++        } else {
++            self.set_scroll_position(scroll_position, window, cx);
++        }
+     }
+ 
+     pub fn scroll_cursor_center_top_bottom(
 diff --git a/crates/editor/src/scroll.rs b/crates/editor/src/scroll.rs
-index 4183365..ca549aa 100644
 --- a/crates/editor/src/scroll.rs
 +++ b/crates/editor/src/scroll.rs
-@@ -20,12 +20,16 @@ use language::language_settings::{AllLanguageSettings, SoftWrap};
+@@ -20,12 +20,16 @@
  use language::{Bias, Point};
  pub use scroll_amount::ScrollAmount;
  use settings::Settings;
@@ -171,7 +184,7 @@ index 4183365..ca549aa 100644
  
  pub struct WasScrolled(pub(crate) bool);
  
-@@ -136,8 +140,231 @@ impl ActiveScrollbarState {
+@@ -136,8 +140,231 @@
      }
  }
  
@@ -403,7 +416,7 @@ index 4183365..ca549aa 100644
      anchor: Entity<SharedScrollAnchor>,
      /// Value to be used for clamping the x component of the SharedScrollAnchor's offset.
      ///
-@@ -163,17 +390,22 @@ pub struct ScrollManager {
+@@ -163,17 +390,22 @@
      visible_column_count: Option<f64>,
      forbid_vertical_scroll: bool,
      minimap_thumb_state: Option<ScrollbarThumbState>,
@@ -427,7 +440,7 @@ index 4183365..ca549aa 100644
              anchor,
              scroll_max_x: None,
              ongoing: OngoingScroll::default(),
-@@ -186,6 +418,7 @@ impl ScrollManager {
+@@ -186,6 +418,7 @@
              visible_column_count: None,
              forbid_vertical_scroll: false,
              minimap_thumb_state: None,
@@ -435,7 +448,7 @@ index 4183365..ca549aa 100644
              _save_scroll_position_task: Task::ready(()),
          }
      }
-@@ -314,19 +547,14 @@ impl ScrollManager {
+@@ -314,19 +547,14 @@
          pos
      }
  
@@ -462,7 +475,7 @@ index 4183365..ca549aa 100644
              ScrollBeyondLastLine::OnePage => scroll_top,
              ScrollBeyondLastLine::Off => {
                  if let Some(height_in_lines) = self.visible_line_count {
-@@ -346,7 +574,45 @@ impl ScrollManager {
+@@ -346,7 +574,45 @@
                      scroll_top
                  }
              }
@@ -508,7 +521,7 @@ index 4183365..ca549aa 100644
          let scroll_top_row = DisplayRow(scroll_top as u32);
          let scroll_top_buffer_point = map
              .clip_point(
-@@ -356,22 +622,36 @@ impl ScrollManager {
+@@ -356,22 +622,36 @@
              .to_point(map);
          let top_anchor = map.buffer_snapshot().anchor_before(scroll_top_buffer_point);
  
@@ -561,7 +574,7 @@ index 4183365..ca549aa 100644
      }
  
      fn set_anchor(
-@@ -397,6 +677,7 @@ impl ScrollManager {
+@@ -397,6 +677,7 @@
  
          self.scroll_max_x.take();
          self.autoscroll_request.take();
@@ -569,7 +582,7 @@ index 4183365..ca549aa 100644
  
          let current = self.anchor.read(cx);
          if current.scroll_anchor == adjusted_anchor {
-@@ -574,6 +855,39 @@ impl ScrollManager {
+@@ -574,6 +855,39 @@
      pub fn forbid_vertical_scroll(&self) -> bool {
          self.forbid_vertical_scroll
      }
@@ -609,7 +622,7 @@ index 4183365..ca549aa 100644
  }
  
  impl Editor {
-@@ -678,19 +992,26 @@ impl Editor {
+@@ -678,19 +992,26 @@
          window: &mut Window,
          cx: &mut Context<Editor>,
      ) {
@@ -648,7 +661,7 @@ index 4183365..ca549aa 100644
      }
  
      pub(crate) fn set_scroll_position_internal(
-@@ -820,7 +1141,12 @@ impl Editor {
+@@ -820,7 +1141,12 @@
              return;
          }
  
@@ -662,7 +675,7 @@ index 4183365..ca549aa 100644
          let Some(visible_line_count) = self.visible_line_count() else {
              return;
          };
-@@ -858,7 +1184,8 @@ impl Editor {
+@@ -858,7 +1184,8 @@
                  amount.columns(visible_column_count),
                  amount.lines(visible_line_count),
              );
@@ -672,7 +685,7 @@ index 4183365..ca549aa 100644
      }
  
      pub fn scroll_screen_with_cursor_margin(
-@@ -990,4 +1317,199 @@ impl Editor {
+@@ -990,4 +1317,199 @@
              self.set_scroll_anchor(scroll_anchor, window, cx);
          }
      }
@@ -872,31 +885,10 @@ index 4183365..ca549aa 100644
 +        });
 +    }
  }
-diff --git a/crates/editor/src/scroll/actions.rs b/crates/editor/src/scroll/actions.rs
-index 53c3900..4953156 100644
---- a/crates/editor/src/scroll/actions.rs
-+++ b/crates/editor/src/scroll/actions.rs
-@@ -28,7 +28,14 @@ impl Editor {
-         window: &mut Window,
-         cx: &mut Context<Self>,
-     ) {
--        self.set_scroll_position(scroll_position, window, cx);
-+        if self.scroll_manager.smooth_scroll {
-+            let current_position = self.scroll_position(cx);
-+            self.scroll_manager
-+                .animate_scroll_to(current_position, scroll_position);
-+            cx.notify();
-+        } else {
-+            self.set_scroll_position(scroll_position, window, cx);
-+        }
-     }
- 
-     pub fn scroll_cursor_center_top_bottom(
 diff --git a/crates/settings/src/vscode_import.rs b/crates/settings/src/vscode_import.rs
-index 997625f..7e8318d 100644
 --- a/crates/settings/src/vscode_import.rs
 +++ b/crates/settings/src/vscode_import.rs
-@@ -286,6 +286,7 @@ impl VsCodeSettings {
+@@ -288,6 +288,7 @@
              excerpt_context_lines: None,
              expand_excerpt_lines: None,
              fast_scroll_sensitivity: self.read_f32("editor.fastScrollSensitivity"),
@@ -905,10 +897,9 @@ index 997625f..7e8318d 100644
              go_to_definition_fallback: None,
              go_to_definition_scroll_strategy: None,
 diff --git a/crates/settings_content/src/editor.rs b/crates/settings_content/src/editor.rs
-index 23ff824..8b3ff9b 100644
 --- a/crates/settings_content/src/editor.rs
 +++ b/crates/settings_content/src/editor.rs
-@@ -110,6 +110,10 @@ pub struct EditorSettingsContent {
+@@ -110,6 +110,10 @@
      /// Default: 4.0
      #[serde(serialize_with = "crate::serialize_optional_f32_with_two_decimal_places")]
      pub fast_scroll_sensitivity: Option<f32>,
@@ -919,7 +910,7 @@ index 23ff824..8b3ff9b 100644
      /// Settings for sticking scopes to the top of the editor.
      ///
      /// Default: sticky scroll is disabled
-@@ -448,6 +452,16 @@ pub struct StickyScrollContent {
+@@ -448,6 +452,16 @@
      pub enabled: Option<bool>,
  }
  
