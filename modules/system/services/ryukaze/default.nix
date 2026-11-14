@@ -92,13 +92,14 @@ in
           };
         };
         settings = {
-          # On AC the performance scenario (turbo, auto fans, super battery
-          # off); on battery eco with super battery. ryukazed leaves super
+          # On AC the balanced scenario (comfort, auto fans, super battery
+          # off): turbo holds the clocks up at idle, and gamemode raises it
+          # for a game. On battery eco with super battery. ryukazed leaves super
           # battery before raising the shift mode and enters it after lowering
           # it, and keeps power-profiles-daemon in step with the shift mode.
           profiles = {
             ac = {
-              scenario = "performance";
+              scenario = "balanced";
             };
             battery = {
               shift_mode = "eco";
