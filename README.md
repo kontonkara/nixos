@@ -46,3 +46,4 @@ host's directory are imported for that host.
 | zed-editor | `modules/home/dotfiles/zed/patches/smooth-scroll.patch` | eased editor scrolling behind `smooth_scroll.enabled` (zed#44827) |
 | sunshine | `modules/system/services/sunshine/unicode-via-wtype.patch` | text from Moonlight typed through wtype instead of Ctrl+Shift+U |
 | iwlwifi | `pkgs/iwlwifi-lar/lar_disable.patch` | brings back the `lar_disable` module parameter |
+| xwayland-satellite | two upstream commits in `modules/system/packages` | X11 follows output mode changes (fixed upstream after 0.8.3) |
