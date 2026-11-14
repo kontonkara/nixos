@@ -20,9 +20,10 @@ in
               vulkanDrivers = [
                 "amd"
               ];
+              # No anti-lag layer since Mesa 26.3: RADV implements
+              # VK_AMD_anti_lag itself.
               vulkanLayers = [
                 "device-select"
-                "anti-lag"
                 "overlay"
               ];
               withValgrind = false;
@@ -38,8 +39,6 @@ in
                     pkgs.lib.mesonOption "optimization" (toString cfg.mesa.optimizationLevel)
                   )
                   ++ lib.optional cfg.mesa.disableAssertions (pkgs.lib.mesonOption "b_ndebug" "true");
-
-                outputs = lib.filter (out: out != "spirv2dxil") oldAttrs.outputs;
               });
         in
         {
