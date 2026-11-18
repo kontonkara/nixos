@@ -172,7 +172,6 @@
 
       services = {
         gvfs.enable = true;
-        lact.enable = true;
         power-profiles-daemon.enable = true;
         searxng.enable = true;
         smartd.enable = true;
@@ -184,6 +183,25 @@
         udisks2.enable = true;
         upower.enable = true;
         yokoso.enable = true;
+
+        # RTX undervolt, tested with FurMark 2026-11-18: +300 hangs, +250
+        # held, +200 kept for margin. The cap stops the curve at 2400 MHz /
+        # 890 mV (stock: up to 2655 MHz / 1.1 V); a game-like load drew 95 W
+        # at 61 °C instead of 116 W at 73 °C with thermal throttling, 2% fps
+        # less. Survives runtime D3. Stop lactd to return to stock.
+        lact = {
+          enable = true;
+          gpus = {
+            "10DE:2820-1462:13ED-0000:01:00.0" = {
+              fan_control_enabled = false;
+              min_core_clock = 210;
+              max_core_clock = 2400;
+              gpu_clock_offsets = {
+                "0" = 200;
+              };
+            };
+          };
+        };
 
         strata = {
           enable = true;
