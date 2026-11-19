@@ -11,8 +11,8 @@
 }:
 
 let
-  release = "0.2.12";
-  component = "0.1.58";
+  release = "0.2.16";
+  component = "0.1.62";
   base = "https://github.com/Niko1221/Strata/releases/download/v${release}";
 in
 stdenvNoCC.mkDerivation {
@@ -25,11 +25,11 @@ stdenvNoCC.mkDerivation {
   srcs = [
     (fetchurl {
       url = "${base}/strata-control-${component}-linux-x86_64.tar.gz";
-      hash = "sha256-/M5Me5D1nE8Q8WGBpxkLOr55+q28nu84J4/cY14CiBc=";
+      hash = "sha256-BFtqfX+/vdq4FHlNtXY9YkTIh6OUQDuf4OikcU2b74w=";
     })
     (fetchurl {
       url = "${base}/strata-engine-${component}-linux-x86_64-cuda-cuda13.tar.gz";
-      hash = "sha256-u7+oJgEluUWRyuMHR8sOSpzuJtnLCy4oTjMADJFQnVQ=";
+      hash = "sha256-ZyPhtrYEK/4dNocj6/hzr7D6ZfTxkI2UjdhlCY9s+54=";
     })
   ];
 
