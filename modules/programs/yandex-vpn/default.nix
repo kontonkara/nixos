@@ -236,6 +236,9 @@ in
                   ${interface} = [ "0.0.0.0/0" ];
                 };
                 domain_suffix = domains;
+                # AAAA too: many office hosts are IPv6 only, and the tunnel
+                # carries their routes. This rule comes before sing-box's
+                # catch-all that answers AAAA empty.
                 server = "dns-office";
               }
             ];

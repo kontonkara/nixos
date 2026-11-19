@@ -122,9 +122,10 @@ in
           # the persistent journal.
           log.level = "warn";
 
+          # IPv4 only, but not as dns.strategy: that one empties AAAA for every
+          # rule, and the office VPN's hosts are IPv6 only. Instead the last
+          # rule answers AAAA empty, after the rules that may keep them.
           dns = {
-            strategy = "ipv4_only";
-
             servers = [
               {
                 type = "udp";
@@ -146,36 +147,47 @@ in
               bind_interface = tailscale.interfaceName;
             };
 
-            rules = [
-              {
-                # Canary domain: NXDOMAIN tells apps with automatic DoH
-                # (Firefox rollout) to keep using the system resolver.
-                domain = [ "use-application-dns.net" ];
-                action = "predefined";
-                rcode = "NXDOMAIN";
-              }
-            ]
-            ++ lib.optional tailscale.enable {
-              domain_suffix = [ "ts.net" ];
-              server = "dns-tailnet";
-            }
-            ++ [
-              {
-                # HTTPS/SVCB records can contain real IP hints. Browsers may
-                # use them for QUIC and bypass the FakeIP route entirely.
-                domain_suffix = proxyDomains;
-                query_type = [ "HTTPS" ];
-                action = "predefined";
-                rcode = "NOERROR";
-              }
-              {
-                domain_suffix = proxyDomains;
-                query_type = [
-                  "A"
-                  "AAAA"
-                ];
-                server = "dns-fakeip";
-              }
+            rules = lib.mkMerge [
+              (
+                [
+                  {
+                    # Canary domain: NXDOMAIN tells apps with automatic DoH
+                    # (Firefox rollout) to keep using the system resolver.
+                    domain = [ "use-application-dns.net" ];
+                    action = "predefined";
+                    rcode = "NXDOMAIN";
+                  }
+                ]
+                ++ lib.optional tailscale.enable {
+                  domain_suffix = [ "ts.net" ];
+                  server = "dns-tailnet";
+                }
+                ++ [
+                  {
+                    # HTTPS/SVCB records can contain real IP hints. Browsers may
+                    # use them for QUIC and bypass the FakeIP route entirely.
+                    domain_suffix = proxyDomains;
+                    query_type = [ "HTTPS" ];
+                    action = "predefined";
+                    rcode = "NOERROR";
+                  }
+                  {
+                    domain_suffix = proxyDomains;
+                    query_type = [
+                      "A"
+                      "AAAA"
+                    ];
+                    server = "dns-fakeip";
+                  }
+                ]
+              )
+              # Last, after other modules' mkAfter rules: no AAAA otherwise.
+              (lib.mkOrder 2000 [
+                {
+                  query_type = [ "AAAA" ];
+                  action = "predefined";
+                }
+              ])
             ];
 
             final = "dns-direct";
@@ -255,7 +267,11 @@ in
 
             final = "direct";
             auto_detect_interface = true;
-            default_domain_resolver = "dns-direct";
+            # sing-box's own lookups for outbounds, as dns.strategy did.
+            default_domain_resolver = {
+              server = "dns-direct";
+              strategy = "ipv4_only";
+            };
           };
 
           experimental = {
