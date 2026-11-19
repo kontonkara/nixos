@@ -11,13 +11,13 @@
 # so depmod prefers it over the in-tree msi-ec.
 stdenv.mkDerivation {
   pname = "msi-ec";
-  version = "0-unstable-2026-08-10";
+  version = "0-unstable-2026-11-18";
 
   src = fetchFromGitHub {
     owner = "BeardOverflow";
     repo = "msi-ec";
-    rev = "d7fbbd88e6831e56801b860e46475cbf8ddbc7c1";
-    hash = "sha256-+XNrhKeltD5eaasqDOdQ/9/dcPf1H6z2N8hGB344POQ=";
+    rev = "b1bf9e3f9d0465934ffcfc4f02729725b0ee1973";
+    hash = "sha256-W9QpyPRMslstbKjLjtIfPfSCRj/hv7FcHQjjZ4z0RYo=";
   };
 
   nativeBuildInputs = kernel.moduleBuildDependencies;
