@@ -45,6 +45,10 @@ in
           # A soft lockup panics instead of only being logged, so efi_pstore
           # keeps its trace (systemd-pstore archives it on the next boot)...
           "kernel.softlockup_panic" = 1;
+          # The trace of every CPU, not only the one that noticed: in a stuck
+          # TLB-flush IPI the culprit is the CPU that never answers. Costs
+          # nothing until a lockup is detected.
+          "kernel.softlockup_all_cpu_backtrace" = 1;
           # ...and a panic reboots after 10 s instead of hanging there.
           "kernel.panic" = 10;
         };
