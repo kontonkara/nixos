@@ -24,21 +24,38 @@ let
   # OpenVPN asks for the PIN here; yavpn-agent answers from the session.
   socket = "/run/yavpn/management";
 
-  # The connection profile (servers, CA, tls-auth, the route to the office
-  # resolver) is the UDP profile of the official setup script, kept in sops.
-  # It comes first so that the lines after it win: the interface name and the
-  # token library. The certificate is picked at connect time.
-  profile = pkgs.writeText "yavpn.conf" ''
-    config ${config.sops.secrets."yandex-vpn/profile".path}
-    dev ${interface}
-    dev-type tun
-    pkcs11-providers ${provider}
-    # The socket is created world-writable; OpenVPN itself turns away anyone
-    # but this user.
-    management ${socket} unix
-    management-client-user ${username}
-    management-query-passwords
-  '';
+  # The protocol that last brought the tunnel up, tried first next time.
+  state = "/var/lib/yavpn/protocol";
+
+  # The connection profiles (servers, CA, tls-auth, the route to the office
+  # resolver) are the official setup script's UDP (1199) and TCP (443) ones,
+  # kept in sops. Their tls-auth keys differ, so each is its own OpenVPN run.
+  # The profile comes first so that the lines after it win: the interface
+  # name and the token library. The certificate is picked at connect time.
+  profiles = lib.mapAttrs (
+    protocol: secret:
+    pkgs.writeText "yavpn-${protocol}.conf" ''
+      # An option of Yandex's patched build, in the TCP profile.
+      ignore-unknown-option yandex-client
+      config ${config.sops.secrets.${secret}.path}
+      dev ${interface}
+      dev-type tun
+      pkcs11-providers ${provider}
+      # The socket is created world-writable; OpenVPN itself turns away anyone
+      # but this user.
+      management ${socket} unix
+      management-client-user ${username}
+      management-query-passwords
+      # One pass over the servers, then yavpn-start tries the other protocol:
+      # on 2026-11-20 UDP went unanswered for hours while TCP worked.
+      connect-retry-max 1
+      script-security 2
+      route-up "${pkgs.writeShellScript "yavpn-remember" ''echo "$1" > ${state}''} ${protocol}"
+    ''
+  ) {
+    udp = "yandex-vpn/profile";
+    tcp = "yandex-vpn/profile-tcp";
+  };
 
   start = pkgs.writeShellApplication {
     name = "yavpn-start";
@@ -67,7 +84,19 @@ let
         exit 1
       fi
 
-      exec openvpn --config ${profile} --pkcs11-id "$id"
+      # The protocol that worked last, then the other one after each run that
+      # ends (a pass over the servers with no answer). The PIN is asked again
+      # by the new run. yavpn-agent stops the unit itself after wrong PINs.
+      protocol=$(cat ${state} 2>/dev/null || echo udp)
+      while true; do
+        case $protocol in
+          tcp) profile=${profiles.tcp} ;;
+          *) profile=${profiles.udp} ;;
+        esac
+        echo "yavpn: trying $protocol"
+        openvpn --config "$profile" --pkcs11-id "$id" || true
+        if [ "$protocol" = tcp ]; then protocol=udp; else protocol=tcp; fi
+      done
     '';
   };
 
@@ -77,6 +106,7 @@ let
       pkgs.coreutils
       pkgs.libnotify
       pkgs.socat
+      pkgs.systemd
       pkgs.zenity
     ];
     text = ''
@@ -93,6 +123,12 @@ let
         printf '"%s"' "''${s//\"/\\\"}"
       }
 
+      # The whole unit, not only this OpenVPN run: yavpn-start would start the
+      # other protocol, which asks for the PIN again.
+      stop() {
+        systemctl stop --no-block yavpn.service || echo "signal SIGTERM"
+      }
+
       # One connection to the management socket: stdin and stdout are the
       # socket. Wrong PINs bring the same request back; after three the
       # tunnel is stopped rather than locking the token.
@@ -107,7 +143,7 @@ let
               type=''${type%"' password"}
               asked=$((asked + 1))
               if [ "$asked" -gt 3 ]; then
-                echo "signal SIGTERM"
+                stop
                 notify --urgency critical "Stopped after 3 wrong PINs" "yavpn up tries again."
                 continue
               fi
@@ -118,7 +154,7 @@ let
               if pin=$(zenity --entry --hide-text --title "$title" --text "$text"); then
                 echo "password $(quote "$type") $(quote "$pin")"
               else
-                echo "signal SIGTERM"
+                stop
               fi
               pin=
               ;;
@@ -194,6 +230,7 @@ in
     sops = {
       secrets = {
         "yandex-vpn/profile" = { };
+        "yandex-vpn/profile-tcp" = { };
         "yandex-vpn/dns" = {
           restartUnits = [ "sing-box.service" ];
         };
@@ -263,6 +300,7 @@ in
             ExecStart = lib.getExe start;
             RuntimeDirectory = "yavpn";
             RuntimeDirectoryMode = "0755";
+            StateDirectory = "yavpn";
             Restart = "on-failure";
             RestartSec = "5s";
           };
