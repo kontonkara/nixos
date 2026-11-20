@@ -37,7 +37,6 @@ in
         ];
         substituters = lib.mkForce [
           "https://nyx-cache.chaotic.cx"
-          "https://nixos-cache-proxy.elxreno.com"
           "https://nix-community.cachix.org"
           "https://cache.nixos.org"
         ];
